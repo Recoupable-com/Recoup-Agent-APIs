@@ -26,6 +26,7 @@ routes.get('/get_tweets' , TwitterController.getAllTweets) ;
 routes.get('/get_spotify_profile' , SpotifyController.getProfile) ;
 routes.get('/get_artist_albums' , SpotifyController.getArtistAlbums) ;
 routes.get('/get_artist_tracks' , SpotifyController.getArtistTracks) ;
+routes.get('/get_related_artists' , SpotifyController.getRelatedArtists) ;
 
 
 export default routes;

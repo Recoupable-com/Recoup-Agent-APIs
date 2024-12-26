@@ -6,6 +6,7 @@ import {
   REPORT_NEXT_STEP_NOTE,
 } from "../lib/consts.js";
 import getChatCompletions from "../lib/getChatCompletions.js";
+import sendReportEmail from "../lib/email/sendReportEmail.js";
 
 export const get_full_report = async (req, res) => {
   try {
@@ -28,6 +29,13 @@ export const get_full_report = async (req, res) => {
       2222,
     );
 
+    sendReportEmail(
+      content,
+      data?.funnel_analytics_profile?.[0]?.avatar,
+      data?.funnel_analytics_profile?.[0]?.nickname,
+      data?.email || "",
+      `${data?.segment_name} Report`,
+    );
     if (content) return res.status(200).json({ content });
     return res.status(500).json({ error: "No content received from OpenAI" });
   } catch (error) {

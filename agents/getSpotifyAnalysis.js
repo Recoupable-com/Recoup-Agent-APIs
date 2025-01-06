@@ -8,7 +8,7 @@ import { Funnel_Type } from "../lib/funnels.js";
 import saveFunnelProfile from "../lib/supabase/saveFunnelProfile.js";
 import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat.js";
 import saveFunnelArtist from "../lib/supabase/saveFunnelArtist.js";
-import { getProfile } from "../lib/spotify/getProfile.js";
+import getProfile from "../lib/spotify/getProfile.js";
 import getAccessToken from "../lib/supabase/getAccessToken.js";
 import getAlbums from "../lib/spotify/getAlbums.js";
 import getTopTracks from "../lib/spotify/getTopTracks.js";

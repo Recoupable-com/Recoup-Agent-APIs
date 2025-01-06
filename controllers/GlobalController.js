@@ -35,19 +35,19 @@ export const get_dataset_items = async (req, res) => {
 export const get_social_profiles = async (req, res) => {
   const { handle } = req.query;
   try {
-    const query = `What is **${handle}** tiktok name, nickname, followers, followings, location, avatar?`
+    const query = `What is **${handle}** tiktok name, nickname, followers, followings, location, avatar?`;
     const result = await exa.searchAndContents(query, {
       numResults: 100,
       includeDomains: ["tiktok.com"],
       useAutoprompt: true,
-      type: "keyword"
-    })
+      type: "keyword",
+    });
     const response = await tvly.search(query, {
       includeDomains: ["tiktok.com"],
       searchDepth: "advanced",
       maxResults: 10,
       includeAnswer: true,
-      maxTokens: 1111
+      maxTokens: 1111,
     });
     return res.status(200).json({ success: true, response, result });
   } catch (error) {

@@ -60,7 +60,8 @@ const createWrappedAnalysis = async (
     });
 
     const comments = getComments(funnel_analyses);
-    const segments = await getSegments(comments.slice(0, 1000));
+    const segments = await getSegments(comments.slice(0, 500));
+    console.log("ZIAD", segments.length);
     const segmentsWithIcons = await getSegmentsWithIcons(segments, analysisId);
     await saveFunnelSegments(segmentsWithIcons);
 

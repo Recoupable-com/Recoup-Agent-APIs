@@ -14,6 +14,7 @@ import getAlbums from "../lib/spotify/getAlbums.js";
 import getTopTracks from "../lib/spotify/getTopTracks.js";
 import saveSpotifyAlbums from "../lib/supabase/saveSpotifyAlbums.js";
 import saveSpotifyTracks from "../lib/supabase/saveSpotifyTracks.js";
+import createWrappedAnalysis from "./createWrappedAnalysis.js";
 
 const getSpotifyAnalysis = async (
   handle,
@@ -21,6 +22,7 @@ const getSpotifyAnalysis = async (
   account_id,
   address,
   isWrapped,
+  existingArtistId,
 ) => {
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.SPOTIFY);
   const analysisId = newAnalysis.id;
@@ -106,16 +108,23 @@ const getSpotifyAnalysis = async (
       Funnel_Type.SPOTIFY,
       STEP_OF_ANALYSIS.FINISHED,
     );
+    if (isWrapped)
+      await createWrappedAnalysis(
+        handle,
+        chat_id,
+        account_id,
+        address,
+        existingArtistId,
+      );
     return;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     await updateAnalysisStatus(
       chat_id,
       analysisId,
       Funnel_Type.SPOTIFY,
       STEP_OF_ANALYSIS.ERROR,
     );
-    throw new Error(error);
   }
 };
 

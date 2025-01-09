@@ -13,6 +13,7 @@ import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus.js";
 import getProfile from "../lib/tiktok/getProfile.js";
 import getProfileDatasetId from "../lib/tiktok/getProfileDatasetId.js";
 import getVideoComments from "../lib/tiktok/getVideoComments.js";
+import createWrappedAnalysis from "./createWrappedAnalysis.js";
 
 const getTikTokAnalysis = async (
   handle,
@@ -20,6 +21,7 @@ const getTikTokAnalysis = async (
   account_id,
   address,
   isWrapped,
+  existingArtistId,
 ) => {
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TIKTOK);
   const analysisId = newAnalysis.id;
@@ -97,16 +99,23 @@ const getTikTokAnalysis = async (
       Funnel_Type.TIKTOK,
       STEP_OF_ANALYSIS.FINISHED,
     );
+    if (isWrapped)
+      await createWrappedAnalysis(
+        handle,
+        chat_id,
+        account_id,
+        address,
+        existingArtistId,
+      );
     return;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     await updateAnalysisStatus(
       chat_id,
       analysisId,
       Funnel_Type.TIKTOK,
       STEP_OF_ANALYSIS.ERROR,
     );
-    throw new Error(error);
   }
 };
 

@@ -13,6 +13,7 @@ import saveFunnelProfile from "../lib/supabase/saveFunnelProfile.js";
 import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat.js";
 import saveFunnelArtist from "../lib/supabase/saveFunnelArtist.js";
 import getFormattedProfile from "../lib/twitter/getFormattedProfile.js";
+import createWrappedAnalysis from "./createWrappedAnalysis.js";
 
 const scraper = new Scraper();
 
@@ -22,6 +23,7 @@ const getTwitterAnalysis = async (
   account_id,
   address,
   isWrapped,
+  existingArtistId,
 ) => {
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TWITTER);
   const analysisId = newAnalysis.id;
@@ -98,16 +100,23 @@ const getTwitterAnalysis = async (
       Funnel_Type.TWITTER,
       STEP_OF_ANALYSIS.FINISHED,
     );
+    if (isWrapped)
+      await createWrappedAnalysis(
+        handle,
+        chat_id,
+        account_id,
+        address,
+        existingArtistId,
+      );
     return;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     await updateAnalysisStatus(
       chat_id,
       analysisId,
       Funnel_Type.TWITTER,
       STEP_OF_ANALYSIS.ERROR,
     );
-    throw new Error(error);
   }
 };
 

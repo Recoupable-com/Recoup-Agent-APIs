@@ -25,7 +25,7 @@ export const run_agent = async (req, res) => {
     if (isWrapped || type === Funnel_Type.SPOTIFY)
       getSpotifyAnalysis(handle, pilotId, null, null, isWrapped);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ error });
   }
 };

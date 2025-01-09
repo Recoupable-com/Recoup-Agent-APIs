@@ -30,6 +30,7 @@ const createWrappedAnalysis = async (
   const newAnalysis = await beginAnalysis(chat_id, handle);
   const analysisId = newAnalysis.id;
   try {
+    console.log("ZIAD EXISITING ARTIST ID", existingArtistId);
     const artist = getAggregatedArtist(funnel_analyses);
     const existingArtist = await getArtist(existingArtistId);
     const aggregatedArtistProfile = getAggregatedProfile(

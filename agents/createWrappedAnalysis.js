@@ -14,6 +14,7 @@ import getComments from "../lib/agent/getComments.js";
 import getAggregatedSocialProfile from "../lib/agent/getAggregatedSocialProfile.js";
 import checkWrappedCompleted from "../lib/agent/checkWrappedCompleted.js";
 import { STEP_OF_ANALYSIS } from "../lib/step.js";
+import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus.js";
 
 const createWrappedAnalysis = async (
   handle,
@@ -70,9 +71,12 @@ const createWrappedAnalysis = async (
         "Wrapped",
       );
     }
-    global.io.emit(`${chat_id}`, {
-      status: STEP_OF_ANALYSIS.WRAPPED_COMPLETED,
-    });
+    await updateAnalysisStatus(
+      chat_id,
+      analysisId,
+      null,
+      STEP_OF_ANALYSIS.WRAPPED_COMPLETED,
+    );
     return;
   } catch (error) {
     console.log(error);

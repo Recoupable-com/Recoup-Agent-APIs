@@ -36,6 +36,12 @@ const createWrappedAnalysis = async (
       artist,
       existingArtist,
     );
+    console.log(
+      "ZIAD",
+      aggregatedArtistProfile,
+      existingArtist,
+      existingArtistId,
+    );
 
     const artistId = await updateArtistProfile(
       account_id,

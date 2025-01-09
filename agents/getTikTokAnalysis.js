@@ -13,6 +13,7 @@ import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus.js";
 import getProfile from "../lib/tiktok/getProfile.js";
 import getProfileDatasetId from "../lib/tiktok/getProfileDatasetId.js";
 import getVideoComments from "../lib/tiktok/getVideoComments.js";
+import createWrappedAnalysis from "./createWrappedAnalysis.js";
 
 const getTikTokAnalysis = async (
   handle,

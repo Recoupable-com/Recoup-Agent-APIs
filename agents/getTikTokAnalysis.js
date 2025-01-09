@@ -5,6 +5,7 @@ import uploadPfpToIpfs from "../lib/ipfs/uploadPfpToIpfs.js";
 import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat.js";
 import { STEP_OF_ANALYSIS } from "../lib/step.js";
 import beginAnalysis from "../lib/supabase/beginAnalysis.js";
+import getArtist from "../lib/supabase/getArtist.js";
 import saveFunnelArtist from "../lib/supabase/saveFunnelArtist.js";
 import saveFunnelComments from "../lib/supabase/saveFunnelComments.js";
 import saveFunnelProfile from "../lib/supabase/saveFunnelProfile.js";
@@ -26,6 +27,7 @@ const getTikTokAnalysis = async (
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TIKTOK);
   const analysisId = newAnalysis.id;
   try {
+    const existingArtist = await getArtist(existingArtistId);
     const profileDatasetId = await getProfileDatasetId(handle);
     await updateAnalysisStatus(
       chat_id,
@@ -45,11 +47,16 @@ const getTikTokAnalysis = async (
     );
     const newArtist = await saveFunnelArtist(
       Funnel_Type.TIKTOK,
-      profile?.nickname,
-      avatar,
+      existingArtist?.name || profile?.nickname,
+      existingArtist?.image || avatar,
+      existingArtist?.instruction || "",
+      existingArtist?.label || "",
+      existingArtist?.knowledges || [],
       `https://tiktok.com/@${profile?.name}`,
       account_id,
+      existingArtistId,
     );
+
     await saveFunnelProfile({
       ...profile,
       avatar,

@@ -15,6 +15,7 @@ import getTopTracks from "../lib/spotify/getTopTracks.js";
 import saveSpotifyAlbums from "../lib/supabase/saveSpotifyAlbums.js";
 import saveSpotifyTracks from "../lib/supabase/saveSpotifyTracks.js";
 import createWrappedAnalysis from "./createWrappedAnalysis.js";
+import getArtist from "../lib/supabase/getArtist.js";
 
 const getSpotifyAnalysis = async (
   handle,
@@ -27,6 +28,7 @@ const getSpotifyAnalysis = async (
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.SPOTIFY);
   const analysisId = newAnalysis.id;
   try {
+    const existingArtist = await getArtist(existingArtistId);
     await updateAnalysisStatus(
       chat_id,
       analysisId,
@@ -45,11 +47,16 @@ const getSpotifyAnalysis = async (
     );
     const newArtist = await saveFunnelArtist(
       Funnel_Type.SPOTIFY,
-      profile?.nickname,
-      profile?.avatar,
+      existingArtist?.name || profile?.nickname,
+      existingArtist?.image || profile?.avatar,
+      existingArtist?.instruction || "",
+      existingArtist?.label || "",
+      existingArtist?.knowledges || [],
       `https://open.spotify.com/artist/${artistUri}`,
       account_id,
+      existingArtistId,
     );
+
     await saveFunnelProfile({
       ...profile,
       type: "SPOTIFY",

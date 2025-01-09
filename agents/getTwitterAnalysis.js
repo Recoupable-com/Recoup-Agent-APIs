@@ -14,6 +14,7 @@ import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat.js";
 import saveFunnelArtist from "../lib/supabase/saveFunnelArtist.js";
 import getFormattedProfile from "../lib/twitter/getFormattedProfile.js";
 import createWrappedAnalysis from "./createWrappedAnalysis.js";
+import getArtist from "../lib/supabase/getArtist.js";
 
 const scraper = new Scraper();
 
@@ -28,6 +29,7 @@ const getTwitterAnalysis = async (
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TWITTER);
   const analysisId = newAnalysis.id;
   try {
+    const existingArtist = await getArtist(existingArtistId);
     await updateAnalysisStatus(
       chat_id,
       analysisId,
@@ -44,10 +46,14 @@ const getTwitterAnalysis = async (
     );
     const newArtist = await saveFunnelArtist(
       Funnel_Type.TWITTER,
-      profile?.nickname,
-      profile?.avatar,
+      existingArtist?.name || profile?.nickname,
+      existingArtist?.image || profile?.avatar,
+      existingArtist?.instruction || "",
+      existingArtist?.label || "",
+      existingArtist?.knowledges || [],
       `https://x.com/${profile?.name}`,
       account_id,
+      existingArtistId,
     );
     await saveFunnelProfile({
       ...profile,

@@ -15,6 +15,7 @@ import getProfileDatasetId from "../lib/instagram/getProfileDatasetId.js";
 import getPostComments from "../lib/instagram/getPostComments.js";
 import getPostCommentsDatasetId from "../lib/instagram/getPostCommentsDatasetId.js";
 import createWrappedAnalysis from "./createWrappedAnalysis.js";
+import getArtist from "../lib/supabase/getArtist.js";
 
 const getInstagramAnalysis = async (
   handle,
@@ -31,6 +32,7 @@ const getInstagramAnalysis = async (
   );
   const analysisId = newAnalysis.id;
   try {
+    const existingArtist = await getArtist(existingArtistId);
     const profileDatasetId = await getProfileDatasetId(handle);
     await updateAnalysisStatus(
       chat_id,
@@ -48,12 +50,17 @@ const getInstagramAnalysis = async (
       Funnel_Type.INSTAGRAM,
       STEP_OF_ANALYSIS.CREATING_ARTIST,
     );
+
     const newArtist = await saveFunnelArtist(
       Funnel_Type.INSTAGRAM,
-      profile?.nickname,
-      avatar,
+      existingArtist?.name || profile?.nickname,
+      existingArtist?.image || avatar,
+      existingArtist?.instruction || "",
+      existingArtist?.label || "",
+      existingArtist?.knowledges || [],
       `https://instagram.com/${profile?.name}`,
       account_id,
+      existingArtistId,
     );
     await saveFunnelProfile({
       ...profile,

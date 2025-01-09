@@ -21,6 +21,7 @@ const getSpotifyAnalysis = async (
   account_id,
   address,
   isWrapped,
+  existingArtistId,
 ) => {
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.SPOTIFY);
   const analysisId = newAnalysis.id;
@@ -100,6 +101,14 @@ const getSpotifyAnalysis = async (
       chat_id,
       isWrapped ? "Wrapped" : "Spotify",
     );
+    if (isWrapped)
+      await createWrappedAnalysis(
+        handle,
+        chat_id,
+        account_id,
+        address,
+        existingArtistId,
+      );
     await updateAnalysisStatus(
       chat_id,
       analysisId,

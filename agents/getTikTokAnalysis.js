@@ -20,6 +20,7 @@ const getTikTokAnalysis = async (
   account_id,
   address,
   isWrapped,
+  existingArtistId,
 ) => {
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TIKTOK);
   const analysisId = newAnalysis.id;
@@ -91,6 +92,14 @@ const getTikTokAnalysis = async (
       chat_id,
       isWrapped ? "Wrapped" : "TikTok",
     );
+    if (isWrapped)
+      await createWrappedAnalysis(
+        handle,
+        chat_id,
+        account_id,
+        address,
+        existingArtistId,
+      );
     await updateAnalysisStatus(
       chat_id,
       analysisId,

@@ -52,6 +52,7 @@ const createWrappedAnalysis = async (
     const aggregatedSocialProfile = getAggregatedSocialProfile(funnel_analyses);
     await saveFunnelProfile({
       ...aggregatedSocialProfile,
+      analysis_id: analysisId,
       artistId: artistId,
     });
 

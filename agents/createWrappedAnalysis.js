@@ -13,6 +13,7 @@ import createSocialLink from "../lib/supabase/createSocialLink.js";
 import getComments from "../lib/agent/getComments.js";
 import getAggregatedSocialProfile from "../lib/agent/getAggregatedSocialProfile.js";
 import checkWrappedCompleted from "../lib/agent/checkWrappedCompleted.js";
+import { STEP_OF_ANALYSIS } from "../lib/step.js";
 
 const createWrappedAnalysis = async (
   handle,
@@ -72,6 +73,9 @@ const createWrappedAnalysis = async (
         "Wrapped",
       );
     }
+    global.io.emit(`${chat_id}`, {
+      status: STEP_OF_ANALYSIS.WRAPPED_COMPLETED,
+    });
     return;
   } catch (error) {
     console.log(error);

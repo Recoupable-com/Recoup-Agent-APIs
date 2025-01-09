@@ -94,6 +94,12 @@ const getTwitterAnalysis = async (
       chat_id,
       isWrapped ? "Wrapped" : "Twitter",
     );
+    await updateAnalysisStatus(
+      chat_id,
+      analysisId,
+      Funnel_Type.TWITTER,
+      STEP_OF_ANALYSIS.FINISHED,
+    );
     if (isWrapped)
       await createWrappedAnalysis(
         handle,
@@ -102,12 +108,6 @@ const getTwitterAnalysis = async (
         address,
         existingArtistId,
       );
-    await updateAnalysisStatus(
-      chat_id,
-      analysisId,
-      Funnel_Type.TWITTER,
-      STEP_OF_ANALYSIS.FINISHED,
-    );
     return;
   } catch (error) {
     console.log(error);

@@ -101,6 +101,12 @@ const getInstagramAnalysis = async (
         isWrapped ? "Wrapped" : "Instagram",
       );
     }
+    await updateAnalysisStatus(
+      chat_id,
+      analysisId,
+      Funnel_Type.INSTAGRAM,
+      STEP_OF_ANALYSIS.FINISHED,
+    );
     if (isWrapped)
       await createWrappedAnalysis(
         handle,
@@ -109,12 +115,6 @@ const getInstagramAnalysis = async (
         address,
         existingArtistId,
       );
-    await updateAnalysisStatus(
-      chat_id,
-      analysisId,
-      Funnel_Type.INSTAGRAM,
-      STEP_OF_ANALYSIS.FINISHED,
-    );
     return;
   } catch (error) {
     console.log(error);

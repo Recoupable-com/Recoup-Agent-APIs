@@ -12,6 +12,7 @@ import updateArtistProfile from "../lib/supabase/updateArtistProfile.js";
 import createSocialLink from "../lib/supabase/createSocialLink.js";
 import getComments from "../lib/agent/getComments.js";
 import getAggregatedSocialProfile from "../lib/agent/getAggregatedSocialProfile.js";
+import checkWrappedCompleted from "../lib/agent/checkWrappedCompleted.js";
 
 const createWrappedAnalysis = async (
   handle,
@@ -21,12 +22,13 @@ const createWrappedAnalysis = async (
   existingArtistId,
 ) => {
   const funnel_analyses = await getAnalyses(chat_id);
+  const wrappedCompleted = checkWrappedCompleted(funnel_analyses);
+  if (!wrappedCompleted) return;
   const newAnalysis = await beginAnalysis(chat_id, handle);
   const analysisId = newAnalysis.id;
   try {
     const artist = getAggregatedArtist(funnel_analyses);
     const existingArtist = await getArtist(existingArtistId);
-    console.log("ZIAD", existingArtistId);
     const aggregatedArtistProfile = getAggregatedProfile(
       artist,
       existingArtist,
@@ -42,9 +44,6 @@ const createWrappedAnalysis = async (
       existingArtistId,
     );
 
-    console.log("ZIAD", existingArtistId);
-
-    console.log("ZIAD", artistId);
     aggregatedArtistProfile.artist_social_links.forEach(async (link) => {
       await createSocialLink(artistId, link.type, link.link);
     });

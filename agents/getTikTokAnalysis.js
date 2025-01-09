@@ -45,12 +45,16 @@ const getTikTokAnalysis = async (
       Funnel_Type.TIKTOK,
       STEP_OF_ANALYSIS.CREATING_ARTIST,
     );
-    console.log("ZIAD", existingArtist?.name || profile?.nickname,
+    console.log(
+      "ZIAD",
+      existingArtist?.name || profile?.nickname,
       existingArtist?.image || avatar,
       existingArtist?.instruction || "",
       existingArtist?.label || "",
       existingArtist?.knowledges || [],
-      `https://tiktok.com/@${profile?.name}`,)
+      `https://tiktok.com/@${profile?.name}`,
+      existingArtistId,
+    );
     const newArtist = await saveFunnelArtist(
       Funnel_Type.TIKTOK,
       profile?.nickname,

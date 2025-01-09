@@ -41,7 +41,6 @@ const getInstagramAnalysis = async (
       STEP_OF_ANALYSIS.PROFILE,
     );
     const accountData = await getProfile(profileDatasetId);
-    console.log("ZIAD", accountData);
     const profile = accountData?.profile;
     const latestPosts = accountData?.latestPosts;
     const avatar = await uploadPfpToIpfs(profile.avatar);

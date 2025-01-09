@@ -125,7 +125,7 @@ const getSpotifyAnalysis = async (
       );
     return;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     await updateAnalysisStatus(
       chat_id,
       analysisId,

@@ -21,12 +21,12 @@ const createWrappedAnalysis = async (
   address,
   existingArtistId,
 ) => {
+  const wrappedCompleted = checkWrappedCompleted(funnel_analyses);
+  if (!wrappedCompleted) return;
   const newAnalysis = await beginAnalysis(chat_id, handle);
   const analysisId = newAnalysis.id;
   try {
     const funnel_analyses = await getAnalyses(chat_id);
-    const wrappedCompleted = checkWrappedCompleted(funnel_analyses);
-    if (!wrappedCompleted) return;
     const artist = getAggregatedArtist(funnel_analyses);
     const existingArtist = await getArtist(existingArtistId);
     console.log("ZIAD", existingArtistId);
@@ -45,9 +45,9 @@ const createWrappedAnalysis = async (
       existingArtistId,
     );
 
-    console.log("ZIAD", artistId);
-
     console.log("ZIAD", existingArtistId);
+
+    console.log("ZIAD", artistId);
     aggregatedArtistProfile.artist_social_links.forEach(async (link) => {
       await createSocialLink(artistId, link.type, link.link);
     });

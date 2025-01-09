@@ -27,6 +27,7 @@ const getSpotifyAnalysis = async (
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.SPOTIFY);
   const analysisId = newAnalysis.id;
   try {
+    const existingArtist = await getArtist(existingArtistId);
     await updateAnalysisStatus(
       chat_id,
       analysisId,
@@ -45,11 +46,15 @@ const getSpotifyAnalysis = async (
     );
     const newArtist = await saveFunnelArtist(
       Funnel_Type.SPOTIFY,
-      profile?.nickname,
-      profile?.avatar,
+      existingArtist?.name || profile?.nickname,
+      existingArtist?.image || profile?.avatar,
       `https://open.spotify.com/artist/${artistUri}`,
+      existingArtist?.instruction || "",
+      existingArtist?.name || "",
+      existingArtist?.image || "",
       account_id,
     );
+
     await saveFunnelProfile({
       ...profile,
       type: "SPOTIFY",

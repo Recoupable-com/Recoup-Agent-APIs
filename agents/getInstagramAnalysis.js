@@ -60,6 +60,7 @@ const getInstagramAnalysis = async (
       existingArtist?.name || "",
       existingArtist?.image || "",
       account_id,
+      existingArtistId,
     );
     await saveFunnelProfile({
       ...profile,

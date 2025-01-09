@@ -15,6 +15,7 @@ import getTopTracks from "../lib/spotify/getTopTracks.js";
 import saveSpotifyAlbums from "../lib/supabase/saveSpotifyAlbums.js";
 import saveSpotifyTracks from "../lib/supabase/saveSpotifyTracks.js";
 import createWrappedAnalysis from "./createWrappedAnalysis.js";
+import getArtist from "../lib/supabase/getArtist.js";
 
 const getSpotifyAnalysis = async (
   handle,

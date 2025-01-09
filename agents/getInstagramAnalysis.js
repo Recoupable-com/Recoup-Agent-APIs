@@ -57,8 +57,8 @@ const getInstagramAnalysis = async (
       existingArtist?.image || avatar,
       `https://instagram.com/${profile?.name}`,
       existingArtist?.instruction || "",
-      existingArtist?.name || "",
-      existingArtist?.image || "",
+      existingArtist?.label || "",
+      existingArtist?.knowledges || [],
       account_id,
       existingArtistId,
     );

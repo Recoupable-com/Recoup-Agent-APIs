@@ -50,8 +50,8 @@ const getSpotifyAnalysis = async (
       existingArtist?.image || profile?.avatar,
       `https://open.spotify.com/artist/${artistUri}`,
       existingArtist?.instruction || "",
-      existingArtist?.name || "",
-      existingArtist?.image || "",
+      existingArtist?.label || "",
+      existingArtist?.knowledges || [],
       account_id,
       existingArtistId,
     );

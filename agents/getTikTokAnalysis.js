@@ -50,10 +50,10 @@ const getTikTokAnalysis = async (
       profile?.nickname,
       existingArtist?.name || profile?.nickname,
       existingArtist?.image || avatar,
-      `https://tiktok.com/@${profile?.name}`,
       existingArtist?.instruction || "",
-      existingArtist?.name || "",
-      existingArtist?.image || "",
+      existingArtist?.label || "",
+      existingArtist?.knowledges || [],
+      `https://tiktok.com/@${profile?.name}`,
       account_id,
       existingArtistId,
     );

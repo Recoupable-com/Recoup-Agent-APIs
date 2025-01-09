@@ -48,10 +48,10 @@ const getTwitterAnalysis = async (
       Funnel_Type.TWITTER,
       existingArtist?.name || profile?.nickname,
       existingArtist?.image || profile?.avatar,
-      `https://x.com/${profile?.name}`,
       existingArtist?.instruction || "",
-      existingArtist?.name || "",
-      existingArtist?.image || "",
+      existingArtist?.label || "",
+      existingArtist?.knowledges || [],
+      `https://x.com/${profile?.name}`,
       account_id,
       existingArtistId,
     );

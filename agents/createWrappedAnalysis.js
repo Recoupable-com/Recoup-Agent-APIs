@@ -15,6 +15,7 @@ import getAggregatedSocialProfile from "../lib/agent/getAggregatedSocialProfile.
 import checkWrappedCompleted from "../lib/agent/checkWrappedCompleted.js";
 import { STEP_OF_ANALYSIS } from "../lib/step.js";
 import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus.js";
+import { Funnel_Type } from "../lib/funnels.js";
 
 const createWrappedAnalysis = async (
   handle,
@@ -77,7 +78,7 @@ const createWrappedAnalysis = async (
     await updateAnalysisStatus(
       chat_id,
       analysisId,
-      null,
+      Funnel_Type.WRAPPED,
       STEP_OF_ANALYSIS.WRAPPED_COMPLETED,
     );
     return;

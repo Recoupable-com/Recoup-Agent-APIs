@@ -55,10 +55,10 @@ const getInstagramAnalysis = async (
       Funnel_Type.INSTAGRAM,
       existingArtist?.name || profile?.nickname,
       existingArtist?.image || avatar,
-      `https://instagram.com/${profile?.name}`,
       existingArtist?.instruction || "",
       existingArtist?.label || "",
       existingArtist?.knowledges || [],
+      `https://instagram.com/${profile?.name}`,
       account_id,
       existingArtistId,
     );

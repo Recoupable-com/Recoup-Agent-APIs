@@ -48,10 +48,10 @@ const getSpotifyAnalysis = async (
       Funnel_Type.SPOTIFY,
       existingArtist?.name || profile?.nickname,
       existingArtist?.image || profile?.avatar,
-      `https://open.spotify.com/artist/${artistUri}`,
       existingArtist?.instruction || "",
       existingArtist?.label || "",
       existingArtist?.knowledges || [],
+      `https://open.spotify.com/artist/${artistUri}`,
       account_id,
       existingArtistId,
     );

@@ -80,6 +80,7 @@ socketIo.on("connection", async (socket) => {
         msg?.account_id,
         msg?.address,
         msg?.isWrapped,
+        msg?.existingArtistId,
       );
   });
 

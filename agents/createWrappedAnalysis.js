@@ -29,6 +29,7 @@ const createWrappedAnalysis = async (
     if (!wrappedCompleted) return;
     const artist = getAggregatedArtist(funnel_analyses);
     const existingArtist = await getArtist(existingArtistId);
+    console.log("ZIAD", existingArtistId);
     const aggregatedArtistProfile = getAggregatedProfile(
       artist,
       existingArtist,
@@ -44,6 +45,9 @@ const createWrappedAnalysis = async (
       existingArtistId,
     );
 
+    console.log("ZIAD", artistId);
+
+    console.log("ZIAD", existingArtistId);
     aggregatedArtistProfile.artist_social_links.forEach(async (link) => {
       await createSocialLink(artistId, link.type, link.link);
     });

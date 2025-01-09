@@ -5,7 +5,6 @@ import beginAnalysis from "../lib/supabase/beginAnalysis.js";
 import saveFunnelProfile from "../lib/supabase/saveFunnelProfile.js";
 import saveFunnelSegments from "../lib/supabase/saveFunnelSegments.js";
 import getAnalyses from "../lib/supabase/getAnalyses.js";
-import checkWrappedCompleted from "../lib/agent/checkWrappedCompleted.js";
 import getAggregatedArtist from "../lib/agent/getAggregatedArtist.js";
 import getArtist from "../lib/supabase/getArtist.js";
 import getAggregatedProfile from "../lib/agent/getAggregatedProfile.js";
@@ -21,12 +20,10 @@ const createWrappedAnalysis = async (
   address,
   existingArtistId,
 ) => {
-  const wrappedCompleted = checkWrappedCompleted(funnel_analyses);
-  if (!wrappedCompleted) return;
+  const funnel_analyses = await getAnalyses(chat_id);
   const newAnalysis = await beginAnalysis(chat_id, handle);
   const analysisId = newAnalysis.id;
   try {
-    const funnel_analyses = await getAnalyses(chat_id);
     const artist = getAggregatedArtist(funnel_analyses);
     const existingArtist = await getArtist(existingArtistId);
     console.log("ZIAD", existingArtistId);

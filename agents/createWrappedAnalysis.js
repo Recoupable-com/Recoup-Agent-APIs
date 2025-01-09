@@ -60,7 +60,7 @@ const createWrappedAnalysis = async (
     });
 
     const comments = getComments(funnel_analyses);
-    const segments = await getSegments(comments);
+    const segments = await getSegments(comments.slice(0, 1000));
     const segmentsWithIcons = await getSegmentsWithIcons(segments, analysisId);
     await saveFunnelSegments(segmentsWithIcons);
 

@@ -115,7 +115,6 @@ const getTikTokAnalysis = async (
       Funnel_Type.TIKTOK,
       STEP_OF_ANALYSIS.ERROR,
     );
-    throw new Error(error);
   }
 };
 

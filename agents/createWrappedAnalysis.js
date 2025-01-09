@@ -75,7 +75,6 @@ const createWrappedAnalysis = async (
     return;
   } catch (error) {
     console.log(error);
-    throw new Error(error);
   }
 };
 

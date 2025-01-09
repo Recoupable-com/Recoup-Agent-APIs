@@ -124,7 +124,6 @@ const getSpotifyAnalysis = async (
       Funnel_Type.SPOTIFY,
       STEP_OF_ANALYSIS.ERROR,
     );
-    throw new Error(error);
   }
 };
 

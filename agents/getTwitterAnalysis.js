@@ -116,7 +116,6 @@ const getTwitterAnalysis = async (
       Funnel_Type.TWITTER,
       STEP_OF_ANALYSIS.ERROR,
     );
-    throw new Error(error);
   }
 };
 

@@ -50,7 +50,10 @@ const createWrappedAnalysis = async (
       await createSocialLink(artistId, link.type, link.link);
     });
 
-    const aggregatedSocialProfile = getAggregatedSocialProfile(funnel_analyses);
+    const aggregatedSocialProfile = getAggregatedSocialProfile(
+      funnel_analyses,
+      existingArtist,
+    );
     await saveFunnelProfile({
       ...aggregatedSocialProfile,
       analysis_id: analysisId,

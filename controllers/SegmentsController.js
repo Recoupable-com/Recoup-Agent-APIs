@@ -44,6 +44,42 @@ export const get_full_report = async (req, res) => {
   }
 };
 
+export const get_pitch_report = async (req, res) => {
+  try {
+    const data = req.body;
+    const content = await getChatCompletions(
+      [
+        {
+          role: "user",
+          content: `
+        Context: ${JSON.stringify(data)}
+        Question: Please create a pitch HTML report if the pitch name is ${data?.pitch_name}.`,
+        },
+        {
+          role: "system",
+          content: `${instructions.get_pitch_report}
+        ${HTML_RESPONSE_FORMAT_INSTRUCTIONS}
+        NOTE: ${FULL_REPORT_NOTE}`,
+        },
+      ],
+      2222,
+    );
+
+    sendReportEmail(
+      content,
+      data?.artistImage,
+      data?.artistName,
+      data?.email || "",
+      `${data?.segment_name} Report`,
+    );
+    if (content) return res.status(200).json({ content });
+    return res.status(500).json({ error: "No content received from OpenAI" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "API request failed" });
+  }
+};
+
 export const get_next_steps = async (req, res) => {
   try {
     const body = req.body;

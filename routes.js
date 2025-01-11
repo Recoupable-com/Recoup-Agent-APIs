@@ -19,6 +19,7 @@ routes.get('/get_tiktok_video_comments/get_dataset_items' , TikTokCommentsContro
 routes.get('/get_tiktok_video_comments/get_dataset_status' , TikTokCommentsController.get_dataset_status) ;
 
 routes.post('/get_full_report' , SegmentsController.get_full_report) ;
+routes.post('/get_pitch_report' , SegmentsController.get_pitch_report) ;
 routes.post('/get_next_steps' , SegmentsController.get_next_steps) ;
 routes.post('/get_segments' , SegmentsController.get_segments) ;
 routes.post('/get_segments_icons' , SegmentsController.get_segments_icons) ;

@@ -36,7 +36,6 @@ const getTikTokAnalysis = async (
       STEP_OF_ANALYSIS.PROFILE,
     );
     const accountData = await getProfile(profileDatasetId);
-    console.log("ZIAD", accountData);
     const profile = accountData?.profile?.[0];
     const videoUrls = accountData?.videoUrls;
     const avatar = await uploadPfpToIpfs(profile.avatar);

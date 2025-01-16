@@ -34,7 +34,7 @@ const getInstagramAnalysis = async (
     scrapedProfile = profile;
     scrapedPostUrls = latestPosts;
     analyzedError = error;
-    console.log("ZIAD scrapedProfile", scrapedProfile, scrapedPostUrls);
+    console.log("ZIAD scrapedProfile", scrapedProfile, scrapedPostUrls, error);
     if (!scrapedProfile || analyzedError) {
       const handles = await getSocialHandles(handle);
       console.log("ZIAD", handles.instagram);
@@ -46,7 +46,16 @@ const getInstagramAnalysis = async (
       scrapedPostUrls = latestPosts;
       console.log("ZIAD scrapedProfile", scrapedProfile, scrapedPostUrls);
     }
-    if (!scrapedProfile || analyzedError) return;
+    if (!scrapedProfile || analyzedError) {
+      console.log("ZIAD analyzedError", analyzedError);
+      await updateAnalysisStatus(
+        chat_id,
+        analysisId,
+        Funnel_Type.INSTAGRAM,
+        analyzedError?.status,
+      );
+      return;
+    }
     const newArtist = await createArtist(
       chat_id,
       analysisId,

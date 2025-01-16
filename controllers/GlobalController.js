@@ -37,10 +37,9 @@ export const get_social_handles = async (req, res) => {
   try {
     const handles = await getSocialHandles(handle);
 
-    if (content)
-      return res.status(200).json({
-        data: handles,
-      });
+    return res.status(200).json({
+      data: handles,
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });

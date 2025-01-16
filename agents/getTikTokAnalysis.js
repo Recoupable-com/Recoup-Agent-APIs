@@ -29,6 +29,7 @@ const getTikTokAnalysis = async (
   try {
     const existingArtist = await getArtist(existingArtistId);
     const profileDatasetId = await getProfileDatasetId(handle);
+    console.log("ZIAD profileDatasetId", profileDatasetId);
     await updateAnalysisStatus(
       chat_id,
       analysisId,

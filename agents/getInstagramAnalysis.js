@@ -25,7 +25,7 @@ const getInstagramAnalysis = async (
   );
   const analysisId = newAnalysis.id;
   try {
-    let scrapedProfile, scrapedPostUrls, analyzedError;
+    let scrapedProfile, scrapedPostUrls, analyzedProfileError;
     const { profile, latestPosts, error } = await analyzeProfile(
       chat_id,
       analysisId,
@@ -33,21 +33,26 @@ const getInstagramAnalysis = async (
     );
     scrapedProfile = profile;
     scrapedPostUrls = latestPosts;
-    analyzedError = error;
+    analyzedProfileError = error;
     console.log("ZIAD scrapedProfile", scrapedProfile, scrapedPostUrls, error);
-    if (!scrapedProfile || analyzedError) {
+    if (!scrapedProfile || analyzedProfileError) {
       const handles = await getSocialHandles(handle);
       console.log("ZIAD", handles.instagram);
       const { profile, latestPosts, error } = await analyzeProfile(
         handles.instagram,
       );
-      analyzedError = error;
+      analyzedProfileError = error;
       scrapedProfile = profile;
       scrapedPostUrls = latestPosts;
-      console.log("ZIAD scrapedProfile", scrapedProfile, scrapedPostUrls);
+      console.log(
+        "ZIAD scrapedProfile",
+        scrapedProfile,
+        scrapedPostUrls,
+        analyzedProfileError,
+      );
     }
-    if (!scrapedProfile || analyzedError) {
-      console.log("ZIAD analyzedError", analyzedError);
+    if (!scrapedProfile || analyzedProfileError) {
+      console.log("ZIAD analyzedError", analyzedProfileError);
       await updateAnalysisStatus(
         chat_id,
         analysisId,

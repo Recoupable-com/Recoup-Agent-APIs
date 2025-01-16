@@ -28,6 +28,7 @@ const getTwitterAnalysis = async (
       chat_id,
       analysisId,
       handle,
+      existingArtistId,
     );
     const newArtist = await createArtist(
       chat_id,

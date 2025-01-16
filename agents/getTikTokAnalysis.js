@@ -35,8 +35,7 @@ const getTikTokAnalysis = async (
       scrapedProfile = profile;
       scrapedVideoUrls = videoUrls;
     }
-    console.log("ZIAD scraped", scrapedProfile, scrapedVideoUrls);
-    await createArtist(
+    const newArtist = await createArtist(
       chat_id,
       analysisId,
       account_id,

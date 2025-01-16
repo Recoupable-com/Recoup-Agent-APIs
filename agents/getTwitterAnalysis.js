@@ -1,20 +1,10 @@
 import { Scraper } from "agent-twitter-client";
-import getAllTweets from "../lib/twitter/getAllTweets.js";
 import { STEP_OF_ANALYSIS } from "../lib/step.js";
 import beginAnalysis from "../lib/supabase/beginAnalysis.js";
 import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus.js";
-import getTwitterComments from "../lib/twitter/getTwitterComments.js";
-import saveFunnelComments from "../lib/supabase/saveFunnelComments.js";
-import getSegments from "../lib/getSegments.js";
-import getSegmentsWithIcons from "../lib/getSegmentsWithIcons.js";
-import saveFunnelSegments from "../lib/supabase/saveFunnelSegments.js";
 import { Funnel_Type } from "../lib/funnels.js";
-import saveFunnelProfile from "../lib/supabase/saveFunnelProfile.js";
 import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat.js";
-import saveFunnelArtist from "../lib/supabase/saveFunnelArtist.js";
-import getFormattedProfile from "../lib/twitter/getFormattedProfile.js";
 import createWrappedAnalysis from "./createWrappedAnalysis.js";
-import getArtist from "../lib/supabase/getArtist.js";
 import createArtist from "../lib/createArtist.js";
 import analyzeComments from "../lib/twitter/analyzeComments.js";
 import analyzeSegments from "../lib/analyzeSegments.js";
@@ -39,15 +29,14 @@ const getTwitterAnalysis = async (
       analysisId,
       handle,
     );
-    const profile = getFormattedProfile(scrappedProfile);
     const newArtist = await createArtist(
       chat_id,
       analysisId,
       account_id,
       existingArtistId,
-      profile,
+      scrappedProfile,
       "twitter",
-      `https://x.com/${profile?.name}`,
+      `https://x.com/${scrappedProfile?.name}`,
     );
     const comments = await analyzeComments(
       scraper,

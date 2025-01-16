@@ -25,7 +25,7 @@ const getInstagramAnalysis = async (
   const analysisId = newAnalysis.id;
   try {
     const { scrapedPostUrls, scrapedProfile, analyzedProfileError } =
-      await getSocialProfile(chat_id, analysisId, existingArtistId);
+      await getSocialProfile(chat_id, analysisId, handle, existingArtistId);
     if (!scrapedProfile || analyzedProfileError) {
       await updateAnalysisStatus(
         chat_id,

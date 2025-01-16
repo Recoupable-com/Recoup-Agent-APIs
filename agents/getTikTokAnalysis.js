@@ -1,10 +1,8 @@
 import { Funnel_Type } from "../lib/funnels.js";
-import getSocialHandles from "../lib/getSocialHandles.js";
 import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat.js";
 import { STEP_OF_ANALYSIS } from "../lib/step.js";
 import beginAnalysis from "../lib/supabase/beginAnalysis.js";
 import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus.js";
-import analyzeProfile from "../lib/tiktok/analyzeProfile.js";
 import analyzeSegments from "../lib/analyzeSegments.js";
 import analyzeVideoComments from "../lib/tiktok/analyzeVideoComments.js";
 import createArtist from "../lib/createArtist.js";
@@ -23,7 +21,7 @@ const getTikTokAnalysis = async (
   const analysisId = newAnalysis.id;
   try {
     const { scrapedVideoUrls, scrapedProfile, analyzedProfileError } =
-      await getSocialProfile(chat_id, analysisId, existingArtistId);
+      await getSocialProfile(chat_id, analysisId, handle, existingArtistId);
     if (!scrapedProfile || analyzedProfileError) {
       await updateAnalysisStatus(
         chat_id,

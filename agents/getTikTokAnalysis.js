@@ -1,14 +1,13 @@
 import { Funnel_Type } from "../lib/funnels.js";
-import getSocialHandles from "../lib/getSocialHandles.js";
 import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat.js";
 import { STEP_OF_ANALYSIS } from "../lib/step.js";
 import beginAnalysis from "../lib/supabase/beginAnalysis.js";
 import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus.js";
-import analyzeProfile from "../lib/tiktok/analyzeProfile.js";
-import analyzeSegments from "../lib/tiktok/analyzeSegments.js";
+import analyzeSegments from "../lib/analyzeSegments.js";
 import analyzeVideoComments from "../lib/tiktok/analyzeVideoComments.js";
-import createArtist from "../lib/tiktok/createArtist.js";
+import createArtist from "../lib/createArtist.js";
 import createWrappedAnalysis from "./createWrappedAnalysis.js";
+import getSocialProfile from "../lib/tiktok/getSocialProfile.js";
 
 const getTikTokAnalysis = async (
   handle,
@@ -21,33 +20,38 @@ const getTikTokAnalysis = async (
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TIKTOK);
   const analysisId = newAnalysis.id;
   try {
-    let scrapedProfile, scrapedVideoUrls;
-    const { profile, videoUrls } = await analyzeProfile(
-      chat_id,
-      analysisId,
-      handle,
-    );
-    scrapedProfile = profile;
-    scrapedVideoUrls = videoUrls;
-    if (!scrapedProfile) {
-      const handles = await getSocialHandles(handle);
-      const { profile, videoUrls } = await analyzeProfile(handles.tiktok);
-      scrapedProfile = profile;
-      scrapedVideoUrls = videoUrls;
+    const { scrapedVideoUrls, scrapedProfile, analyzedProfileError } =
+      await getSocialProfile(chat_id, analysisId, handle, existingArtistId);
+    if (!scrapedProfile || analyzedProfileError) {
+      await updateAnalysisStatus(
+        chat_id,
+        analysisId,
+        Funnel_Type.INSTAGRAM,
+        analyzedProfileError?.status,
+      );
+      return;
     }
     const newArtist = await createArtist(
       chat_id,
       analysisId,
       account_id,
       existingArtistId,
-      profile,
+      scrapedProfile,
+      "tiktok",
+      `https://tiktok.com/@${scrapedProfile?.name}`,
     );
+
     const videoComments = await analyzeVideoComments(
-      videoUrls,
+      scrapedVideoUrls,
       chat_id,
       analysisId,
     );
-    await analyzeSegments(chat_id, analysisId, videoComments);
+    await analyzeSegments(
+      chat_id,
+      analysisId,
+      videoComments,
+      Funnel_Type.TIKTOK,
+    );
     await trackFunnelAnalysisChat(
       address,
       handle,

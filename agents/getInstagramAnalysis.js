@@ -4,11 +4,10 @@ import { STEP_OF_ANALYSIS } from "../lib/step.js";
 import beginAnalysis from "../lib/supabase/beginAnalysis.js";
 import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus.js";
 import createWrappedAnalysis from "./createWrappedAnalysis.js";
-import analyzeProfile from "../lib/instagram/analyzeProfile.js";
-import getSocialHandles from "../lib/getSocialHandles.js";
 import createArtist from "../lib/createArtist.js";
 import analyzeComments from "../lib/instagram/analyzeComments.js";
 import analyzeSegments from "../lib/analyzeSegments.js";
+import getSocialProfile from "../lib/instagram/getSocialProfile.js";
 
 const getInstagramAnalysis = async (
   handle,
@@ -25,34 +24,9 @@ const getInstagramAnalysis = async (
   );
   const analysisId = newAnalysis.id;
   try {
-    let scrapedProfile, scrapedPostUrls, analyzedProfileError;
-    const { profile, latestPosts, error } = await analyzeProfile(
-      chat_id,
-      analysisId,
-      handle,
-    );
-    scrapedProfile = profile;
-    scrapedPostUrls = latestPosts;
-    analyzedProfileError = error;
-    console.log("ZIAD scrapedProfile", scrapedProfile, scrapedPostUrls, error);
+    const { scrapedPostUrls, scrapedProfile, analyzedProfileError } =
+      await getSocialProfile(chat_id, analysisId, existingArtistId);
     if (!scrapedProfile || analyzedProfileError) {
-      const handles = await getSocialHandles(handle);
-      console.log("ZIAD", handles.instagram);
-      const { profile, latestPosts, error } = await analyzeProfile(
-        handles.instagram.replaceAll("@", ""),
-      );
-      analyzedProfileError = error;
-      scrapedProfile = profile;
-      scrapedPostUrls = latestPosts;
-      console.log(
-        "ZIAD scrapedProfile",
-        scrapedProfile,
-        scrapedPostUrls,
-        analyzedProfileError,
-      );
-    }
-    if (!scrapedProfile || analyzedProfileError) {
-      console.log("ZIAD analyzedProfileError", analyzedProfileError);
       await updateAnalysisStatus(
         chat_id,
         analysisId,
@@ -73,7 +47,7 @@ const getInstagramAnalysis = async (
     const postComments = await analyzeComments(
       chat_id,
       analysisId,
-      latestPosts,
+      scrapedPostUrls,
     );
     await analyzeSegments(
       chat_id,

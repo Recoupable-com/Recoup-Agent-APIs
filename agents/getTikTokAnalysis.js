@@ -1,19 +1,13 @@
 import { Funnel_Type } from "../lib/funnels.js";
-import getSegments from "../lib/getSegments.js";
-import getSegmentsWithIcons from "../lib/getSegmentsWithIcons.js";
-import uploadPfpToIpfs from "../lib/ipfs/uploadPfpToIpfs.js";
+import getSocialHandles from "../lib/getSocialHandles.js";
 import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat.js";
 import { STEP_OF_ANALYSIS } from "../lib/step.js";
 import beginAnalysis from "../lib/supabase/beginAnalysis.js";
-import getArtist from "../lib/supabase/getArtist.js";
-import saveFunnelArtist from "../lib/supabase/saveFunnelArtist.js";
-import saveFunnelComments from "../lib/supabase/saveFunnelComments.js";
-import saveFunnelProfile from "../lib/supabase/saveFunnelProfile.js";
-import saveFunnelSegments from "../lib/supabase/saveFunnelSegments.js";
 import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus.js";
-import getProfile from "../lib/tiktok/getProfile.js";
-import getProfileDatasetId from "../lib/tiktok/getProfileDatasetId.js";
-import getVideoComments from "../lib/tiktok/getVideoComments.js";
+import analyzeProfile from "../lib/tiktok/analyzeProfile.js";
+import analyzeSegments from "../lib/tiktok/analyzeSegments.js";
+import analyzeVideoComments from "../lib/tiktok/analyzeVideoComments.js";
+import createArtist from "../lib/tiktok/createArtist.js";
 import createWrappedAnalysis from "./createWrappedAnalysis.js";
 
 const getTikTokAnalysis = async (
@@ -27,73 +21,34 @@ const getTikTokAnalysis = async (
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TIKTOK);
   const analysisId = newAnalysis.id;
   try {
-    const existingArtist = await getArtist(existingArtistId);
-    const profileDatasetId = await getProfileDatasetId(handle);
-    console.log("ZIAD profileDatasetId", profileDatasetId);
-    await updateAnalysisStatus(
+    let scrapedProfile, scrapedVideoUrls;
+    const { profile, videoUrls } = await analyzeProfile(
       chat_id,
       analysisId,
-      Funnel_Type.TIKTOK,
-      STEP_OF_ANALYSIS.PROFILE,
+      handle,
     );
-    const accountData = await getProfile(profileDatasetId);
-    const profile = accountData?.profile?.[0];
-    const videoUrls = accountData?.videoUrls;
-    const avatar = await uploadPfpToIpfs(profile.avatar);
-    await updateAnalysisStatus(
+    scrapedProfile = profile;
+    scrapedVideoUrls = videoUrls;
+    if (!scrapedProfile) {
+      const handles = await getSocialHandles(handle);
+      const { profile, videoUrls } = await analyzeProfile(handles.tiktok);
+      scrapedProfile = profile;
+      scrapedVideoUrls = videoUrls;
+    }
+    console.log("ZIAD scraped", scrapedProfile, scrapedVideoUrls);
+    await createArtist(
       chat_id,
       analysisId,
-      Funnel_Type.TIKTOK,
-      STEP_OF_ANALYSIS.CREATING_ARTIST,
-    );
-    const newArtist = await saveFunnelArtist(
-      Funnel_Type.TIKTOK,
-      existingArtist?.name || profile?.nickname,
-      existingArtist?.image || avatar,
-      existingArtist?.instruction || "",
-      existingArtist?.label || "",
-      existingArtist?.knowledges || [],
-      `https://tiktok.com/@${profile?.name}`,
       account_id,
       existingArtistId,
+      profile,
     );
-
-    await saveFunnelProfile({
-      ...profile,
-      avatar,
-      type: "TIKTOK",
-      analysis_id: analysisId,
-      artistId: newArtist.id,
-    });
-    await updateAnalysisStatus(
-      chat_id,
-      analysisId,
-      Funnel_Type.TIKTOK,
-      STEP_OF_ANALYSIS.CREATED_ARTIST,
-      0,
-      newArtist,
-    );
-    const videoComments = await getVideoComments(
+    const videoComments = await analyzeVideoComments(
       videoUrls,
       chat_id,
       analysisId,
     );
-    await saveFunnelComments(videoComments);
-    await updateAnalysisStatus(
-      chat_id,
-      analysisId,
-      Funnel_Type.TIKTOK,
-      STEP_OF_ANALYSIS.SEGMENTS,
-    );
-    const segments = await getSegments(videoComments);
-    const segmentsWithIcons = await getSegmentsWithIcons(segments, analysisId);
-    await saveFunnelSegments(segmentsWithIcons);
-    await updateAnalysisStatus(
-      chat_id,
-      analysisId,
-      Funnel_Type.TIKTOK,
-      STEP_OF_ANALYSIS.SAVING_ANALYSIS,
-    );
+    await analyzeSegments(chat_id, analysisId, videoComments);
     await trackFunnelAnalysisChat(
       address,
       handle,

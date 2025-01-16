@@ -5,9 +5,9 @@ import { STEP_OF_ANALYSIS } from "../lib/step.js";
 import beginAnalysis from "../lib/supabase/beginAnalysis.js";
 import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus.js";
 import analyzeProfile from "../lib/tiktok/analyzeProfile.js";
-import analyzeSegments from "../lib/tiktok/analyzeSegments.js";
+import analyzeSegments from "../lib/analyzeSegments.js";
 import analyzeVideoComments from "../lib/tiktok/analyzeVideoComments.js";
-import createArtist from "../lib/tiktok/createArtist.js";
+import createArtist from "../lib/createArtist.js";
 import createWrappedAnalysis from "./createWrappedAnalysis.js";
 
 const getTikTokAnalysis = async (
@@ -40,14 +40,22 @@ const getTikTokAnalysis = async (
       analysisId,
       account_id,
       existingArtistId,
-      profile,
+      scrapedProfile,
+      "tiktok",
+      `https://tiktok.com/@${scrapedProfile?.name}`,
     );
+
     const videoComments = await analyzeVideoComments(
       videoUrls,
       chat_id,
       analysisId,
     );
-    await analyzeSegments(chat_id, analysisId, videoComments);
+    await analyzeSegments(
+      chat_id,
+      analysisId,
+      videoComments,
+      Funnel_Type.TIKTOK,
+    );
     await trackFunnelAnalysisChat(
       address,
       handle,

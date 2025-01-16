@@ -15,6 +15,10 @@ import saveFunnelArtist from "../lib/supabase/saveFunnelArtist.js";
 import getFormattedProfile from "../lib/twitter/getFormattedProfile.js";
 import createWrappedAnalysis from "./createWrappedAnalysis.js";
 import getArtist from "../lib/supabase/getArtist.js";
+import createArtist from "../lib/createArtist.js";
+import analyzeComments from "../lib/twitter/analyzeComments.js";
+import analyzeSegments from "../lib/analyzeSegments.js";
+import getSocialProfile from "../lib/twitter/getSocialProfile.js";
 
 const scraper = new Scraper();
 
@@ -29,70 +33,30 @@ const getTwitterAnalysis = async (
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TWITTER);
   const analysisId = newAnalysis.id;
   try {
-    const existingArtist = await getArtist(existingArtistId);
-    await updateAnalysisStatus(
+    const scrappedProfile = await getSocialProfile(
+      scraper,
       chat_id,
       analysisId,
-      Funnel_Type.TWITTER,
-      STEP_OF_ANALYSIS.PROFILE,
+      handle,
     );
-    const scrappedProfile = await scraper.getProfile(handle);
     const profile = getFormattedProfile(scrappedProfile);
-    await updateAnalysisStatus(
+    const newArtist = await createArtist(
       chat_id,
       analysisId,
-      Funnel_Type.TWITTER,
-      STEP_OF_ANALYSIS.CREATING_ARTIST,
-    );
-    const newArtist = await saveFunnelArtist(
-      Funnel_Type.TWITTER,
-      existingArtist?.name || profile?.nickname,
-      existingArtist?.image || profile?.avatar,
-      existingArtist?.instruction || "",
-      existingArtist?.label || "",
-      existingArtist?.knowledges || [],
-      `https://x.com/${profile?.name}`,
       account_id,
       existingArtistId,
+      profile,
+      "twitter",
+      `https://x.com/${profile?.name}`,
     );
-    await saveFunnelProfile({
-      ...profile,
-      type: "TWITTER",
-      analysis_id: analysisId,
-      artistId: newArtist.id,
-    });
-    await updateAnalysisStatus(
+    const comments = await analyzeComments(
+      scraper,
       chat_id,
-      analysisId,
-      Funnel_Type.TWITTER,
-      STEP_OF_ANALYSIS.CREATED_ARTIST,
-      0,
-      newArtist,
+      account_id,
+      handle,
     );
-    await updateAnalysisStatus(
-      chat_id,
-      analysisId,
-      Funnel_Type.TWITTER,
-      STEP_OF_ANALYSIS.POST_COMMENTS,
-    );
-    const allTweets = await getAllTweets(scraper, handle);
-    const comments = getTwitterComments(allTweets, analysisId);
-    await saveFunnelComments(comments);
-    await updateAnalysisStatus(
-      chat_id,
-      analysisId,
-      Funnel_Type.TWITTER,
-      STEP_OF_ANALYSIS.SEGMENTS,
-    );
-    const segments = await getSegments(comments);
-    const segmentsWithIcons = await getSegmentsWithIcons(segments, analysisId);
-    await saveFunnelSegments(segmentsWithIcons);
-    await updateAnalysisStatus(
-      chat_id,
-      analysisId,
-      Funnel_Type.TWITTER,
-      STEP_OF_ANALYSIS.SAVING_ANALYSIS,
-    );
+    await analyzeSegments(chat_id, analysisId, comments, Funnel_Type.TWITTER);
+
     await trackFunnelAnalysisChat(
       address,
       handle,

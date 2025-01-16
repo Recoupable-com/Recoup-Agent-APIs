@@ -52,12 +52,12 @@ const getInstagramAnalysis = async (
       );
     }
     if (!scrapedProfile || analyzedProfileError) {
-      console.log("ZIAD analyzedError", analyzedProfileError);
+      console.log("ZIAD analyzedProfileError", analyzedProfileError);
       await updateAnalysisStatus(
         chat_id,
         analysisId,
         Funnel_Type.INSTAGRAM,
-        analyzedError?.status,
+        analyzedProfileError?.status,
       );
       return;
     }

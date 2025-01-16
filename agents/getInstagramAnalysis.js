@@ -39,7 +39,7 @@ const getInstagramAnalysis = async (
       const handles = await getSocialHandles(handle);
       console.log("ZIAD", handles.instagram);
       const { profile, latestPosts, error } = await analyzeProfile(
-        handles.instagram,
+        handles.instagram.replaceAll("@", ""),
       );
       analyzedProfileError = error;
       scrapedProfile = profile;

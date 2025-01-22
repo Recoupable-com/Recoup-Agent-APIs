@@ -22,15 +22,16 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
     await stagehand.init();
     await stagehand.page.goto(`https://tiktok.com/@${handle}`);
 
-    const { bio, username, followers, postItemHrefLinks } =
+    const { bio, username, followers, postVideoHrefs, region } =
       await stagehand.page.extract({
         instruction:
-          "extract the bio, username, followers, postItemHrefLinks of the page",
+          "Extract the bio, username, followers, region, postVideoHrefs of the page. postVideoHref example: 'https://www.tiktok.com/@sweetman.eth/video/7462402031702035718'",
         schema: z.object({
           bio: z.string(),
           username: z.string(),
           followers: z.number(),
-          postItemHrefLinks: z.array(z.string()),
+          postVideoHrefs: z.array(z.string()),
+          region: z.string(),
         }),
       });
 
@@ -40,7 +41,8 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
         bio,
         username,
         followers,
-        postItemHrefLinks,
+        postVideoHrefs,
+        region,
       },
     });
   } catch (error) {

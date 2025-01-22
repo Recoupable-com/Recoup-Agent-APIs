@@ -26,7 +26,7 @@ export const get_profile = async (req: Request, res: Response) => {
 
     await stagehand.page.goto(profileUrl);
 
-    const { bio, username, followers } = await stagehand.page.extract({
+    const { bio, username, followers, email } = await stagehand.page.extract({
       instruction: "Extract the email, bio, username, followers, of the page.",
       schema: z.object({
         bio: z.string(),
@@ -42,6 +42,7 @@ export const get_profile = async (req: Request, res: Response) => {
         bio,
         username,
         followers,
+        email,
       },
     });
   } catch (error) {

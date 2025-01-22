@@ -1,4 +1,3 @@
-import { Funnel_Type } from "./funnels.js";
 import uploadPfpToIpfs from "./ipfs/uploadPfpToIpfs.js";
 import { STEP_OF_ANALYSIS } from "./step.js";
 import getArtist from "./supabase/getArtist.js";

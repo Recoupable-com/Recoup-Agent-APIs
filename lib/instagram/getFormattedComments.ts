@@ -1,6 +1,5 @@
 const getFormattedComments = (data: any, analysis_id: string) => {
   if (data?.error) return [];
-  console.log("ZIAD", data);
   const sorteddata = data
     .sort(
       (a: any, b: any) =>

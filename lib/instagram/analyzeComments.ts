@@ -8,6 +8,7 @@ const analyzeComments = async (
   latestPosts: any,
 ) => {
   const commentsDatasetId = await getPostCommentsDatasetId(latestPosts);
+  console.log("ZIAD", commentsDatasetId);
   const postComments = await getPostComments(
     commentsDatasetId,
     chat_id,

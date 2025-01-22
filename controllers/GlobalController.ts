@@ -22,6 +22,7 @@ export const get_profile = async (req: Request, res: Response) => {
     await stagehand.init();
     let profileUrl = `https://tiktok.com/@${handle}`;
     if (type === "twitter") profileUrl = `https://x.com/${handle}`;
+    if (type === "instagram") profileUrl = `https://instagram.com/${handle}`;
 
     await stagehand.page.goto(profileUrl);
 

@@ -31,20 +31,23 @@ export const get_profile = async (req: Request, res: Response) => {
 
     await stagehand.page.goto(profileUrl);
 
-    const { bio, username, followers, email } = await stagehand.page.extract({
-      instruction: "Extract the email, bio, username, followers, of the page.",
-      schema: z.object({
-        bio: z.string(),
-        username: z.string(),
-        followers: z.number(),
-        email: z.string(),
-      }),
-    });
+    const { bio, username, followers, email, about } =
+      await stagehand.page.extract({
+        instruction:
+          "Extract the email, bio, username, followers, of the page.",
+        schema: z.object({
+          bio: z.string(),
+          username: z.string(),
+          followers: z.number(),
+          email: z.string(),
+          about: z.string(),
+        }),
+      });
 
     return res.status(200).json({
       success: true,
       data: {
-        bio,
+        bio: bio || about,
         username,
         followers,
         email,

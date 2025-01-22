@@ -27,11 +27,12 @@ export const get_profile = async (req: Request, res: Response) => {
     await stagehand.page.goto(profileUrl);
 
     const { bio, username, followers } = await stagehand.page.extract({
-      instruction: "Extract the bio, username, followers, of the page.",
+      instruction: "Extract the email, bio, username, followers, of the page.",
       schema: z.object({
         bio: z.string(),
         username: z.string(),
         followers: z.number(),
+        email: z.string(),
       }),
     });
 

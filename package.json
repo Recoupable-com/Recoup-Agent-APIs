@@ -3,17 +3,18 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
-    "start": "nodemon --experimental-specifier-resolution=node --no-warnings app.js",
+    "start": "npx tsc && nodemon --experimental-specifier-resolution=node --no-warnings ./dist/app.js",
     "test": "echo \"No tests specified\" && exit 0",
-    "format": "prettier --write app.js lib controllers agents"
+    "format": "prettier --write app.ts lib controllers agents"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@browserbasehq/stagehand": "^1.10.1",
+    "@playwright/test": "^1.49.1",
     "@stackso/js-core": "^0.5.10",
     "@supabase/supabase-js": "^2.47.9",
     "@tavily/core": "^0.0.2",
@@ -29,6 +30,12 @@
     "openai": "^4.74.0",
     "prettier": "^3.4.1",
     "socket.io": "^4.8.1",
-    "uuid": "^11.0.4"
+    "ts-node": "^10.9.2",
+    "uuid": "^11.0.4",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "typescript": "^5.7.3"
   }
 }

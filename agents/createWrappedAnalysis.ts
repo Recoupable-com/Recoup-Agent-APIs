@@ -1,0 +1,92 @@
+import getSegments from "../lib/getSegments";
+import getSegmentsWithIcons from "../lib/getSegmentsWithIcons";
+import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat";
+import beginAnalysis from "../lib/supabase/beginAnalysis";
+import saveFunnelProfile from "../lib/supabase/saveFunnelProfile";
+import saveFunnelSegments from "../lib/supabase/saveFunnelSegments";
+import getAnalyses from "../lib/supabase/getAnalyses";
+import getAggregatedArtist from "../lib/agent/getAggregatedArtist";
+import getArtist from "../lib/supabase/getArtist";
+import getAggregatedProfile from "../lib/agent/getAggregatedProfile";
+import updateArtistProfile from "../lib/supabase/updateArtistProfile";
+import createSocialLink from "../lib/supabase/createSocialLink";
+import getComments from "../lib/agent/getComments";
+import getAggregatedSocialProfile from "../lib/agent/getAggregatedSocialProfile";
+import checkWrappedCompleted from "../lib/agent/checkWrappedCompleted";
+import { STEP_OF_ANALYSIS } from "../lib/step";
+import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus";
+import { Funnel_Type, SOCIAL_LINK } from "../lib/funnels";
+
+const createWrappedAnalysis = async (
+  handle: string,
+  chat_id: string,
+  account_id: string | null,
+  address: string | null,
+  existingArtistId: string | null,
+) => {
+  const funnel_analyses = await getAnalyses(chat_id);
+  const wrappedCompleted = checkWrappedCompleted(funnel_analyses);
+  if (!wrappedCompleted) return;
+  const newAnalysis = await beginAnalysis(chat_id, handle);
+  const analysisId = newAnalysis.id;
+  try {
+    const artist = getAggregatedArtist(funnel_analyses);
+    const existingArtist = await getArtist(existingArtistId);
+    const aggregatedArtistProfile = getAggregatedProfile(
+      artist,
+      existingArtist,
+    );
+
+    const artistId = await updateArtistProfile(
+      account_id,
+      aggregatedArtistProfile.image,
+      aggregatedArtistProfile.name,
+      aggregatedArtistProfile.instruction,
+      aggregatedArtistProfile.label,
+      aggregatedArtistProfile.knowledges,
+      existingArtistId,
+    );
+
+    aggregatedArtistProfile.artist_social_links.forEach(
+      async (link: SOCIAL_LINK) => {
+        await createSocialLink(artistId, link.type, link.link);
+      },
+    );
+
+    const aggregatedSocialProfile = getAggregatedSocialProfile(
+      funnel_analyses,
+      existingArtist,
+    );
+    await saveFunnelProfile({
+      ...aggregatedSocialProfile,
+      analysis_id: analysisId,
+      artistId: artistId,
+    });
+
+    const comments = getComments(funnel_analyses);
+    const segments = await getSegments(comments.slice(0, 500));
+    const segmentsWithIcons = await getSegmentsWithIcons(segments, analysisId);
+    await saveFunnelSegments(segmentsWithIcons);
+
+    if (address) {
+      await trackFunnelAnalysisChat(
+        address,
+        handle,
+        artistId,
+        chat_id,
+        "Wrapped",
+      );
+    }
+    await updateAnalysisStatus(
+      chat_id,
+      analysisId,
+      Funnel_Type.WRAPPED,
+      STEP_OF_ANALYSIS.WRAPPED_COMPLETED,
+    );
+    return;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export default createWrappedAnalysis;

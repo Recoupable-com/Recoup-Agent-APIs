@@ -6,19 +6,19 @@ import { Stagehand } from "@browserbasehq/stagehand";
 import { Request, Response } from "express";
 import { z } from "zod";
 
-const stagehand = new Stagehand({
-  env: "LOCAL",
-  verbose: 1,
-  debugDom: true,
-  enableCaching: false,
-});
-
 export const get_tiktok_profile = async (req: Request, res: Response) => {
   const { handle } = req.query;
 
   try {
-    stagehand.init({ modelName: "gpt-4o-mini" });
+    const stagehand = new Stagehand({
+      env: "LOCAL",
+      verbose: 1,
+      debugDom: true,
+      enableCaching: false,
+      headless: false
+    });
 
+    await stagehand.init({ modelName: "gpt-4o-mini" });
     await stagehand.page.goto(`https://tiktok.com/@${handle}`);
 
     const data = await stagehand.page.extract({

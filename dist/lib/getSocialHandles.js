@@ -36,10 +36,7 @@ const getSocialHandles = async (handle) => {
                 content: `Response should be in JSON format. {"data": {"twitter": string, "instagram": string, "spotify": string, "tiktok": string}}.`,
             },
         ], 1111);
-        const handles = JSON.parse(content
-            ?.replace(/\n/g, "")
-            ?.replace(/json/g, "")
-            ?.replace(/```/g, ""))?.data || {
+        const handles = JSON.parse(content?.replace(/\n/g, "")?.replace(/json/g, "")?.replace(/```/g, ""))?.data || {
             twitter: "",
             instagram: "",
             spotify: "",

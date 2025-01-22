@@ -10,16 +10,17 @@ const serverClient_1 = __importDefault(require("../lib/supabase/serverClient"));
 const getSocialHandles_1 = __importDefault(require("../lib/getSocialHandles"));
 const stagehand_1 = require("@browserbasehq/stagehand");
 const zod_1 = require("zod");
-const stagehand = new stagehand_1.Stagehand({
-    env: "LOCAL",
-    verbose: 1,
-    debugDom: true,
-    enableCaching: false,
-});
 const get_tiktok_profile = async (req, res) => {
     const { handle } = req.query;
     try {
-        stagehand.init({ modelName: "gpt-4o-mini" });
+        const stagehand = new stagehand_1.Stagehand({
+            env: "LOCAL",
+            verbose: 1,
+            debugDom: true,
+            enableCaching: false,
+            headless: false
+        });
+        await stagehand.init({ modelName: "gpt-4o-mini" });
         await stagehand.page.goto(`https://tiktok.com/@${handle}`);
         const data = await stagehand.page.extract({
             instruction: "extract the bio of the page",

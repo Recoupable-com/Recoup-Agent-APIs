@@ -44,6 +44,7 @@ const getInstagramAnalysis = async (
       "instagram",
       `https://instagram.com/${scrapedProfile?.name}`,
     );
+
     const postComments = await analyzeComments(
       chat_id,
       analysisId,

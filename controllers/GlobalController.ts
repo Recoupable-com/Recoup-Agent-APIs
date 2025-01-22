@@ -6,8 +6,8 @@ import { Stagehand } from "@browserbasehq/stagehand";
 import { Request, Response } from "express";
 import { z } from "zod";
 
-export const get_tiktok_profile = async (req: Request, res: Response) => {
-  const { handle } = req.query;
+export const get_profile = async (req: Request, res: Response) => {
+  const { handle, type } = req.query;
 
   try {
     const stagehand = new Stagehand({
@@ -20,14 +20,21 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
     });
 
     await stagehand.init();
-    await stagehand.page.goto(`https://tiktok.com/@${handle}`);
+    let profileUrl = "";
+    if (type === "tiktok") profileUrl = `https://tiktok.com/@${handle}`;
+    if (type === "twitter") profileUrl = `https://x.com/${handle}`;
 
-    const { bio, username, followers } = await stagehand.page.extract({
-      instruction: "Extract the bio, username, followers, of the page.",
+    if (!profileUrl) throw new Error("Invalid handle");
+
+    await stagehand.page.goto(profileUrl);
+
+    const { bio, username, followers, email } = await stagehand.page.extract({
+      instruction: "Extract the email, bio, username, followers, of the page.",
       schema: z.object({
         bio: z.string(),
         username: z.string(),
         followers: z.number(),
+        email: z.string(),
       }),
     });
 
@@ -37,6 +44,7 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
         bio,
         username,
         followers,
+        email,
       },
     });
   } catch (error) {

@@ -22,14 +22,17 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
     await stagehand.init();
     await stagehand.page.goto(`https://tiktok.com/@${handle}`);
 
-    const { bio, username, followers } = await stagehand.page.extract({
-      instruction: "extract the bio, username, followers of the page",
-      schema: z.object({
-        bio: z.string(),
-        username: z.string(),
-        followers: z.number(),
-      }),
-    });
+    const { bio, username, followers, videoUrls } =
+      await stagehand.page.extract({
+        instruction:
+          "extract the bio, username, followers, videoUrls of the page",
+        schema: z.object({
+          bio: z.string(),
+          username: z.string(),
+          followers: z.number(),
+          videoUrls: z.array(z.string()),
+        }),
+      });
 
     return res.status(200).json({
       success: true,
@@ -37,6 +40,7 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
         bio,
         username,
         followers,
+        videoUrls,
       },
     });
   } catch (error) {

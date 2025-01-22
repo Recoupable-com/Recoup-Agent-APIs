@@ -15,7 +15,7 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
       verbose: 1,
       debugDom: true,
       enableCaching: false,
-      headless: false,
+      headless: true,
       modelName: "gpt-4o-mini",
     });
 

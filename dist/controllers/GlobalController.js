@@ -18,9 +18,10 @@ const get_tiktok_profile = async (req, res) => {
             verbose: 1,
             debugDom: true,
             enableCaching: false,
-            headless: false
+            headless: false,
+            modelName: "gpt-4o-mini",
         });
-        await stagehand.init({ modelName: "gpt-4o-mini" });
+        await stagehand.init();
         await stagehand.page.goto(`https://tiktok.com/@${handle}`);
         const data = await stagehand.page.extract({
             instruction: "extract the bio of the page",

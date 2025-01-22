@@ -2,6 +2,39 @@ import getActorStatus from "../lib/apify/getActorStatus.js";
 import getDataset from "../lib/apify/getDataset.js";
 import supabase from "../lib/supabase/serverClient.js";
 import getSocialHandles from "../lib/getSocialHandles.js";
+import { Stagehand } from "@browserbasehq/stagehand";
+
+const stagehand = new Stagehand({
+  env: "LOCAL",
+  verbose: 1,
+  debugDom: true,
+  enableCaching: false,
+});
+
+export const get_tiktok_profile = async (req, res) => {
+  const { handle } = req.query;
+
+  try {
+    stagehand.init({ modelName: "gpt-4o" });
+
+    await stagehand.page.goto(`https://tiktok.com/@${handle}`);
+
+    const data = await stagehand.page.extract({
+      instruction: "extract the bio of the page",
+      schema: z.object({
+        bio: z.string(),
+      }),
+    });
+
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error });
+  }
+};
 
 export const get_dataset_status = async (req, res) => {
   const { datasetId } = req.query;

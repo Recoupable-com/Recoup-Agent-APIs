@@ -19,4 +19,6 @@ routes.get('/get_social_handles', GlobalController.get_social_handles);
 routes.get('/autopilot' , PilotController.run_agent) ;
 routes.get('/autopilot/status' , GlobalController.get_autopilot) ;
 
+routes.get('/get_tiktok_profile', GlobalController.get_tiktok_profile);
+
 export default routes;

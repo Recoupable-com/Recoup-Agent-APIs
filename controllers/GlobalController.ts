@@ -23,31 +23,25 @@ export const get_profile = async (req: Request, res: Response) => {
     let profileUrl = "";
     if (type === "tiktok") profileUrl = `https://tiktok.com/@${handle}`;
     if (type === "twitter") profileUrl = `https://x.com/${handle}`;
-    if (type === "spotify")
-      profileUrl = `https://open.spotify.com/artist/${handle}`;
-    if (type === "instagram") profileUrl = `https://instagram.com/${handle}`;
 
     if (!profileUrl) throw new Error("Invalid handle");
 
     await stagehand.page.goto(profileUrl);
 
-    const { bio, username, followers, email, about } =
-      await stagehand.page.extract({
-        instruction:
-          "Extract the email, bio, username, followers, of the page.",
-        schema: z.object({
-          bio: z.string(),
-          username: z.string(),
-          followers: z.number(),
-          email: z.string(),
-          about: z.string(),
-        }),
-      });
+    const { bio, username, followers, email } = await stagehand.page.extract({
+      instruction: "Extract the email, bio, username, followers, of the page.",
+      schema: z.object({
+        bio: z.string(),
+        username: z.string(),
+        followers: z.number(),
+        email: z.string(),
+      }),
+    });
 
     return res.status(200).json({
       success: true,
       data: {
-        bio: bio || about,
+        bio,
         username,
         followers,
         email,

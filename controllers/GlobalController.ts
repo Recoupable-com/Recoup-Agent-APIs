@@ -20,9 +20,14 @@ export const get_profile = async (req: Request, res: Response) => {
     });
 
     await stagehand.init();
-    let profileUrl = `https://tiktok.com/@${handle}`;
+    let profileUrl = "";
+    if (type === "tiktok") profileUrl = `https://tiktok.com/@${handle}`;
     if (type === "twitter") profileUrl = `https://x.com/${handle}`;
+    if (type === "spotify")
+      profileUrl = `https://open.spotify.com/artist/${handle}`;
     if (type === "instagram") profileUrl = `https://instagram.com/${handle}`;
+
+    if (!profileUrl) throw new Error("Invalid handle");
 
     await stagehand.page.goto(profileUrl);
 

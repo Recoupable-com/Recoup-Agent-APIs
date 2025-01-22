@@ -22,15 +22,15 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
     await stagehand.init();
     await stagehand.page.goto(`https://tiktok.com/@${handle}`);
 
-    const { bio, username, followers, videoUrls } =
+    const { bio, username, followers, postItemHrefLinks } =
       await stagehand.page.extract({
         instruction:
-          "extract the bio, username, followers, videoUrls of the page",
+          "extract the bio, username, followers, postItemHrefLinks of the page",
         schema: z.object({
           bio: z.string(),
           username: z.string(),
           followers: z.number(),
-          videoUrls: z.array(z.string()),
+          postItemHrefLinks: z.array(z.string()),
         }),
       });
 
@@ -40,7 +40,7 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
         bio,
         username,
         followers,
-        videoUrls,
+        postItemHrefLinks,
       },
     });
   } catch (error) {

@@ -26,6 +26,7 @@ export const get_profile = async (req: Request, res: Response) => {
 
     if (!profileUrl) throw new Error("Invalid handle");
 
+    console.log("ZIAD", profileUrl);
     await stagehand.page.goto(profileUrl);
 
     const { bio, username, followers, email } = await stagehand.page.extract({

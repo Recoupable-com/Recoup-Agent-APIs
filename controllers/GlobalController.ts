@@ -22,11 +22,9 @@ export const get_profile = async (req: Request, res: Response) => {
     await stagehand.init();
     let profileUrl = "";
     if (type === "tiktok") profileUrl = `https://tiktok.com/@${handle}`;
-    if (type === "twitter") profileUrl = `https://x.com/${handle}`;
 
     if (!profileUrl) throw new Error("Invalid handle");
 
-    console.log("ZIAD", profileUrl);
     await stagehand.page.goto(profileUrl);
 
     const { bio, username, followers, email } = await stagehand.page.extract({

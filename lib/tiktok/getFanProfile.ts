@@ -33,6 +33,7 @@ const getFanProfile = async (handle: string) => {
       bio,
       avatar,
       email,
+      pageContent
     };
   } catch (error) {
     console.error(error);

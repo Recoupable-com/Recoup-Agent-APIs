@@ -10,6 +10,7 @@ const getFanProfile = async (handle: string) => {
 
   return {
     followerCount,
+    content: response.data
   };
 };
 

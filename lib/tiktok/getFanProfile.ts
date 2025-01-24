@@ -16,6 +16,7 @@ const getFanProfile = async (handle: string) => {
 
     await stagehand.init();
     await stagehand.page.goto(profilePageUrl);
+    await stagehand.page.waitForLoadState("networkidle");
     const pageContent = await stagehand.page.content();
     console.log("ZIAD", pageContent);
     let $ = cheerio.load(pageContent);

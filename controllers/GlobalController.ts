@@ -36,7 +36,6 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
 export const get_twitter_profile = async (req: Request, res: Response) => {
   const { handle } = req.query;
   const scraper = new Scraper();
-
   try {
     const profile = await getTwitterFanProfile(scraper, handle as string);
     return res.status(200).json({ profile });

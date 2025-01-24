@@ -51,29 +51,27 @@ export const get_fans_segments = async (req: Request, res: Response) => {
             ?.replace(/```/g, ""),
         )?.data || [];
 
-    const profilesPromise = Object.entries(fansSegments).map(
-      async ([username, segment]: any) => {
-        try {
-          const profile: any = await scraper.getProfile(username);
-          const avatar = profile.avatar;
-          const bio = profile.biography;
-          const followerCount = profile.followersCount;
-          const handle = username;
-          const email = extracMails(bio);
+    const profilesPromise = fansSegments.map(async (segment: any) => {
+      try {
+        const profile: any = await scraper.getProfile(Object.keys(segment)[0]);
+        const avatar = profile.avatar;
+        const bio = profile.biography;
+        const followerCount = profile.followersCount;
+        const handle = Object.keys(segment)[0];
+        const email = extracMails(bio);
 
-          return {
-            handle,
-            email,
-            bio,
-            segment,
-            followerCount,
-            avatar,
-          };
-        } catch(error) {
-          return null
-        }
-      },
-    );
+        return {
+          handle,
+          email,
+          bio,
+          segment: Object.values(segment)[0],
+          followerCount,
+          avatar,
+        };
+      } catch (error) {
+        return null;
+      }
+    });
 
     const profiles = await Promise.all(profilesPromise);
 

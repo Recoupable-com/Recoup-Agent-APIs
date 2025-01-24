@@ -1,18 +1,15 @@
-import extracMails from "../extracMails";
+import axios from "axios";
+import * as cheerio from "cheerio";
 
-const getFanProfile = async (scraper: any, handle: string) => {
-  const profile: any = await scraper.getProfile(handle);
-  const avatar = profile.avatar;
-  const bio = profile.biography;
-  const followerCount = profile.followersCount;
-  const email = extracMails(bio);
+const getFanProfile = async (handle: string) => {
+  const profilePageUrl = `https://x.com/${handle}`;
+  const response = await axios.get(profilePageUrl);
+  let $ = cheerio.load(response.data);
+
+  const followerCount = $("[href*='verified_followers']").first();
 
   return {
-    avatar,
-    bio,
     followerCount,
-    email,
-    handle,
   };
 };
 

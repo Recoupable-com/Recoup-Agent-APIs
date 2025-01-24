@@ -6,17 +6,18 @@ import { Stagehand } from "@browserbasehq/stagehand";
 import { Request, Response } from "express";
 import { z } from "zod";
 import { Scraper } from "agent-twitter-client";
-import getFansProfiles from "../lib/twitter/getFansProfiles";
+import getFansProfiles from "../lib/getFansSegments";
 import getTikTokFanProfile from "../lib/tiktok/getFanProfile";
+import getTwitterFanProfile from "../lib/twitter/getFanProfile";
 
 const scraper = new Scraper();
 
 export const get_fans_segments = async (req: Request, res: Response) => {
   try {
-    const twitter_analytics_id = "e5f3e98b-2af0-4740-8eb4-fd0718e0535c";
-    const profiles = await getFansProfiles(scraper, twitter_analytics_id);
+    const { reportId } = req.query;
+    const fansSegments = await getFansProfiles(reportId as string);
 
-    return res.status(500).json({ profiles });
+    return res.status(500).json({ data: fansSegments });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });
@@ -27,6 +28,17 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
   const { handle } = req.query;
   try {
     const profile = await getTikTokFanProfile(handle as string);
+    return res.status(200).json({ profile });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error });
+  }
+};
+
+export const get_twitter_profile = async (req: Request, res: Response) => {
+  const { handle } = req.query;
+  try {
+    const profile = await getTwitterFanProfile(scraper, handle as string);
     return res.status(200).json({ profile });
   } catch (error) {
     console.error(error);

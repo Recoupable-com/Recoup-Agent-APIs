@@ -2,7 +2,7 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 
 const getFanProfile = async (handle: string) => {
-  const profilePageUrl = `https://x.com/${handle}`;
+  const profilePageUrl = `https://x.com/sweetman_eth`;
   const response = await axios.get(profilePageUrl);
   let $ = cheerio.load(response.data);
 

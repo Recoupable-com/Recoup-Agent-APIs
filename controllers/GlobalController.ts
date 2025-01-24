@@ -53,21 +53,25 @@ export const get_fans_segments = async (req: Request, res: Response) => {
 
     const profilesPromise = Object.entries(fansSegments).map(
       async ([username, segment]: any) => {
-        const profile: any = await scraper.getProfile(username);
-        const avatar = profile.avatar;
-        const bio = profile.biography;
-        const followerCount = profile.followersCount;
-        const handle = username;
-        const email = extracMails(bio);
+        try {
+          const profile: any = await scraper.getProfile(username);
+          const avatar = profile.avatar;
+          const bio = profile.biography;
+          const followerCount = profile.followersCount;
+          const handle = username;
+          const email = extracMails(bio);
 
-        return {
-          handle,
-          email,
-          bio,
-          segment,
-          followerCount,
-          avatar,
-        };
+          return {
+            handle,
+            email,
+            bio,
+            segment,
+            followerCount,
+            avatar,
+          };
+        } catch(error) {
+          return null
+        }
       },
     );
 

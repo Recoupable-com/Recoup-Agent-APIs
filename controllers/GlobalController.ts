@@ -21,8 +21,6 @@ export const get_fans_segments = async (req: Request, res: Response) => {
       comment: comment.comment,
     }));
 
-    const context = JSON.stringify(segments, comments);
-
     const content = await getChatCompletions(
       [
         {

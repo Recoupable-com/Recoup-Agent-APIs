@@ -7,7 +7,8 @@ const getFansSegments = async (chat_id: string) => {
     const funnel_analyses: any = await getAnalyses(chat_id);
     const segments = funnel_analyses
       .map((analysis: any) => analysis.funnel_analytics_segments)
-      .flat();
+      .flat()
+      .map((segment: any) => segment.name);
     const comments = funnel_analyses
       .map((analysis: any) => analysis.funnel_analytics_comments)
       .flat()
@@ -16,12 +17,14 @@ const getFansSegments = async (chat_id: string) => {
         comment: comment.comment,
       }));
 
+    console.log("ZIAD", segments, comments);
+
     const content = await getChatCompletions(
       [
         {
           role: "user",
           content: `
-            [COMMENTS]: ${JSON.stringify(comments)}
+            [COMMENTS]: ${JSON.stringify(comments.slice(0, 500))}
             [SEGMENTS]: ${JSON.stringify(segments)}`,
         },
         {

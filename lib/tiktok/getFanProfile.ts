@@ -19,14 +19,13 @@ const getFanProfile = async (handle: string) => {
         if (!scriptSrc && scriptContent) {
           const metadata = JSON.parse(scriptContent);
           if (Object.keys(metadata)[0] === "__DEFAULT_SCOPE__")
-            userInfo = metadata["__DEFAULT_SCOPE__"]["webapp.user-detail"];
+            userInfo =
+              metadata["__DEFAULT_SCOPE__"]["webapp.user-detail"]["userInfo"];
         }
       } catch (error) {
         console.error(error);
       }
     });
-
-    console.log("ZIAD", userInfo);
 
     return {
       handle: userInfo?.user?.uniqueId || handle,
@@ -34,8 +33,6 @@ const getFanProfile = async (handle: string) => {
       avatar: userInfo?.user?.avatarThumb || "",
       followerCount: userInfo?.stats?.followerCount || 0,
       email: extracMails(userInfo?.user?.signature || ""),
-      userInfo,
-      a,
     };
   } catch (error) {
     console.error(error);

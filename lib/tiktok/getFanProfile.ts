@@ -1,30 +1,16 @@
+import * as cheerio from "cheerio";
+import axios from "axios";
 import extracMails from "../extracMails";
-import { Stagehand } from "@browserbasehq/stagehand";
-import { z } from "zod";
 
 const getFanProfile = async (handle: string) => {
   try {
-    const profilePageUrl = `https://tiktok.com/${handle}`;
-    const stagehand = new Stagehand({
-      env: "LOCAL",
-      verbose: 1,
-      debugDom: true,
-      enableCaching: false,
-      headless: true,
-      modelName: "gpt-4o-mini",
-    });
+    const profilePageUrl = `https://tiktok.com/@${handle}`;
+    const response = await axios.get(profilePageUrl);
+    let $ = cheerio.load(response.data);
 
-    await stagehand.init();
-    await stagehand.page.goto(profilePageUrl);
-    const { bio, followerCount, avatarUrl } = await stagehand.page.extract({
-      instruction: "Extract the bio, followers, avatarUrl of the page.",
-      schema: z.object({
-        bio: z.string(),
-        followerCount: z.number(),
-        avatarUrl: z.string(),
-      }),
-      domSettleTimeoutMs: 5000,
-    });
+    const followerCount = $("[title='Followers']").text();
+    const bio = $("[data-e2e='user-bio']").text();
+    const avatar = $("[class*='ImgAvatar']").first().text();
 
     const email = extracMails(bio);
 
@@ -32,7 +18,7 @@ const getFanProfile = async (handle: string) => {
       handle,
       followerCount,
       bio,
-      avatar: avatarUrl,
+      avatar,
       email,
     };
   } catch (error) {

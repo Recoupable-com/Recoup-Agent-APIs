@@ -17,8 +17,6 @@ const getFansSegments = async (chat_id: string) => {
         comment: comment.comment,
       }));
 
-    console.log("ZIAD", segments, comments);
-
     const content = await getChatCompletions(
       [
         {

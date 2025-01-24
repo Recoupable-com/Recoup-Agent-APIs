@@ -25,12 +25,15 @@ const getFanProfile = async (handle: string) => {
       }
     });
 
+    console.log("ZIAD", userInfo)
+
     return {
       handle: userInfo?.user?.uniqueId || handle,
       bio: userInfo?.user?.signature || "",
       avatar: userInfo?.user?.avatarThumb || "",
-      followerCount: userInfo?.stats?.followerCount,
+      followerCount: userInfo?.stats?.followerCount || 0,
       email: extracMails(userInfo?.user?.signature || ""),
+      userInfo
     };
   } catch (error) {
     console.error(error);

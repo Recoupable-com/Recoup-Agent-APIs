@@ -5,6 +5,7 @@ import getSocialHandles from "../lib/getSocialHandles";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { Request, Response } from "express";
 import { z } from "zod";
+import { Scraper } from "agent-twitter-client";
 import getFansProfiles from "../lib/getFansSegments";
 import getTikTokFanProfile from "../lib/tiktok/getFanProfile";
 import getTwitterFanProfile from "../lib/twitter/getFanProfile";
@@ -34,8 +35,10 @@ export const get_tiktok_profile = async (req: Request, res: Response) => {
 
 export const get_twitter_profile = async (req: Request, res: Response) => {
   const { handle } = req.query;
+  const scraper = new Scraper();
+
   try {
-    const profile = await getTwitterFanProfile(handle as string);
+    const profile = await getTwitterFanProfile(scraper, handle as string);
     return res.status(200).json({ profile });
   } catch (error) {
     console.error(error);

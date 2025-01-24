@@ -28,7 +28,8 @@ export const get_fans_segments = async (req: Request, res: Response) => {
         {
           role: "user",
           content: `
-        Context: ${JSON.stringify(context)}`,
+        [COMMENTS]: ${JSON.stringify(comments)}
+        [SEGMENTS]: ${JSON.stringify(segments)}`,
         },
         {
           role: "system",

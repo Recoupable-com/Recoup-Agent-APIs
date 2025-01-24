@@ -15,9 +15,7 @@ const getFanProfile = async (handle: string) => {
     // const email = extracMails(bio);
 
     return {
-      followerCount,
-      avatar,
-      content: $.html()
+      data: response.data,
     };
   } catch (error) {
     console.error(error);

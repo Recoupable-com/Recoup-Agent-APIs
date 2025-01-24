@@ -13,7 +13,6 @@ const getVideoComments = async (
 ) => {
   try {
     const datasetId = await getVideoCommentsDatasetId(postURLs);
-    console.log("ZIAD", datasetId)
     let attempts = 0;
     const maxAttempts = 30;
     let progress = 0;

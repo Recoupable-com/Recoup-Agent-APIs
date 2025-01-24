@@ -1,6 +1,6 @@
-import * as cheerio from "cheerio";
 import extracMails from "../extracMails";
 import { Stagehand } from "@browserbasehq/stagehand";
+import { z } from "zod";
 
 const getFanProfile = async (handle: string) => {
   try {
@@ -16,14 +16,15 @@ const getFanProfile = async (handle: string) => {
 
     await stagehand.init();
     await stagehand.page.goto(profilePageUrl);
-    await stagehand.page.waitForLoadState("networkidle");
-    const pageContent = await stagehand.page.content();
-    console.log("ZIAD", pageContent);
-    let $ = cheerio.load(pageContent);
-
-    const followerCount = $("[title='Followers']").text();
-    const bio = $("[data-e2e='user-bio']").text();
-    const avatar = $("[class*='ImgAvatar']").first().text();
+    const { bio, followerCount, avatarUrl } = await stagehand.page.extract({
+      instruction: "Extract the bio, followers, avatarUrl of the page.",
+      schema: z.object({
+        bio: z.string(),
+        followerCount: z.number(),
+        avatarUrl: z.string(),
+      }),
+      domSettleTimeoutMs: 5000,
+    });
 
     const email = extracMails(bio);
 
@@ -31,9 +32,8 @@ const getFanProfile = async (handle: string) => {
       handle,
       followerCount,
       bio,
-      avatar,
+      avatar: avatarUrl,
       email,
-      pageContent
     };
   } catch (error) {
     console.error(error);

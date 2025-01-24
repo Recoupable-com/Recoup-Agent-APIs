@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 import axios from "axios";
 import extracMails from "../extracMails";
+import uploadPfpToIpfs from "../ipfs/uploadPfpToIpfs";
 
 const getFanProfile = async (handle: string) => {
   try {
@@ -26,11 +27,12 @@ const getFanProfile = async (handle: string) => {
         console.error(error);
       }
     });
+    const avatar = await uploadPfpToIpfs(userInfo?.user?.avatarThumb || "");
 
     return {
       handle: userInfo?.user?.uniqueId || handle,
       bio: userInfo?.user?.signature || "",
-      avatar: userInfo?.user?.avatarThumb || "",
+      avatar,
       followerCount: userInfo?.stats?.followerCount || 0,
       email: extracMails(userInfo?.user?.signature || ""),
     };

@@ -10,6 +10,8 @@ import analyzeComments from "../lib/twitter/analyzeComments";
 import analyzeSegments from "../lib/analyzeSegments";
 import getSocialProfile from "../lib/twitter/getSocialProfile";
 
+const scraper = new Scraper();
+
 const getTwitterAnalysis = async (
   handle: string,
   chat_id: string,
@@ -18,7 +20,6 @@ const getTwitterAnalysis = async (
   isWrapped: boolean,
   existingArtistId: string | null = null,
 ) => {
-  const scraper = new Scraper();
   const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TWITTER);
   const analysisId = newAnalysis.id;
   try {

@@ -6,6 +6,7 @@ const getFanProfile = async (handle: string) => {
   try {
     const profilePageUrl = `https://tiktok.com/${handle}`;
     const response = await axios.get(profilePageUrl);
+    console.log("ZIAD", response.data);
     let $ = cheerio.load(response.data);
 
     const followerCount = $("[title='Followers']").text();

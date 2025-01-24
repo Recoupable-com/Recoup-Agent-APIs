@@ -26,7 +26,7 @@ const getTikTokAnalysis = async (
       await updateAnalysisStatus(
         chat_id,
         analysisId,
-        Funnel_Type.INSTAGRAM,
+        Funnel_Type.TIKTOK,
         analyzedProfileError?.status,
       );
       return;

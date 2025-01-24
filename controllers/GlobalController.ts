@@ -8,6 +8,10 @@ import { z } from "zod";
 import getChatCompletions from "../lib/getChatCompletions";
 import getFunnelAnalysis from "../lib/supabase/getFunnelAnalysis";
 import { instructions } from "../lib/instructions";
+import { Scraper } from "agent-twitter-client";
+import extracMails from "../lib/extracMails";
+
+const scraper = new Scraper();
 
 export const get_fans_segments = async (req: Request, res: Response) => {
   try {
@@ -37,19 +41,39 @@ export const get_fans_segments = async (req: Request, res: Response) => {
       2222,
     );
 
+    let fansSegments = [];
     if (content)
-      return res.status(200).json({
-        data:
-          JSON.parse(
-            content
-              ?.replace(/\n/g, "")
-              ?.replace(/json/g, "")
-              ?.replace(/```/g, ""),
-          )?.data || [],
-        segments,
-        comments,
-      });
-    return res.status(500).json({ error: "No content received from OpenAI" });
+      fansSegments =
+        JSON.parse(
+          content
+            ?.replace(/\n/g, "")
+            ?.replace(/json/g, "")
+            ?.replace(/```/g, ""),
+        )?.data || [];
+
+    const profilesPromise = Object.entries(fansSegments).map(
+      async ([username, segment]: any) => {
+        const profile: any = await scraper.getProfile(username);
+        const avatar = profile.avatar;
+        const bio = profile.biography;
+        const followerCount = profile.followersCount;
+        const handle = username;
+        const email = extracMails(bio);
+
+        return {
+          handle,
+          email,
+          bio,
+          segment,
+          followerCount,
+          avatar,
+        };
+      },
+    );
+
+    const profiles = await Promise.all(profilesPromise);
+
+    return res.status(500).json({ profiles });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });

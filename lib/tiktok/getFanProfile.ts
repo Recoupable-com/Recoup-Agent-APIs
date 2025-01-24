@@ -23,7 +23,7 @@ const getFanProfile = async (handle: string) => {
     };
   } catch (error) {
     console.error(error);
-    return "";
+    return null;
   }
 };
 

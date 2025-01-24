@@ -20,5 +20,6 @@ routes.get('/autopilot' , PilotController.run_agent as any) ;
 routes.get('/autopilot/status' , GlobalController.get_autopilot as any) ;
 
 routes.get('/get_profile', GlobalController.get_profile as any);
+routes.get('/get_fans_segments', GlobalController.get_fans_segments as any);
 
 export default routes;

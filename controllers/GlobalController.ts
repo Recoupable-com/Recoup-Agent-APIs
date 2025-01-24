@@ -5,6 +5,45 @@ import getSocialHandles from "../lib/getSocialHandles";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { Request, Response } from "express";
 import { z } from "zod";
+import getChatCompletions from "../lib/getChatCompletions";
+import getFunnelAnalysis from "../lib/supabase/getFunnelAnalysis";
+import { instructions } from "../lib/instructions";
+
+export const get_fans_segments = async (req: Request, res: Response) => {
+  try {
+    const twitter_analytics_id = "e5f3e98b-2af0-4740-8eb4-fd0718e0535c";
+    const data: any = await getFunnelAnalysis(twitter_analytics_id);
+    const segments = data.funnel_analytics_segments.map(
+      (segment: any) => segment.name,
+    );
+    const comments = data.funnel_analytics_comments.map((comment: any) => ({
+      username: comment.username,
+      comment: comment.comment,
+    }));
+
+    const context = JSON.stringify(segments, comments);
+
+    const content = await getChatCompletions(
+      [
+        {
+          role: "user",
+          content: `
+        Context: ${JSON.stringify(context)}`,
+        },
+        {
+          role: "system",
+          content: `${instructions.sort_fans_on_segments} \n Response should be in JSON format. {"data": [{ "string": string }, { "string": string }]}.`,
+        },
+      ],
+      2222,
+    );
+
+    res.status(500).json({ content, segments, comments });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error });
+  }
+};
 
 export const get_profile = async (req: Request, res: Response) => {
   const { handle, type } = req.query;

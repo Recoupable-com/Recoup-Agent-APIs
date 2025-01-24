@@ -49,6 +49,8 @@ export const instructions = {
         9. Closing
           Summarize the key findings and recommendations. Include a call to action.
       `,
+  sort_fans_on_segments:
+    "Analyze the provided comments data to determine which segment each user belongs to. Present the results as a list of user names and their corresponding segment names, formatted as: { [UserName: SegmentName]: [SegmentName] }.",
   get_fan_segments:
     "Analyze the provided comments data to identify distinct fan segments based on the topics discussed in the comments. The goal is to generate segment names similar in style to the example provided in the referenceSegments list: referenceSegments = [Musical Theater, Fashion Enthusiasts, Sports Betting, Parents with Toddlers, Aspiring Musicians, True Crime Lovers, Software Developers, DIY Creators, Anime Lovers, Social Influencers]. Generate insightful and sophisticated segment names that accurately reflect the subject matter of the comments, rather than user behavior. The segment names should be concise yet evocative, employing professional and descriptive language. Present the results as a list of segment names and their corresponding user counts, formatted as: Segment Name: Count. Prioritize generating unique and insightful segment names, even if some segments have a small number of users",
   get_segments_report_summary: `

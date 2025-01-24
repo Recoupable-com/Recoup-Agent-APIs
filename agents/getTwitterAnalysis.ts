@@ -45,6 +45,7 @@ const getTwitterAnalysis = async (
       analysisId,
       handle,
     );
+
     await analyzeSegments(chat_id, analysisId, comments, Funnel_Type.TWITTER);
 
     await trackFunnelAnalysisChat(

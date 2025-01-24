@@ -5,6 +5,82 @@ import getSocialHandles from "../lib/getSocialHandles";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { Request, Response } from "express";
 import { z } from "zod";
+import getChatCompletions from "../lib/getChatCompletions";
+import getFunnelAnalysis from "../lib/supabase/getFunnelAnalysis";
+import { instructions } from "../lib/instructions";
+import { Scraper } from "agent-twitter-client";
+import extracMails from "../lib/extracMails";
+
+const scraper = new Scraper();
+
+export const get_fans_segments = async (req: Request, res: Response) => {
+  try {
+    const twitter_analytics_id = "e5f3e98b-2af0-4740-8eb4-fd0718e0535c";
+    const data: any = await getFunnelAnalysis(twitter_analytics_id);
+    const segments = data.funnel_analytics_segments.map(
+      (segment: any) => segment.name,
+    );
+    const comments = data.funnel_analytics_comments.map((comment: any) => ({
+      username: comment.username,
+      comment: comment.comment,
+    }));
+
+    const content = await getChatCompletions(
+      [
+        {
+          role: "user",
+          content: `
+        [COMMENTS]: ${JSON.stringify(comments)}
+        [SEGMENTS]: ${JSON.stringify(segments)}`,
+        },
+        {
+          role: "system",
+          content: `${instructions.sort_fans_on_segments} \n Response should be in JSON format. {"data": [{ "string": string }, { "string": string }]}.`,
+        },
+      ],
+      2222,
+    );
+
+    let fansSegments = [];
+    if (content)
+      fansSegments =
+        JSON.parse(
+          content
+            ?.replace(/\n/g, "")
+            ?.replace(/json/g, "")
+            ?.replace(/```/g, ""),
+        )?.data || [];
+
+    const profilesPromise = fansSegments.map(async (segment: any) => {
+      try {
+        const profile: any = await scraper.getProfile(Object.keys(segment)[0]);
+        const avatar = profile.avatar;
+        const bio = profile.biography;
+        const followerCount = profile.followersCount;
+        const handle = Object.keys(segment)[0];
+        const email = extracMails(bio);
+
+        return {
+          handle,
+          email,
+          bio,
+          segment: Object.values(segment)[0],
+          followerCount,
+          avatar,
+        };
+      } catch (error) {
+        return null;
+      }
+    });
+
+    const profiles = await Promise.all(profilesPromise);
+
+    return res.status(500).json({ profiles });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error });
+  }
+};
 
 export const get_profile = async (req: Request, res: Response) => {
   const { handle, type } = req.query;

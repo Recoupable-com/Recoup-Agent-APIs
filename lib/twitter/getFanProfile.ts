@@ -6,7 +6,7 @@ const getFanProfile = async (handle: string) => {
   const response = await axios.get(profilePageUrl);
   let $ = cheerio.load(response.data);
 
-  const followerCount = $("[href*='verified_followers']").first();
+  const followerCount = $("[href*='verified_followers']").text()
 
   return {
     followerCount,

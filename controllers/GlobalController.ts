@@ -37,7 +37,19 @@ export const get_fans_segments = async (req: Request, res: Response) => {
       2222,
     );
 
-    res.status(500).json({ content, segments, comments });
+    if (content)
+      return res.status(200).json({
+        data:
+          JSON.parse(
+            content
+              ?.replace(/\n/g, "")
+              ?.replace(/json/g, "")
+              ?.replace(/```/g, ""),
+          )?.data || [],
+        segments,
+        comments,
+      });
+    return res.status(500).json({ error: "No content received from OpenAI" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });

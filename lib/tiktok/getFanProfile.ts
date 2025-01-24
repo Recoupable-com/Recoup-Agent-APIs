@@ -9,12 +9,13 @@ const getFanProfile = async (handle: string) => {
     let $ = cheerio.load(response.data);
     const scripts = $("script");
 
+    const a: any = [];
     let userInfo: any = null;
     scripts.each((_, element) => {
       try {
         const scriptContent = $(element).html();
         const scriptSrc = $(element).attr("src");
-
+        a.push(scriptContent || "");
         if (!scriptSrc && scriptContent) {
           const metadata = JSON.parse(scriptContent);
           if (Object.keys(metadata)[0] === "__DEFAULT_SCOPE__")
@@ -25,7 +26,7 @@ const getFanProfile = async (handle: string) => {
       }
     });
 
-    console.log("ZIAD", userInfo)
+    console.log("ZIAD", userInfo);
 
     return {
       handle: userInfo?.user?.uniqueId || handle,
@@ -33,7 +34,8 @@ const getFanProfile = async (handle: string) => {
       avatar: userInfo?.user?.avatarThumb || "",
       followerCount: userInfo?.stats?.followerCount || 0,
       email: extracMails(userInfo?.user?.signature || ""),
-      userInfo
+      userInfo,
+      a,
     };
   } catch (error) {
     console.error(error);

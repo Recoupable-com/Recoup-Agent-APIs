@@ -37,7 +37,6 @@ const getSpotifyAnalysis = async (
     );
     const accessToken = await getAccessToken();
     const data = await getProfile(handle, accessToken);
-    console.log("ZIAD SPOTIFY PROFILE", data)
     const profile = data.profile;
     const artistUri = data.artistId;
     await updateAnalysisStatus(

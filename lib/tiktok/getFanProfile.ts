@@ -4,7 +4,7 @@ import extracMails from "../extracMails";
 
 const getFanProfile = async (handle: string) => {
   try {
-    const profilePageUrl = `https://tiktok.com/@${handle}`;
+    const profilePageUrl = `https://tiktok.com/@sweetman.eth`;
     const response = await axios.get(profilePageUrl);
     let $ = cheerio.load(response.data);
 

@@ -21,5 +21,6 @@ routes.get('/autopilot/status' , GlobalController.get_autopilot as any) ;
 
 routes.get('/get_profile', GlobalController.get_profile as any);
 routes.get('/get_fans_segments', GlobalController.get_fans_segments as any);
+routes.get('/get_tiktok_profile', GlobalController.get_tiktok_profile as any);
 
 export default routes;

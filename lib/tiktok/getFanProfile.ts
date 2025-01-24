@@ -20,6 +20,7 @@ const getFanProfile = async (handle: string) => {
       bio,
       avatar,
       email,
+      data: response.data
     };
   } catch (error) {
     console.error(error);

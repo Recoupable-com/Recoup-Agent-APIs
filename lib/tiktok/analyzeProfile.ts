@@ -16,6 +16,7 @@ const analyzeProfile = async (
     STEP_OF_ANALYSIS.PROFILE,
   );
   const profileDatasetId = await getProfileDatasetId(handle);
+  console.log("ZIAD", profileDatasetId)
   const accountData: any = await getProfile(profileDatasetId);
   if (accountData?.error) {
     return { error: accountData?.error, profile: null, videoUrls: null };

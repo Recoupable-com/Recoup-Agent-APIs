@@ -27,7 +27,8 @@ const getFunnelAnalysis = async (analysis_id: string | null) => {
         *
       )`,
     )
-    .eq("id", analysis_id);
+    .eq("id", analysis_id)
+    .single();
 
   return data;
 };

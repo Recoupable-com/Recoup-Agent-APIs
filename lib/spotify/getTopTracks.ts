@@ -22,8 +22,7 @@ const getTopTracks = async (
     const formattedTracks = getFormattedTracks(topTracks, analysisId);
     return formattedTracks;
   } catch (error) {
-    console.error(error);
-    return { error };
+    throw new Error(error as string);
   }
 };
 

@@ -57,8 +57,7 @@ export const getAllTweets = async (scraper: any, handle: string) => {
     }
     return Array.from(allTweets.values());
   } catch (error) {
-    console.error(error);
-    return { error };
+    throw new Error(error as string);
   }
 };
 

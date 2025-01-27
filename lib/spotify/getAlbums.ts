@@ -24,8 +24,7 @@ const getAlbums = async (
     );
     return formattedSavedAlbums;
   } catch (error) {
-    console.error(error);
-    return { error };
+    throw new Error(error as string);
   }
 };
 

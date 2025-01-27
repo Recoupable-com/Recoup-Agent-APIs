@@ -25,6 +25,7 @@ const analyzeSegments = async (
     funnel_type,
     STEP_OF_ANALYSIS.SAVING_ANALYSIS,
   );
+  return segmentsWithIcons;
 };
 
 export default analyzeSegments;

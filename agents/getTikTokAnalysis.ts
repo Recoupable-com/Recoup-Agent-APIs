@@ -8,6 +8,9 @@ import analyzeVideoComments from "../lib/tiktok/analyzeVideoComments";
 import createArtist from "../lib/createArtist";
 import createWrappedAnalysis from "./createWrappedAnalysis";
 import getSocialProfile from "../lib/tiktok/getSocialProfile";
+import getFanSegments from "../lib/getFanSegments";
+import getSocialProfiles from "../lib/tiktok/getSocialProfiles";
+import saveFansProfiles from "../lib/supabase/saveFansProfiles";
 
 const getTikTokAnalysis = async (
   handle: string,
@@ -17,7 +20,12 @@ const getTikTokAnalysis = async (
   isWrapped: boolean,
   existingArtistId: string | null = null,
 ) => {
-  const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TIKTOK);
+  const newAnalysis = await beginAnalysis(
+    chat_id,
+    handle,
+    Funnel_Type.TIKTOK,
+    existingArtistId,
+  );
   const analysisId = newAnalysis.id;
   try {
     const { scrapedVideoUrls, scrapedProfile, analyzedProfileError } =
@@ -46,7 +54,7 @@ const getTikTokAnalysis = async (
       chat_id,
       analysisId,
     );
-    await analyzeSegments(
+    const segments = await analyzeSegments(
       chat_id,
       analysisId,
       videoComments,
@@ -73,6 +81,9 @@ const getTikTokAnalysis = async (
         address,
         existingArtistId,
       );
+    const fansSegments = await getFanSegments(segments, videoComments);
+    const socialProfiles = await getSocialProfiles(fansSegments, newArtist.id);
+    await saveFansProfiles(socialProfiles);
     return;
   } catch (error) {
     console.error(error);

@@ -8,7 +8,7 @@ const getSocialProfiles = async (
   const socialProfilesPromise = fansSegments.map(async (fanSegment: any) => {
     try {
       const handle = Object.keys(fanSegment)[0];
-      const segment = Object.values(fansSegments)[0];
+      const segment = Object.values(fanSegment)[0];
       const profile = await getFanProfile(scraper, handle);
 
       return {

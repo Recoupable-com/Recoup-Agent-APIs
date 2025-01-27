@@ -9,6 +9,9 @@ import createArtist from "../lib/createArtist";
 import analyzeComments from "../lib/twitter/analyzeComments";
 import analyzeSegments from "../lib/analyzeSegments";
 import getSocialProfile from "../lib/twitter/getSocialProfile";
+import getFanSegments from "../lib/getFanSegments";
+import getSocialProfiles from "../lib/twitter/getSocialProfiles";
+import saveFansProfiles from "../lib/supabase/saveFansProfiles";
 
 const scraper = new Scraper();
 
@@ -20,7 +23,12 @@ const getTwitterAnalysis = async (
   isWrapped: boolean,
   existingArtistId: string | null = null,
 ) => {
-  const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TWITTER);
+  const newAnalysis = await beginAnalysis(
+    chat_id,
+    handle,
+    Funnel_Type.TWITTER,
+    existingArtistId,
+  );
   const analysisId = newAnalysis.id;
   try {
     const scrappedProfile = await getSocialProfile(
@@ -46,7 +54,12 @@ const getTwitterAnalysis = async (
       handle,
     );
 
-    await analyzeSegments(chat_id, analysisId, comments, Funnel_Type.TWITTER);
+    const segments = await analyzeSegments(
+      chat_id,
+      analysisId,
+      comments,
+      Funnel_Type.TWITTER,
+    );
 
     await trackFunnelAnalysisChat(
       address,
@@ -69,6 +82,14 @@ const getTwitterAnalysis = async (
         address,
         existingArtistId,
       );
+    const fansSegments = await getFanSegments(segments, comments);
+    const socialProfiles = await getSocialProfiles(
+      scraper,
+      fansSegments,
+      newArtist.id,
+    );
+    console.log("ZIAD", socialProfiles);
+    await saveFansProfiles(socialProfiles);
     return;
   } catch (error) {
     console.error(error);

@@ -20,7 +20,12 @@ const getTikTokAnalysis = async (
   isWrapped: boolean,
   existingArtistId: string | null = null,
 ) => {
-  const newAnalysis = await beginAnalysis(chat_id, handle, Funnel_Type.TIKTOK);
+  const newAnalysis = await beginAnalysis(
+    chat_id,
+    handle,
+    Funnel_Type.TIKTOK,
+    existingArtistId,
+  );
   const analysisId = newAnalysis.id;
   try {
     const { scrapedVideoUrls, scrapedProfile, analyzedProfileError } =

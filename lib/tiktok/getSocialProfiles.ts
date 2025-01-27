@@ -8,7 +8,7 @@ const getSocialProfiles = async (fansSegments: any, artistId: string) => {
       const profile = await getFanProfile(handle);
 
       return {
-        profile,
+        ...profile,
         segment,
         artistId,
       };

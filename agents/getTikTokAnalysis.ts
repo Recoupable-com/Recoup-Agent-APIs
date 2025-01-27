@@ -8,6 +8,8 @@ import analyzeVideoComments from "../lib/tiktok/analyzeVideoComments";
 import createArtist from "../lib/createArtist";
 import createWrappedAnalysis from "./createWrappedAnalysis";
 import getSocialProfile from "../lib/tiktok/getSocialProfile";
+import getFanSegments from "../lib/getFanSegments";
+import getSocialProfiles from "../lib/tiktok/getSocialProfiles";
 
 const getTikTokAnalysis = async (
   handle: string,
@@ -46,7 +48,7 @@ const getTikTokAnalysis = async (
       chat_id,
       analysisId,
     );
-    await analyzeSegments(
+    const segments = await analyzeSegments(
       chat_id,
       analysisId,
       videoComments,
@@ -73,6 +75,9 @@ const getTikTokAnalysis = async (
         address,
         existingArtistId,
       );
+    const fansSegments = getFanSegments(segments, videoComments);
+    const socialProfiles = getSocialProfiles(fansSegments);
+    console.log("ZIAD", socialProfiles);
     return;
   } catch (error) {
     console.error(error);

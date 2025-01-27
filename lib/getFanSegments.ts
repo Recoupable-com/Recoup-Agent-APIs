@@ -27,8 +27,6 @@ const getFanSegments = async (segments: any, comments: any) => {
       2222,
     );
 
-    console.log("ZIAD", content);
-
     let fansSegments = [];
     if (content)
       fansSegments =

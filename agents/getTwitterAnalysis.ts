@@ -83,13 +83,11 @@ const getTwitterAnalysis = async (
         existingArtistId,
       );
     const fansSegments = await getFanSegments(segments, comments);
-    console.log("ZIAD FANS SEGMENTS", fansSegments);
     const socialProfiles = await getSocialProfiles(
       scraper,
       fansSegments,
       newArtist.id,
     );
-    console.log("ZIAD SOCIAL PROFILES", socialProfiles);
     await saveFansProfiles(socialProfiles);
     return;
   } catch (error) {

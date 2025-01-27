@@ -5,7 +5,6 @@ const getSocialProfiles = async (
   fansSegments: any,
   artistId: string,
 ) => {
-  console.log("ZIAD SOCIAL PROFILES");
   try {
     const socialProfilesPromise = fansSegments.map(async (fanSegment: any) => {
       try {
@@ -13,7 +12,6 @@ const getSocialProfiles = async (
         const segment = Object.values(fanSegment)[0];
         const profile = await getFanProfile(scraper, handle);
 
-        console.log("ZIAD", handle, segment, profile);
         return {
           ...profile,
           segment,

@@ -83,6 +83,7 @@ const getTwitterAnalysis = async (
         existingArtistId,
       );
     const fansSegments = await getFanSegments(segments, comments);
+    console.log("ZIAD", fansSegments);
     const socialProfiles = await getSocialProfiles(
       scraper,
       fansSegments,

@@ -11,6 +11,7 @@ const getSocialProfiles = async (
       const segment = Object.values(fanSegment)[0];
       const profile = await getFanProfile(scraper, handle);
 
+      console.log("ZIAD", handle, segment, profile);
       return {
         ...profile,
         segment,

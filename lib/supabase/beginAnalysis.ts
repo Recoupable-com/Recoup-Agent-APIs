@@ -5,7 +5,7 @@ const beginAnalysis = async (
   chat_id: string,
   handle: string,
   funnel_type: string | null = null,
-  artistId: string | null,
+  artistId: string | null = null,
 ) => {
   const { data } = await supabase
     .from("funnel_analytics")

@@ -28,7 +28,6 @@ const getFanSegments = async (segments: any, comments: any) => {
     );
 
     let fansSegments = [];
-    console.log("ZIAD", content);
     if (content)
       fansSegments =
         JSON.parse(

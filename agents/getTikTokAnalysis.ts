@@ -82,9 +82,7 @@ const getTikTokAnalysis = async (
         existingArtistId,
       );
     const fansSegments = await getFanSegments(segments, videoComments);
-    console.log("ZIAD", fansSegments);
     const socialProfiles = await getSocialProfiles(fansSegments, newArtist.id);
-    console.log("ZIAD", socialProfiles);
     await saveFansProfiles(socialProfiles);
     return;
   } catch (error) {

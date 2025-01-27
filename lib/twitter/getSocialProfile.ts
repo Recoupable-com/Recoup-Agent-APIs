@@ -26,9 +26,13 @@ const getSocialProfile = async (
     console.error(error);
     const existingArtist = await getArtist(existingArtistId);
     const handles = await getSocialHandles(existingArtist?.name || handle);
-    scrapedProfile = await scraper.getProfile(
-      handles.twitter.replace(/@/g, ""),
-    );
+    try {
+      scrapedProfile = await scraper.getProfile(
+        handles.twitter.replace(/@/g, ""),
+      );
+    } catch (error) {
+      throw new Error(error as string);
+    }
   }
 
   return getFormattedProfile(scrapedProfile);

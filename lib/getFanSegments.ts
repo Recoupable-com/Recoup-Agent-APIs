@@ -11,7 +11,6 @@ const getFanSegments = async (segments: any, comments: any) => {
       }))
       .slice(0, 500);
 
-    console.log("ZIAD", latestComments, segmentsNames);
     const content = await getChatCompletions(
       [
         {
@@ -29,6 +28,7 @@ const getFanSegments = async (segments: any, comments: any) => {
     );
 
     let fansSegments = [];
+    console.log("ZIAD", content);
     if (content)
       fansSegments =
         JSON.parse(

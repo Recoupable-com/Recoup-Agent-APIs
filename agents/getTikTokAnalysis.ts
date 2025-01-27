@@ -10,7 +10,6 @@ import createWrappedAnalysis from "./createWrappedAnalysis";
 import getSocialProfile from "../lib/tiktok/getSocialProfile";
 import getFanSegments from "../lib/getFanSegments";
 import getSocialProfiles from "../lib/tiktok/getSocialProfiles";
-import saveFansProfiles from "../lib/supabase/saveFansProfiles";
 
 const getTikTokAnalysis = async (
   handle: string,

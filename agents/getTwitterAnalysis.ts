@@ -88,6 +88,7 @@ const getTwitterAnalysis = async (
       fansSegments,
       newArtist.id,
     );
+    console.log("ZIAD", socialProfiles);
     await saveFansProfiles(socialProfiles);
     return;
   } catch (error) {

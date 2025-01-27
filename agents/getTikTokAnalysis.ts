@@ -10,6 +10,7 @@ import createWrappedAnalysis from "./createWrappedAnalysis";
 import getSocialProfile from "../lib/tiktok/getSocialProfile";
 import getFanSegments from "../lib/getFanSegments";
 import getSocialProfiles from "../lib/tiktok/getSocialProfiles";
+import saveFansProfiles from "../lib/supabase/saveFansProfiles";
 
 const getTikTokAnalysis = async (
   handle: string,
@@ -79,6 +80,7 @@ const getTikTokAnalysis = async (
     console.log("ZIAD", fansSegments);
     const socialProfiles = await getSocialProfiles(fansSegments);
     console.log("ZIAD", socialProfiles);
+    await saveFansProfiles(socialProfiles);
     return;
   } catch (error) {
     console.error(error);

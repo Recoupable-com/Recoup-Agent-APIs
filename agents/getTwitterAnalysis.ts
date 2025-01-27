@@ -83,12 +83,7 @@ const getTwitterAnalysis = async (
         existingArtistId,
       );
     const fansSegments = await getFanSegments(segments, comments);
-    const socialProfiles = await getSocialProfiles(
-      scraper,
-      fansSegments,
-      newArtist.id,
-    );
-    await saveFansProfiles(socialProfiles);
+    await getSocialProfiles(scraper, fansSegments, newArtist.id);
     return;
   } catch (error) {
     console.error(error);

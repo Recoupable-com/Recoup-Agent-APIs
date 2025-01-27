@@ -75,8 +75,9 @@ const getTikTokAnalysis = async (
         address,
         existingArtistId,
       );
-    const fansSegments = getFanSegments(segments, videoComments);
-    const socialProfiles = getSocialProfiles(fansSegments);
+    const fansSegments = await getFanSegments(segments, videoComments);
+    console.log("ZIAD", fansSegments);
+    const socialProfiles = await getSocialProfiles(fansSegments);
     console.log("ZIAD", socialProfiles);
     return;
   } catch (error) {

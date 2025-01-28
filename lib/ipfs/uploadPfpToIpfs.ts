@@ -9,6 +9,7 @@ const uploadPfpToIpfs = async (image: string) => {
   const avatarFile = new File([avatarBlob], fileName, { type });
   const avatarCid = await uploadToIpfs(avatarFile);
 
+  if (!avatarCid) return "";
   return `https://ipfs.decentralized-content.com/ipfs/${avatarCid}`;
 };
 

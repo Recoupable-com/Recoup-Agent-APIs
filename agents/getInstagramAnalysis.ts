@@ -21,6 +21,7 @@ const getInstagramAnalysis = async (
     pilot_id,
     handle,
     Funnel_Type.INSTAGRAM,
+    existingArtistId,
   );
   const analysisId = newAnalysis.id;
   try {

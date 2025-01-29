@@ -10,13 +10,13 @@ const getFormattedAccount = (data: any) => {
       videoUrls.push(item.webVideoUrl);
       if (!existingAuthor) {
         acc.push({
-          name: item.authorMeta.name,
-          nickname: item.authorMeta.nickName,
+          username: item.authorMeta.name,
+          name: item.authorMeta.nickName,
           region: item.authorMeta.region,
           avatar: item.authorMeta.avatar,
           bio: item.authorMeta.signature,
-          followers: item.authorMeta.fans,
-          followings: item.authorMeta.following,
+          followerCount: item.authorMeta.fans,
+          followingCount: item.authorMeta.following,
         });
       }
       return acc;

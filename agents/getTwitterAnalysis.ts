@@ -17,14 +17,14 @@ const scraper = new Scraper();
 
 const getTwitterAnalysis = async (
   handle: string,
-  chat_id: string,
+  pilot_id: string,
   account_id: string | null,
   address: string | null,
   isWrapped: boolean,
   existingArtistId: string | null = null,
 ) => {
   const newAnalysis = await beginAnalysis(
-    chat_id,
+    pilot_id,
     handle,
     Funnel_Type.TWITTER,
     existingArtistId,
@@ -33,13 +33,13 @@ const getTwitterAnalysis = async (
   try {
     const scrappedProfile = await getSocialProfile(
       scraper,
-      chat_id,
+      pilot_id,
       analysisId,
       handle,
       existingArtistId,
     );
     const newArtist = await createArtist(
-      chat_id,
+      pilot_id,
       analysisId,
       account_id,
       existingArtistId,
@@ -49,13 +49,13 @@ const getTwitterAnalysis = async (
     );
     const comments = await analyzeComments(
       scraper,
-      chat_id,
+      pilot_id,
       analysisId,
       handle,
     );
 
     const segments = await analyzeSegments(
-      chat_id,
+      pilot_id,
       analysisId,
       comments,
       Funnel_Type.TWITTER,
@@ -65,11 +65,11 @@ const getTwitterAnalysis = async (
       address,
       handle,
       newArtist?.id,
-      chat_id,
+      pilot_id,
       isWrapped ? "Wrapped" : "Twitter",
     );
     await updateAnalysisStatus(
-      chat_id,
+      pilot_id,
       analysisId,
       Funnel_Type.TWITTER,
       STEP_OF_ANALYSIS.FINISHED,
@@ -77,7 +77,7 @@ const getTwitterAnalysis = async (
     if (isWrapped)
       await createWrappedAnalysis(
         handle,
-        chat_id,
+        pilot_id,
         account_id,
         address,
         existingArtistId,
@@ -88,7 +88,7 @@ const getTwitterAnalysis = async (
   } catch (error) {
     console.error(error);
     await updateAnalysisStatus(
-      chat_id,
+      pilot_id,
       analysisId,
       Funnel_Type.TWITTER,
       STEP_OF_ANALYSIS.ERROR,

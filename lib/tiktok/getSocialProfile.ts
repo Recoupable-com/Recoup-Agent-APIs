@@ -3,14 +3,14 @@ import getArtist from "../supabase/getArtist.js";
 import analyzeProfile from "./analyzeProfile.js";
 
 const getSocialProfile = async (
-  chat_id: string | null,
+  pilot_id: string | null,
   analysisId: string,
   handle: string,
   existingArtistId: string | null,
 ) => {
   let scrapedProfile, scrapedVideoUrls, analyzedProfileError;
   const { profile, videoUrls, error } = await analyzeProfile(
-    chat_id,
+    pilot_id,
     analysisId,
     handle,
   );
@@ -21,7 +21,7 @@ const getSocialProfile = async (
     const existingArtist = await getArtist(existingArtistId);
     const handles = await getSocialHandles(existingArtist?.name || handle);
     const { profile, videoUrls, error } = await analyzeProfile(
-      chat_id,
+      pilot_id,
       analysisId,
       handles.tiktok.replace(/@/g, ""),
     );

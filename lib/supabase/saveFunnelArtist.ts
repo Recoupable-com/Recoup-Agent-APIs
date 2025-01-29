@@ -5,11 +5,8 @@ import updateArtistSocials from "./updateArtistSocials";
 
 const saveFunnelArtist = async (
   funnelType: string,
-  nickname: string,
+  name: string,
   avatar: string,
-  instruction: string,
-  label: string,
-  knowledges: string,
   url: string,
   accountId: string | null = null,
   existingArtistId: string | null,
@@ -29,10 +26,7 @@ const saveFunnelArtist = async (
   const id = await updateArtistProfile(
     accountId,
     avatar,
-    nickname,
-    instruction,
-    label,
-    knowledges,
+    name,
     existingArtistId,
   );
 
@@ -46,20 +40,16 @@ const saveFunnelArtist = async (
     socialUrls.spotify_url,
   );
 
-  const { data } = await supabase
-    .from("artists")
-    .select(
-      `
-        *,
-        artist_social_links (
-          *
-        )
-      `,
-    )
-    .eq("id", id)
+  const { data: account } = await supabase
+    .from("accounts")
+    .select("*, account_info(*), account_socials(*)")
+    .eq("id", existingArtistId)
     .single();
 
-  return data;
+  return {
+    ...account.account_info[0],
+    ...account,
+  };
 };
 
 export default saveFunnelArtist;

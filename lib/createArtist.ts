@@ -6,7 +6,7 @@ import saveFunnelProfile from "./supabase/saveFunnelProfile.js";
 import updateAnalysisStatus from "./supabase/updateAnalysisStatus.js";
 
 const createArtist = async (
-  chat_id: string | null,
+  pilot_id: string | null,
   analysisId: string,
   account_id: string | null,
   existingArtistId: string | null,
@@ -18,18 +18,15 @@ const createArtist = async (
     const existingArtist = await getArtist(existingArtistId);
     const avatar = await uploadPfpToIpfs(profile.avatar);
     await updateAnalysisStatus(
-      chat_id,
+      pilot_id,
       analysisId,
       funnel_type,
       STEP_OF_ANALYSIS.CREATING_ARTIST,
     );
     const newArtist = await saveFunnelArtist(
       funnel_type,
-      existingArtist?.name || profile?.nickname,
+      existingArtist?.name || profile?.name,
       existingArtist?.image || avatar,
-      existingArtist?.instruction || "",
-      existingArtist?.label || "",
-      existingArtist?.knowledges || [],
       socialUrl,
       account_id,
       existingArtistId,
@@ -40,10 +37,9 @@ const createArtist = async (
       avatar,
       type: funnel_type.toUpperCase(),
       analysis_id: analysisId,
-      artistId: newArtist.id,
     });
     await updateAnalysisStatus(
-      chat_id,
+      pilot_id,
       analysisId,
       funnel_type,
       STEP_OF_ANALYSIS.CREATED_ARTIST,

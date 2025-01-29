@@ -154,7 +154,7 @@ export const get_autopilot = async (req: Request, res: Response) => {
         )
       )`,
       )
-      .eq("chat_id", pilotId);
+      .eq("pilot_id", pilotId);
 
     return res.status(200).json({ data });
   } catch (error) {

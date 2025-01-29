@@ -8,7 +8,7 @@ import getVideoCommentsDatasetId from "./getVideoCommentsDatasetId.js";
 
 const getVideoComments = async (
   postURLs: any,
-  chat_id: string | any,
+  pilot_id: string | any,
   analysisId: string,
 ) => {
   try {
@@ -21,7 +21,7 @@ const getVideoComments = async (
       progress = (attempts / maxAttempts) * 100;
       if (progress < 20)
         await updateAnalysisStatus(
-          chat_id,
+          pilot_id,
           analysisId,
           Funnel_Type.TIKTOK,
           STEP_OF_ANALYSIS.POSTURLS,
@@ -29,7 +29,7 @@ const getVideoComments = async (
         );
       if (progress > 20)
         await updateAnalysisStatus(
-          chat_id,
+          pilot_id,
           analysisId,
           Funnel_Type.TIKTOK,
           STEP_OF_ANALYSIS.POST_COMMENTS,

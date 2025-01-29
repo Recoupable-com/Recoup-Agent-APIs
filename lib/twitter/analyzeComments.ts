@@ -7,12 +7,12 @@ import getTwitterComments from "./getTwitterComments.js";
 
 const analyzeComments = async (
   scraper: any,
-  chat_id: string | null,
+  pilot_id: string | null,
   analysisId: string,
   handle: string,
 ) => {
   await updateAnalysisStatus(
-    chat_id,
+    pilot_id,
     analysisId,
     Funnel_Type.TWITTER,
     STEP_OF_ANALYSIS.POST_COMMENTS,

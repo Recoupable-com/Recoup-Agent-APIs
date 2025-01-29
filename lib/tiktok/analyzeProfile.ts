@@ -5,12 +5,12 @@ import getProfile from "./getProfile.js";
 import getProfileDatasetId from "./getProfileDatasetId.js";
 
 const analyzeProfile = async (
-  chat_id: string | null,
+  pilot_id: string | null,
   analysisId: string,
   handle: string,
 ) => {
   await updateAnalysisStatus(
-    chat_id,
+    pilot_id,
     analysisId,
     Funnel_Type.TIKTOK,
     STEP_OF_ANALYSIS.PROFILE,

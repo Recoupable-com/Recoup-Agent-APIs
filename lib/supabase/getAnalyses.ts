@@ -1,6 +1,6 @@
 import supabase from "./serverClient";
 
-const getAnalyses = async (chat_id: string | null) => {
+const getAnalyses = async (pilot_id: string | null) => {
   const { data } = await supabase
     .from("funnel_analytics")
     .select(
@@ -8,11 +8,14 @@ const getAnalyses = async (chat_id: string | null) => {
       funnel_analytics_segments (
         *
       ),
-      funnel_analytics_profile (
+      funnel_analytics_accounts (
         *,
-        artists (
+        accounts (
           *,
-          artist_social_links (
+          account_info (
+            *
+          ),
+          account_socials (
             *
           )
         )
@@ -27,7 +30,7 @@ const getAnalyses = async (chat_id: string | null) => {
         *
       )`,
     )
-    .eq("chat_id", chat_id);
+    .eq("pilot_id", pilot_id);
 
   return data;
 };

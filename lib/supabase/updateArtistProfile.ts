@@ -4,58 +4,66 @@ const updateArtistProfile = async (
   accountId: string | null,
   image: string,
   name: string,
-  instruction: string,
-  label: string,
-  knowledges: any,
   existingArtistId: string | null = null,
 ) => {
   if (existingArtistId) {
-    const { data: artistInfo, error } = await supabase
-      .from("artists")
+    const { data } = await supabase
+      .from("accounts")
       .update({
-        image,
         name,
-        instruction,
-        knowledges,
-        label,
-        timestamp: Date.now(),
+        id: existingArtistId,
       })
       .eq("id", existingArtistId)
-      .select("*")
+      .select("*, account_info(*)")
       .single();
-    if (error) console.error(error);
-    return artistInfo.id;
+    const account_info = data.account_info?.[0];
+    if (account_info) {
+      await supabase
+        .from("account_info")
+        .update({
+          ...account_info,
+          image,
+        })
+        .eq("id", account_info.id)
+        .select("*")
+        .single();
+    } else {
+      await supabase
+        .from("account_info")
+        .insert({
+          image,
+          account_id: existingArtistId,
+        })
+        .select("*")
+        .single();
+    }
+    return existingArtistId;
   }
 
-  const { data: artistInfo } = await supabase
-    .from("artists")
+  const { data: new_artist_account } = await supabase
+    .from("accounts")
     .insert({
-      image,
       name,
-      instruction,
-      knowledges,
-      label,
-      timestamp: Date.now(),
+    })
+    .select("*")
+    .single();
+  await supabase.from("account_info").insert({
+    image,
+    account_id: new_artist_account.id,
+  });
+
+  if (!accountId) return existingArtistId;
+
+  await supabase
+    .from("account_artist_ids")
+    .insert({
+      account_id: accountId,
+      artist_id: new_artist_account.id,
     })
     .select("*")
     .single();
 
-  if (!accountId) return artistInfo.id;
-
-  const { data: account } = await supabase
-    .from("accounts")
-    .select("*")
-    .eq("id", accountId);
-  if (!account || !account.length) throw Error("Account does not exist.");
-
-  await supabase
-    .from("accounts")
-    .update({
-      ...account[0],
-      artistIds: [...account[0].artistIds, artistInfo.id],
-    })
-    .eq("id", account[0].id);
-  return artistInfo.id;
+  return new_artist_account.id;
 };
 
 export default updateArtistProfile;

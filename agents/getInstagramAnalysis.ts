@@ -11,24 +11,24 @@ import getSocialProfile from "../lib/instagram/getSocialProfile";
 
 const getInstagramAnalysis = async (
   handle: string,
-  chat_id: string,
+  pilot_id: string,
   account_id: string | null,
   address: string | null,
   isWrapped: boolean,
   existingArtistId: string | null = null,
 ) => {
   const newAnalysis = await beginAnalysis(
-    chat_id,
+    pilot_id,
     handle,
     Funnel_Type.INSTAGRAM,
   );
   const analysisId = newAnalysis.id;
   try {
     const { scrapedPostUrls, scrapedProfile, analyzedProfileError } =
-      await getSocialProfile(chat_id, analysisId, handle, existingArtistId);
+      await getSocialProfile(pilot_id, analysisId, handle, existingArtistId);
     if (!scrapedProfile || analyzedProfileError) {
       await updateAnalysisStatus(
-        chat_id,
+        pilot_id,
         analysisId,
         Funnel_Type.INSTAGRAM,
         analyzedProfileError?.status,
@@ -36,7 +36,7 @@ const getInstagramAnalysis = async (
       return;
     }
     const newArtist = await createArtist(
-      chat_id,
+      pilot_id,
       analysisId,
       account_id,
       existingArtistId,
@@ -46,12 +46,12 @@ const getInstagramAnalysis = async (
     );
 
     const postComments = await analyzeComments(
-      chat_id,
+      pilot_id,
       analysisId,
       scrapedPostUrls,
     );
     await analyzeSegments(
-      chat_id,
+      pilot_id,
       analysisId,
       postComments,
       Funnel_Type.INSTAGRAM,
@@ -61,12 +61,12 @@ const getInstagramAnalysis = async (
         address,
         handle,
         newArtist?.id,
-        chat_id,
+        pilot_id,
         isWrapped ? "Wrapped" : "Instagram",
       );
     }
     await updateAnalysisStatus(
-      chat_id,
+      pilot_id,
       analysisId,
       Funnel_Type.INSTAGRAM,
       STEP_OF_ANALYSIS.FINISHED,
@@ -74,7 +74,7 @@ const getInstagramAnalysis = async (
     if (isWrapped)
       await createWrappedAnalysis(
         handle,
-        chat_id,
+        pilot_id,
         account_id,
         address,
         existingArtistId,
@@ -83,7 +83,7 @@ const getInstagramAnalysis = async (
   } catch (error) {
     console.error(error);
     await updateAnalysisStatus(
-      chat_id,
+      pilot_id,
       analysisId,
       Funnel_Type.INSTAGRAM,
       STEP_OF_ANALYSIS.ERROR,

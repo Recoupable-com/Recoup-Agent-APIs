@@ -15,19 +15,19 @@ import getAggregatedSocialProfile from "../lib/agent/getAggregatedSocialProfile"
 import checkWrappedCompleted from "../lib/agent/checkWrappedCompleted";
 import { STEP_OF_ANALYSIS } from "../lib/step";
 import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus";
-import { Funnel_Type, SOCIAL_LINK } from "../lib/funnels";
+import { Funnel_Type, SOCIAL } from "../lib/funnels";
 
 const createWrappedAnalysis = async (
   handle: string,
-  chat_id: string,
+  pilot_id: string,
   account_id: string | null,
   address: string | null,
   existingArtistId: string | null,
 ) => {
-  const funnel_analyses = await getAnalyses(chat_id);
+  const funnel_analyses = await getAnalyses(pilot_id);
   const wrappedCompleted = checkWrappedCompleted(funnel_analyses);
   if (!wrappedCompleted) return;
-  const newAnalysis = await beginAnalysis(chat_id, handle);
+  const newAnalysis = await beginAnalysis(pilot_id, handle);
   const analysisId = newAnalysis.id;
   try {
     const artist = getAggregatedArtist(funnel_analyses);
@@ -41,17 +41,12 @@ const createWrappedAnalysis = async (
       account_id,
       aggregatedArtistProfile.image,
       aggregatedArtistProfile.name,
-      aggregatedArtistProfile.instruction,
-      aggregatedArtistProfile.label,
-      aggregatedArtistProfile.knowledges,
       existingArtistId,
     );
 
-    aggregatedArtistProfile.artist_social_links.forEach(
-      async (link: SOCIAL_LINK) => {
-        await createSocialLink(artistId, link.type, link.link);
-      },
-    );
+    aggregatedArtistProfile.account_socials.forEach(async (link: SOCIAL) => {
+      await createSocialLink(artistId, link.type, link.link);
+    });
 
     const aggregatedSocialProfile = getAggregatedSocialProfile(
       funnel_analyses,
@@ -73,12 +68,12 @@ const createWrappedAnalysis = async (
         address,
         handle,
         artistId,
-        chat_id,
+        pilot_id,
         "Wrapped",
       );
     }
     await updateAnalysisStatus(
-      chat_id,
+      pilot_id,
       analysisId,
       Funnel_Type.WRAPPED,
       STEP_OF_ANALYSIS.WRAPPED_COMPLETED,

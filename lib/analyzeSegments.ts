@@ -5,13 +5,13 @@ import saveFunnelSegments from "./supabase/saveFunnelSegments.js";
 import updateAnalysisStatus from "./supabase/updateAnalysisStatus.js";
 
 const analyzeSegments = async (
-  chat_id: string | null,
+  pilot_id: string | null,
   analysisId: string,
   videoComments: any,
   funnel_type: string,
 ) => {
   await updateAnalysisStatus(
-    chat_id,
+    pilot_id,
     analysisId,
     funnel_type,
     STEP_OF_ANALYSIS.SEGMENTS,
@@ -20,7 +20,7 @@ const analyzeSegments = async (
   const segmentsWithIcons = await getSegmentsWithIcons(segments, analysisId);
   await saveFunnelSegments(segmentsWithIcons);
   await updateAnalysisStatus(
-    chat_id,
+    pilot_id,
     analysisId,
     funnel_type,
     STEP_OF_ANALYSIS.SAVING_ANALYSIS,

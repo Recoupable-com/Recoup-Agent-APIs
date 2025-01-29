@@ -6,9 +6,9 @@ const getAggregatedProfile = (artist: any, existingArtist: any) => {
         ...artist,
         ...existingArtist,
         image: existingArtist?.image || artist?.image || "",
-        artist_social_links: getAggregatedSocials([
-          ...(existingArtist?.artist_social_links || []),
-          ...artist.artist_social_links,
+        account_socials: getAggregatedSocials([
+          ...(existingArtist?.account_socials || []),
+          ...artist.account_socials,
         ]),
       }
     : artist;

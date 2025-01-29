@@ -1,4 +1,7 @@
-import saveFansProfiles from "../supabase/saveFansProfiles";
+import saveAccount from "../supabase/saveAccount";
+import saveAccountEmail from "../supabase/saveAccountEmail";
+import saveFanSegment from "../supabase/saveFanSegment";
+import saveSocial from "../supabase/saveSocial";
 import getFanProfile from "./getFanProfile";
 
 const getSocialProfiles = async (
@@ -11,14 +14,24 @@ const getSocialProfiles = async (
       try {
         const handle = Object.keys(fanSegment)[0];
         const segment = Object.values(fanSegment)[0];
-        const profile = await getFanProfile(scraper, handle);
-        const fanProfile = {
+        const { profile, email } = await getFanProfile(scraper, handle);
+        const fanAccount = await saveAccount({
+          name: profile?.username || "",
+        });
+        await saveAccountEmail({
+          account_id: artistId,
+          email,
+        });
+        await saveSocial({
+          account_id: fanAccount.id,
           ...profile,
-          segment,
+        });
+        saveFanSegment({
+          account_id: fanAccount.id,
           artistId,
-        };
-        saveFansProfiles(fanProfile);
-        return fanProfile;
+          segment_name: segment,
+        });
+        return profile;
       } catch (error) {
         console.error(error);
         return null;

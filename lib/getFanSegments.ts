@@ -21,7 +21,7 @@ const getFanSegments = async (segments: any, comments: any) => {
         },
         {
           role: "system",
-          content: `${instructions.sort_fans_on_segments} \n Response should be in JSON format. {"data": [{ "string": string }, { "string": string }]}.`,
+          content: `${instructions.sort_fans_on_segments} \n **IMPORTANT**: Response MUST be formatted in only JSON. {"data": [{ "string": string }, { "string": string }]}.\n Please, don't use any other explaining or sentences in response.`,
         },
       ],
       2222,

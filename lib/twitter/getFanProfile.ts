@@ -7,13 +7,19 @@ const getFanProfile = async (scraper: any, handle: string) => {
     const bio = profile.biography;
     const followerCount = profile.followersCount;
     const email = extracMails(bio);
+    const followingCount = profile.followingCount;
 
     return {
-      avatar,
-      bio,
-      followerCount,
+      profile: {
+        avatar,
+        bio,
+        followerCount,
+        followingCount,
+        type: "TWITTER",
+        link: `https://twitter.com/${handle}`,
+        username: handle,
+      },
       email,
-      handle,
     };
   } catch (error) {
     throw new Error(error as string);

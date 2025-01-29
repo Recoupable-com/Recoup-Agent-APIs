@@ -17,7 +17,6 @@ const updateArtistProfile = async (
       .select("*, account_info(*)")
       .single();
     const account_info = data.account_info?.[0];
-    console.log("ZIAD UPDATE WITH SELECT CHECK", account_info);
     if (account_info) {
       await supabase
         .from("account_info")

@@ -1,7 +1,6 @@
 import supabase from "./serverClient";
 
 const saveFunnelProfile = async (profile: any) => {
-  console.log("ZIAD saveFunnelProfile", profile)
   const { data: account } = await supabase
     .from("accounts")
     .insert({
@@ -10,7 +9,7 @@ const saveFunnelProfile = async (profile: any) => {
     .select("*")
     .single();
 
-  const { error } = await supabase
+  await supabase
     .from("funnel_analytics_accounts")
     .insert({
       account_id: account.id,
@@ -18,7 +17,6 @@ const saveFunnelProfile = async (profile: any) => {
     })
     .select("*")
     .single();
-  console.log("ZIAD funnel_analytics_accounts", error)
 
   await supabase.from("account_socials").insert({
     account_id: account.id,

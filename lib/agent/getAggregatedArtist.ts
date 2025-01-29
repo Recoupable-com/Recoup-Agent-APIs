@@ -4,7 +4,7 @@ const getAggregatedArtist = (funnelAnalyses: any) => {
   const { image, name, socials } = funnelAnalyses.reduce(
     (acc: any, fa: any) => {
       const account_socials =
-        fa.funnel_analytics_accounts?.[0]?.accounts?.[0]?.account_socials;
+        fa.funnel_analytics_accounts?.[0]?.accounts?.account_socials;
       if (account_socials.length > 0) {
         acc.image = account_socials[0].avatar || acc.image || "";
         acc.name = account_socials[0].username || acc.name || "";

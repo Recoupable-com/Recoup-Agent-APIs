@@ -5,7 +5,7 @@ const getAggregatedSocialProfile = (
   const { name, username, region, avatar, bio, followerCount, followingCount } =
     funnelAnalyses.reduce(
       (acc: any, fa: any) => {
-        const profile = fa.funnel_analytics_accounts?.[0]?.accounts?.[0]
+        const profile = fa.funnel_analytics_accounts?.[0]?.accounts
           ?.account_socials?.[0] || {
           name: "",
           username: "",

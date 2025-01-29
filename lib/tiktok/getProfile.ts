@@ -4,7 +4,10 @@ import { STEP_OF_ANALYSIS } from "../step.js";
 import { UNKNOWN_PROFILE_ERROR } from "../twitter/errors.js";
 import getFormattedAccount from "./getFormattedAccount.js";
 
-const getProfile = async (datasetId: string, chat_id: string | null = null) => {
+const getProfile = async (
+  datasetId: string,
+  pilot_id: string | null = null,
+) => {
   try {
     while (1) {
       const datasetItems: any = await getDataset(datasetId);
@@ -15,7 +18,7 @@ const getProfile = async (datasetId: string, chat_id: string | null = null) => {
           funnel_type: Funnel_Type.INSTAGRAM,
           error: errorMessage,
         };
-        global.io.emit(`${chat_id}`, error);
+        global.io.emit(`${pilot_id}`, error);
         return { error };
       }
       if (errorMessage) throw new Error(errorMessage);

@@ -7,7 +7,7 @@ import getFormattedComments from "./getFormattedComments.js";
 
 const getPostComments = async (
   datasetId: string,
-  chat_id: string | null = null,
+  pilot_id: string | null = null,
   analysisId: string,
 ) => {
   try {
@@ -19,7 +19,7 @@ const getPostComments = async (
       progress = (attempts / maxAttempts) * 100;
       if (progress < 20)
         await updateAnalysisStatus(
-          chat_id,
+          pilot_id,
           analysisId,
           Funnel_Type.INSTAGRAM,
           STEP_OF_ANALYSIS.POSTURLS,
@@ -27,7 +27,7 @@ const getPostComments = async (
         );
       if (progress > 20)
         await updateAnalysisStatus(
-          chat_id,
+          pilot_id,
           analysisId,
           Funnel_Type.INSTAGRAM,
           STEP_OF_ANALYSIS.POST_COMMENTS,

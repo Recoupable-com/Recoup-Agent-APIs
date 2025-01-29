@@ -2,9 +2,9 @@ import getChatCompletions from "./getChatCompletions";
 import { instructions } from "./instructions";
 import getAnalyses from "./supabase/getAnalyses";
 
-const getFansSegments = async (chat_id: string) => {
+const getFansSegments = async (pilot_id: string) => {
   try {
-    const funnel_analyses: any = await getAnalyses(chat_id);
+    const funnel_analyses: any = await getAnalyses(pilot_id);
     const segments = funnel_analyses
       .map((analysis: any) => analysis.funnel_analytics_segments)
       .flat()

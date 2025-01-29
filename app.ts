@@ -41,10 +41,10 @@ socketIo.on("connection", async (socket) => {
   console.log("New client connected: " + socket.id);
 
   socket.on("TIKTOK_ANALYSIS", (_, msg) => {
-    if (msg?.handle && msg?.chat_id && msg?.account_id && msg?.address)
+    if (msg?.handle && msg?.pilot_id && msg?.account_id && msg?.address)
       getTikTokAnalysis(
         msg?.handle,
-        msg?.chat_id,
+        msg?.pilot_id,
         msg?.account_id,
         msg?.address,
         msg?.isWrapped,
@@ -53,10 +53,10 @@ socketIo.on("connection", async (socket) => {
   });
 
   socket.on("INSTAGRAM_ANALYSIS", (_, msg) => {
-    if (msg?.handle && msg?.chat_id && msg?.account_id && msg?.address)
+    if (msg?.handle && msg?.pilot_id && msg?.account_id && msg?.address)
       getInstagramAnalysis(
         msg?.handle,
-        msg?.chat_id,
+        msg?.pilot_id,
         msg?.account_id,
         msg?.address,
         msg?.isWrapped,
@@ -65,10 +65,10 @@ socketIo.on("connection", async (socket) => {
   });
 
   socket.on("TWITTER_ANALYSIS", (_, msg) => {
-    if (msg?.handle && msg?.chat_id && msg?.account_id && msg?.address)
+    if (msg?.handle && msg?.pilot_id && msg?.account_id && msg?.address)
       getTwitterAnalysis(
         msg?.handle,
-        msg?.chat_id,
+        msg?.pilot_id,
         msg?.account_id,
         msg?.address,
         msg?.isWrapped,
@@ -77,10 +77,10 @@ socketIo.on("connection", async (socket) => {
   });
 
   socket.on("SPOTIFY_ANALYSIS", (_, msg) => {
-    if (msg?.handle && msg?.chat_id && msg?.account_id && msg?.address)
+    if (msg?.handle && msg?.pilot_id && msg?.account_id && msg?.address)
       getSpotifyAnalysis(
         msg?.handle,
-        msg?.chat_id,
+        msg?.pilot_id,
         msg?.account_id,
         msg?.address,
         msg?.isWrapped,

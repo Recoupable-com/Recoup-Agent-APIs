@@ -4,7 +4,7 @@ import { STEP_OF_ANALYSIS } from "../step";
 import { RATE_LIMIT_EXCEEDED, UNKNOWN_PROFILE_ERROR } from "../twitter/errors";
 import getFormattedAccount from "./getFormattedAccount";
 
-const getProfile = async (datasetId: string, chat_id: string | null) => {
+const getProfile = async (datasetId: string, pilot_id: string | null) => {
   try {
     while (1) {
       const datasetItems: any = await getDataset(datasetId);
@@ -15,7 +15,7 @@ const getProfile = async (datasetId: string, chat_id: string | null) => {
           status: STEP_OF_ANALYSIS.UNKNOWN_PROFILE,
           funnel_type: Funnel_Type.INSTAGRAM,
         };
-        global.io.emit(`${chat_id}`, error);
+        global.io.emit(`${pilot_id}`, error);
         return { error };
       }
       if (errorMessage === RATE_LIMIT_EXCEEDED) {
@@ -24,7 +24,7 @@ const getProfile = async (datasetId: string, chat_id: string | null) => {
           funnel_type: Funnel_Type.INSTAGRAM,
           error: errorMessage,
         };
-        global.io.emit(`${chat_id}`, error);
+        global.io.emit(`${pilot_id}`, error);
         return { error };
       }
       if (errorMessage) throw new Error(errorMessage);

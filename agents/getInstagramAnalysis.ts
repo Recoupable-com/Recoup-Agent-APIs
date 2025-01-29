@@ -60,7 +60,7 @@ const getInstagramAnalysis = async (
       await trackFunnelAnalysisChat(
         address,
         handle,
-        newArtist?.id,
+        newArtist?.account_id,
         pilot_id,
         isWrapped ? "Wrapped" : "Instagram",
       );

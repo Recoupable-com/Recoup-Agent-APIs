@@ -7,19 +7,18 @@ const beginAnalysis = async (
   funnel_type: string | null = null,
   artistId: string | null = null,
 ) => {
-  const { data: new_analytics, error } = await supabase
+  const { data: new_analytics } = await supabase
     .from("funnel_analytics")
     .insert({
       pilot_id: pilotId,
       handle,
       status: STEP_OF_ANALYSIS.INITIAL,
       type: funnel_type ? funnel_type.toUpperCase() : funnel_type,
-      artistId: artistId || "00000000-0000-0000-0000-000000000000",
+      artist_id: artistId || "00000000-0000-0000-0000-000000000000",
     })
     .select("*")
     .single();
 
-  console.log("ZIAD HERE", error)
   return new_analytics;
 };
 

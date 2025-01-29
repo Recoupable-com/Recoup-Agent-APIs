@@ -6,7 +6,7 @@ const updateAnalysisStatus = async (
   funnel_type: string,
   status: number,
   progress = 0,
-  extra_data = null,
+  extra_data: any = null,
 ) => {
   if (!analysis_id || !chat_id) return;
   const { data } = await supabase

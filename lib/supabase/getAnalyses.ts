@@ -8,11 +8,14 @@ const getAnalyses = async (chat_id: string | null) => {
       funnel_analytics_segments (
         *
       ),
-      funnel_analytics_profile (
+      funnel_analytics_accounts (
         *,
-        artists (
+        accounts (
           *,
-          artist_social_links (
+          account_info (
+            *
+          ),
+          account_socials (
             *
           )
         )

@@ -25,11 +25,8 @@ const createArtist = async (
     );
     const newArtist = await saveFunnelArtist(
       funnel_type,
-      existingArtist?.name || profile?.nickname,
+      existingArtist?.name || profile?.name,
       existingArtist?.image || avatar,
-      existingArtist?.instruction || "",
-      existingArtist?.label || "",
-      existingArtist?.knowledges || [],
       socialUrl,
       account_id,
       existingArtistId,
@@ -40,7 +37,6 @@ const createArtist = async (
       avatar,
       type: funnel_type.toUpperCase(),
       analysis_id: analysisId,
-      artistId: newArtist.id,
     });
     await updateAnalysisStatus(
       chat_id,

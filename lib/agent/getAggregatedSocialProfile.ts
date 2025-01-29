@@ -2,40 +2,41 @@ const getAggregatedSocialProfile = (
   funnelAnalyses: any,
   existingArtist: any,
 ) => {
-  const { name, nickname, region, avatar, bio, followers, followings } =
+  const { name, username, region, avatar, bio, followerCount, followingCount } =
     funnelAnalyses.reduce(
       (acc: any, fa: any) => {
-        const profile = fa.funnel_analytics_profile?.[0] || {
+        const profile = fa.funnel_analytics_accounts?.[0]?.accounts?.[0]
+          ?.account_socials?.[0] || {
           name: "",
-          nickname: "",
+          username: "",
           region: "",
           avatar: "",
           bio: "",
-          followers: 0,
-          followings: 0,
+          followerCount: 0,
+          followingCount: 0,
         };
         acc.name = existingArtist?.name || profile.name || acc.name || "";
-        acc.nickname = existingArtist?.name || profile.nickname || acc.nickname;
+        acc.username = existingArtist?.name || profile.username || acc.username;
         acc.region = profile.region || acc.region || "";
         acc.avatar =
           existingArtist?.image || profile.avatar || acc.avatar || "";
         acc.bio = profile.bio || acc.bio || "";
-        acc.followers += profile.followers || 0;
-        acc.followings += profile.followings || 0;
+        acc.followerCount += profile.followerCount || 0;
+        acc.followingCount += profile.followingCount || 0;
         return acc;
       },
       {
         name: "",
-        nickname: "",
+        username: "",
         region: "",
         avatar: "",
         bio: "",
-        followers: 0,
-        followings: 0,
+        followerCount: 0,
+        followingCount: 0,
       },
     );
 
-  return { nickname, name, region, avatar, bio, followers, followings };
+  return { username, name, region, avatar, bio, followerCount, followingCount };
 };
 
 export default getAggregatedSocialProfile;

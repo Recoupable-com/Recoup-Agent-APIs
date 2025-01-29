@@ -8,14 +8,14 @@ const getFormattedAccountInfo = (data: any) => {
       existingAuthor.videos.push(item.webVideoUrl);
     } else {
       acc.push({
-        name: item.authorMeta.name,
-        nickname: item.authorMeta.nickName,
+        username: item.authorMeta.name,
+        name: item.authorMeta.nickName,
         region: item.authorMeta.region,
         avatar: item.authorMeta.avatar,
         bio: item.authorMeta.signature,
         videos: [item.webVideoUrl],
-        fans: item.authorMeta.fans,
-        following: item.authorMeta.following,
+        followerCount: item.authorMeta.fans,
+        followingCount: item.authorMeta.following,
       });
     }
     return acc;

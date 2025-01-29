@@ -13,14 +13,14 @@ import getSocialProfiles from "../lib/tiktok/getSocialProfiles";
 
 const getTikTokAnalysis = async (
   handle: string,
-  chat_id: string,
+  pilot_id: string,
   account_id: string | null,
   address: string | null,
   isWrapped: boolean,
   existingArtistId: string | null = null,
 ) => {
   const newAnalysis = await beginAnalysis(
-    chat_id,
+    pilot_id,
     handle,
     Funnel_Type.TIKTOK,
     existingArtistId,
@@ -28,10 +28,10 @@ const getTikTokAnalysis = async (
   const analysisId = newAnalysis.id;
   try {
     const { scrapedVideoUrls, scrapedProfile, analyzedProfileError } =
-      await getSocialProfile(chat_id, analysisId, handle, existingArtistId);
+      await getSocialProfile(pilot_id, analysisId, handle, existingArtistId);
     if (!scrapedProfile || analyzedProfileError) {
       await updateAnalysisStatus(
-        chat_id,
+        pilot_id,
         analysisId,
         Funnel_Type.TIKTOK,
         analyzedProfileError?.status,
@@ -39,7 +39,7 @@ const getTikTokAnalysis = async (
       return;
     }
     const newArtist = await createArtist(
-      chat_id,
+      pilot_id,
       analysisId,
       account_id,
       existingArtistId,
@@ -50,11 +50,13 @@ const getTikTokAnalysis = async (
 
     const videoComments = await analyzeVideoComments(
       scrapedVideoUrls,
-      chat_id,
+      pilot_id,
       analysisId,
     );
+    if (isWrapped) {
+    }
     const segments = await analyzeSegments(
-      chat_id,
+      pilot_id,
       analysisId,
       videoComments,
       Funnel_Type.TIKTOK,
@@ -62,12 +64,12 @@ const getTikTokAnalysis = async (
     await trackFunnelAnalysisChat(
       address,
       handle,
-      newArtist?.id,
-      chat_id,
+      newArtist?.account_id,
+      pilot_id,
       isWrapped ? "Wrapped" : "TikTok",
     );
     await updateAnalysisStatus(
-      chat_id,
+      pilot_id,
       analysisId,
       Funnel_Type.TIKTOK,
       STEP_OF_ANALYSIS.FINISHED,
@@ -75,18 +77,18 @@ const getTikTokAnalysis = async (
     if (isWrapped)
       await createWrappedAnalysis(
         handle,
-        chat_id,
+        pilot_id,
         account_id,
         address,
         existingArtistId,
       );
     const fansSegments = await getFanSegments(segments, videoComments);
-    await getSocialProfiles(fansSegments, newArtist.id);
+    await getSocialProfiles(fansSegments, newArtist.account_id);
     return;
   } catch (error) {
     console.error(error);
     await updateAnalysisStatus(
-      chat_id,
+      pilot_id,
       analysisId,
       Funnel_Type.TIKTOK,
       STEP_OF_ANALYSIS.ERROR,

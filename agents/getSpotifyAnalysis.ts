@@ -47,11 +47,8 @@ const getSpotifyAnalysis = async (
     );
     const newArtist = await saveFunnelArtist(
       Funnel_Type.SPOTIFY,
-      existingArtist?.name || profile?.nickname,
+      existingArtist?.name || profile?.name,
       existingArtist?.image || profile?.avatar,
-      existingArtist?.instruction || "",
-      existingArtist?.label || "",
-      existingArtist?.knowledges || [],
       `https://open.spotify.com/artist/${artistUri}`,
       account_id,
       existingArtistId,

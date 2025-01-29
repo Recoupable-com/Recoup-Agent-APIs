@@ -30,15 +30,20 @@ const getFanProfile = async (handle: string) => {
     const avatar = await uploadPfpToIpfs(userInfo?.user?.avatarThumb || "");
 
     return {
-      handle: userInfo?.user?.uniqueId || handle,
-      bio: userInfo?.user?.signature || "",
-      avatar,
-      followerCount: userInfo?.stats?.followerCount || 0,
+      profile: {
+        username: userInfo?.user?.uniqueId || handle,
+        bio: userInfo?.user?.signature || "",
+        avatar,
+        followerCount: userInfo?.stats?.followerCount || 0,
+        followingCount: userInfo?.stats?.followingCount || 0,
+        link: profilePageUrl,
+        type: "TIKTOK",
+      },
       email: extracMails(userInfo?.user?.signature || ""),
     };
   } catch (error) {
     console.error(error);
-    return null;
+    return { profile: null, email: null };
   }
 };
 

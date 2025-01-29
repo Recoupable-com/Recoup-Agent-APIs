@@ -1,6 +1,6 @@
-import { SOCIAL_LINK } from "../funnels";
+import { SOCIAL } from "../funnels";
 
-const getAggregatedSocials = (socialLinks: Array<SOCIAL_LINK>) => {
+const getAggregatedSocials = (socialLinks: Array<SOCIAL>) => {
   const socialLinkMap = new Map();
   socialLinks.forEach((link) => {
     const existingSocial = socialLinkMap.get(link.type);

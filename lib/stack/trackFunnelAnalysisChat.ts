@@ -8,7 +8,7 @@ import getStackClient from "./getStackClient";
 const trackFunnelAnalysisChat = async (
   address: string | null,
   username: string,
-  artistId: string,
+  accountId: string,
   chatId: string,
   funnelName: string,
 ) => {
@@ -22,7 +22,7 @@ const trackFunnelAnalysisChat = async (
       uniqueId,
       metadata: {
         conversationId: chatId,
-        artistId,
+        accountId,
         title: `${funnelName} Analysis: ${username}`,
         is_funnel_analysis: true,
         funnel_name: funnelName,

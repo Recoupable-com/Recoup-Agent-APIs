@@ -1,39 +1,35 @@
-import { SOCIAL_LINK } from "../funnels";
+import { SOCIAL } from "../funnels";
 
 const getAggregatedArtist = (funnelAnalyses: any) => {
-  const socialLinks = funnelAnalyses.reduce((acc: any, fa: any) => {
-    const profile = fa.funnel_analytics_profile?.[0];
-    return profile && profile.artists && profile.artists.artist_social_links
-      ? acc.concat(profile.artists.artist_social_links)
-      : acc;
-  }, []);
+  const { image, name, socials } = funnelAnalyses.reduce(
+    (acc: any, fa: any) => {
+      const account_socials =
+        fa.funnel_analytics_accounts?.[0]?.accounts?.[0]?.account_socials;
+      if (account_socials.length > 0) {
+        acc.image = account_socials[0].avatar || acc.image || "";
+        acc.name = account_socials[0].username || acc.name || "";
+        acc.socials.concat(account_socials);
+      }
+      return acc;
+    },
+    { image: "", name: "", socials: [] },
+  );
 
   const socialLinkMap = new Map();
-  socialLinks.forEach((link: SOCIAL_LINK) => {
-    if (!socialLinkMap.get(link.type) || link.link) {
-      socialLinkMap.set(link.type, link);
+  socials.forEach((social: SOCIAL) => {
+    if (!socialLinkMap.get(social.type) || social.link) {
+      socialLinkMap.set(social.type, social);
     }
   });
 
-  const aggregatedLinks = Array.from(socialLinkMap.values());
-
-  const { image, name } = funnelAnalyses.reduce(
-    (acc: any, fa: any) => {
-      const profile = fa.funnel_analytics_profile?.[0] || {};
-      acc.image = profile.avatar || acc.image || "";
-      acc.name = profile.nickname || acc.name || "";
-      return acc;
-    },
-    { image: "", name: "" },
-  );
+  const aggregatedSocials = Array.from(socialLinkMap.values());
 
   return {
     image,
     name,
     instruction: "",
     label: "",
-    artist_social_links: aggregatedLinks,
-    bases: [],
+    account_socials: aggregatedSocials,
     knowledges: [],
   };
 };

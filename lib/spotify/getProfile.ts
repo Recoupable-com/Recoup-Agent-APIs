@@ -6,11 +6,11 @@ export const getProfile = async (handle: string, accessToken: string) => {
   return {
     profile: {
       name: artist.name,
-      nickname: artist.name,
+      username: artist.name,
       avatar: artist.images?.[0]?.url || "",
-      followers: artist.followers.total,
+      followerCount: artist.followers.total,
       bio: "",
-      followings: 0,
+      followingCount: 0,
       region: "",
     },
     artistId: artist.id,

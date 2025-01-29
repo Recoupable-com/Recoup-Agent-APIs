@@ -7,7 +7,7 @@ const beginAnalysis = async (
   funnel_type: string | null = null,
   artistId: string | null = null,
 ) => {
-  const { data: new_analytics } = await supabase
+  const { data: new_analytics, error } = await supabase
     .from("funnel_analytics")
     .insert({
       pilot_id: pilotId,
@@ -19,6 +19,7 @@ const beginAnalysis = async (
     .select("*")
     .single();
 
+  console.log("ZIAD HERE", error)
   return new_analytics;
 };
 

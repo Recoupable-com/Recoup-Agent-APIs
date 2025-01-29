@@ -1,18 +1,18 @@
 import { SOCIAL } from "../funnels";
 
 const getAggregatedArtist = (funnelAnalyses: any) => {
-  const { image, name, socials } = funnelAnalyses.reduce(
+  const { image, name, socials, account_id } = funnelAnalyses.reduce(
     (acc: any, fa: any) => {
-      const account_socials =
-        fa.funnel_analytics_accounts?.[0]?.accounts?.account_socials;
-      if (account_socials.length > 0) {
-        acc.image = account_socials[0].avatar || acc.image || "";
-        acc.name = account_socials[0].username || acc.name || "";
-        acc.socials.concat(account_socials);
-      }
+      const account = fa.accounts;
+      const account_info = account.account_info?.[0];
+      const account_socials = account.account_socials;
+      acc.image = account_info?.image || acc.image || "";
+      acc.name = account?.name || acc.name || "";
+      acc.socials = [...acc.socials, ...account_socials];
+      acc.account_id = account.id;
       return acc;
     },
-    { image: "", name: "", socials: [] },
+    { image: "", name: "", socials: [], account_id: "" },
   );
 
   const socialLinkMap = new Map();
@@ -31,6 +31,7 @@ const getAggregatedArtist = (funnelAnalyses: any) => {
     label: "",
     account_socials: aggregatedSocials,
     knowledges: [],
+    account_id,
   };
 };
 

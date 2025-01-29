@@ -21,6 +21,7 @@ const getInstagramAnalysis = async (
     pilot_id,
     handle,
     Funnel_Type.INSTAGRAM,
+    existingArtistId,
   );
   const analysisId = newAnalysis.id;
   try {
@@ -60,7 +61,7 @@ const getInstagramAnalysis = async (
       await trackFunnelAnalysisChat(
         address,
         handle,
-        newArtist?.id,
+        newArtist?.account_id,
         pilot_id,
         isWrapped ? "Wrapped" : "Instagram",
       );

@@ -13,7 +13,7 @@ const saveFunnelProfile = async (profile: any) => {
     .from("funnel_analytics_accounts")
     .insert({
       account_id: account.id,
-      analysis_id: profile.analysisId,
+      analysis_id: profile.analysis_id,
     })
     .select("*")
     .single();

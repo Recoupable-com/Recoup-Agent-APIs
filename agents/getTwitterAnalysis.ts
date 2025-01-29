@@ -11,7 +11,6 @@ import analyzeSegments from "../lib/analyzeSegments";
 import getSocialProfile from "../lib/twitter/getSocialProfile";
 import getFanSegments from "../lib/getFanSegments";
 import getSocialProfiles from "../lib/twitter/getSocialProfiles";
-import saveFansProfiles from "../lib/supabase/saveFansProfiles";
 
 const scraper = new Scraper();
 

@@ -29,6 +29,7 @@ const getSpotifyAnalysis = async (
     pilot_id,
     handle,
     Funnel_Type.SPOTIFY,
+    existingArtistId
   );
   const analysisId = newAnalysis.id;
   try {

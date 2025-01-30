@@ -5,6 +5,15 @@ const getAnalyses = async (pilot_id: string | null) => {
     .from("funnel_analytics")
     .select(
       `*,
+      accounts (
+        *,
+        account_info (
+          *
+        ),
+        account_socials (
+          *
+        )
+      ),
       funnel_analytics_segments (
         *
       ),

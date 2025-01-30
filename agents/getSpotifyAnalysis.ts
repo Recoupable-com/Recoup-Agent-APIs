@@ -107,7 +107,7 @@ const getSpotifyAnalysis = async (
     await trackFunnelAnalysisChat(
       address,
       handle,
-      newArtist?.id,
+      newArtist?.account_id,
       pilot_id,
       isWrapped ? "Wrapped" : "Spotify",
     );

@@ -15,7 +15,7 @@ const getAggregatedSocialProfile = (
           followerCount: 0,
           followingCount: 0,
         };
-        acc.name = existingArtist?.name || profile.name || acc.name || "";
+        acc.name = existingArtist?.name || profile.username || acc.name || "";
         acc.username = existingArtist?.name || profile.username || acc.username;
         acc.region = profile.region || acc.region || "";
         acc.avatar =

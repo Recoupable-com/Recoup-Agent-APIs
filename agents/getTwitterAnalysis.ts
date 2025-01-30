@@ -63,7 +63,7 @@ const getTwitterAnalysis = async (
     await trackFunnelAnalysisChat(
       address,
       handle,
-      newArtist?.id,
+      newArtist?.account_id,
       pilot_id,
       isWrapped ? "Wrapped" : "Twitter",
     );
@@ -82,7 +82,7 @@ const getTwitterAnalysis = async (
         existingArtistId,
       );
     const fansSegments = await getFanSegments(segments, comments);
-    await getSocialProfiles(scraper, fansSegments, newArtist.id);
+    await getSocialProfiles(scraper, fansSegments, newArtist.account_id);
     return;
   } catch (error) {
     console.error(error);

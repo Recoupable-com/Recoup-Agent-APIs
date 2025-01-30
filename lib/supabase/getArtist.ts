@@ -9,6 +9,7 @@ const getArtist = async (artist_id: string | null) => {
   return {
     ...account.account_info[0],
     ...account,
+    account_id: account.id,
   };
 };
 

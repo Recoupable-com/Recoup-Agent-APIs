@@ -45,7 +45,7 @@ const getTikTokAnalysis = async (
       existingArtistId,
       scrapedProfile,
       "tiktok",
-      `https://tiktok.com/@${scrapedProfile?.name}`,
+      `https://tiktok.com/@${scrapedProfile?.username}`,
     );
 
     const videoComments = await analyzeVideoComments(

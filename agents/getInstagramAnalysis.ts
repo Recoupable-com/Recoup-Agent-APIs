@@ -43,7 +43,7 @@ const getInstagramAnalysis = async (
       existingArtistId,
       scrapedProfile,
       "instagram",
-      `https://instagram.com/${scrapedProfile?.name}`,
+      `https://instagram.com/${scrapedProfile?.username}`,
     );
 
     const postComments = await analyzeComments(

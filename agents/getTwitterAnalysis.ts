@@ -44,7 +44,7 @@ const getTwitterAnalysis = async (
       existingArtistId,
       scrappedProfile,
       "twitter",
-      `https://x.com/${scrappedProfile?.name}`,
+      `https://x.com/${scrappedProfile?.username}`,
     );
     const comments = await analyzeComments(
       scraper,

@@ -89,7 +89,6 @@ const getInstagramAnalysis = async (
       Funnel_Type.INSTAGRAM,
       STEP_OF_ANALYSIS.ERROR,
     );
-    throw new Error(error as string);
   }
 };
 

@@ -3,7 +3,7 @@ import getSpotifyAnalysis from "../agents/getSpotifyAnalysis";
 import getTikTokAnalysis from "../agents/getTikTokAnalysis";
 import getTwitterAnalysis from "../agents/getTwitterAnalysis";
 import { Funnel_Type } from "../lib/funnels";
-import supabase from "../lib/supabase/serverClient";
+import { createAgent } from "../lib/supabase/createAgent";
 import { Request, Response } from "express";
 
 export const run_agent = async (req: Request, res: Response) => {
@@ -15,18 +15,13 @@ export const run_agent = async (req: Request, res: Response) => {
     if (!agent_type)
       return res.status(500).json({ message: "Agent type is invalid." });
 
-    // Create new agent record
-    const { data: agent, error: agentError } = await supabase
-      .from("agents")
-      .insert({})
-      .select()
-      .single();
+    const { agent, error } = await createAgent();
 
-    if (agentError) {
-      console.error("Failed to create agent:", agentError);
+    if (error || !agent) {
+      console.error("Failed to create agent:", error);
       return res
         .status(500)
-        .json({ message: "Failed to create agent record." });
+        .json({ message: error?.message || "Failed to create agent record." });
     }
 
     const pilotId = agent.id;

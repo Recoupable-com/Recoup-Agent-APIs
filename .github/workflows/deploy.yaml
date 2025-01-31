@@ -62,12 +62,6 @@ jobs:
               sudo ln -s ~/.bun/bin/bun /usr/local/bin/bun
             fi
 
-            # Install nodemon globally if not already installed
-            if ! command -v nodemon &> /dev/null; then
-              echo "Installing nodemon globally..."
-              npm install -g nodemon
-            fi
-
             # Ensure correct Node.js version
             source ~/.nvm/nvm.sh
             nvm use 20
@@ -75,29 +69,20 @@ jobs:
             # Install dependencies
             bun install
 
-            # Create start script
-            echo "Creating start script..."
-            cat > start.sh << 'EOL'
-#!/bin/bash
-export PATH="/usr/local/bin:/usr/bin:/bin:/root/.bun/bin:$PATH"
-cd ~/recoup-agent-apis
-bun x tsc && nodemon --experimental-specifier-resolution=node --no-warnings ./dist/app.js
-EOL
-            chmod +x start.sh
-
             # Update PM2 environment variables
             echo "Updating PM2 environment..."
             cat > ecosystem.config.cjs << 'EOL'
-module.exports = {
-  apps: [{
-    name: 'recoup-agent-apis',
-    script: './start.sh',
-    env: {
-      NODE_ENV: 'production'
-    }
-  }]
-}
-EOL
+            module.exports = {
+              apps: [{
+                name: 'recoup-agent-apis',
+                script: 'bun x tsc && nodemon --experimental-specifier-resolution=node --no-warnings ./dist/app.js',
+                env: {
+                  PATH: '/usr/local/bin:/usr/bin:/bin:~/.bun/bin',
+                  NODE_ENV: 'production'
+                }
+              }]
+            }
+            EOL
 
             # Restart the application
             pm2 restart ecosystem.config.cjs --update-env

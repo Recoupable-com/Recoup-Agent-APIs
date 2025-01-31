@@ -4,7 +4,7 @@ const updateArtistProfile = async (
   accountId: string | null,
   image: string,
   name: string,
-  existingArtistId: string | null = null,
+  existingArtistId: string | null = null
 ) => {
   if (existingArtistId) {
     const { data } = await supabase

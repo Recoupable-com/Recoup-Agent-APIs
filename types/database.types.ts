@@ -233,6 +233,63 @@ export type Database = {
           },
         ]
       }
+      agent_status: {
+        Row: {
+          agent_id: string
+          id: string
+          progress: number | null
+          social_id: string
+          status: number | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string
+          id?: string
+          progress?: number | null
+          social_id: string
+          status?: number | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          id?: string
+          progress?: number | null
+          social_id?: string
+          status?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_status_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_status_social_id_fkey"
+            columns: ["social_id"]
+            isOneToOne: false
+            referencedRelation: "socials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agents: {
+        Row: {
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_store_link_clicked: {
         Row: {
           clientId: string | null

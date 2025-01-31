@@ -2,6 +2,15 @@ import { Funnel_Type } from "../funnels";
 import supabase from "./serverClient";
 import updateArtistProfile from "./updateArtistProfile";
 import updateArtistSocials from "./updateArtistSocials";
+import type { Database } from "../../types/database.types";
+
+type AccountSocial = Database["public"]["Tables"]["account_socials"]["Row"] & {
+  socials?: {
+    id: string;
+    type: string;
+    link: string;
+  };
+};
 
 const saveFunnelArtist = async (
   funnelType: string,
@@ -9,7 +18,7 @@ const saveFunnelArtist = async (
   avatar: string,
   url: string,
   accountId: string | null = null,
-  existingArtistId: string | null,
+  existingArtistId: string | null
 ) => {
   let socialUrls: any = {
     twitter_url: "",
@@ -27,7 +36,7 @@ const saveFunnelArtist = async (
     accountId,
     avatar,
     name,
-    existingArtistId,
+    existingArtistId
   );
 
   await updateArtistSocials(
@@ -37,18 +46,56 @@ const saveFunnelArtist = async (
     "",
     socialUrls.instagram_url,
     socialUrls.twitter_url,
-    socialUrls.spotify_url,
+    socialUrls.spotify_url
   );
 
   const { data: account } = await supabase
     .from("accounts")
-    .select("*, account_info(*), account_socials(*)")
-    .eq("id", existingArtistId)
+    .select(
+      `
+      *,
+      account_info (
+        id,
+        image,
+        instruction,
+        label,
+        organization,
+        knowledges
+      ),
+      account_socials (
+        id,
+        social_id,
+        socials (
+          id,
+          type,
+          link
+        )
+      )
+    `
+    )
+    .eq("id", id)
     .single();
 
+  if (!account) {
+    throw new Error("Failed to fetch created artist");
+  }
+
   return {
-    ...account.account_info[0],
-    ...account,
+    id: account.id,
+    account_id: account.id,
+    name: account.name,
+    timestamp: account.timestamp,
+    image: account.account_info?.[0]?.image ?? null,
+    organization: account.account_info?.[0]?.organization ?? null,
+    instruction: account.account_info?.[0]?.instruction ?? null,
+    label: account.account_info?.[0]?.label ?? null,
+    knowledges: account.account_info?.[0]?.knowledges ?? null,
+    socials:
+      account.account_socials?.map((social: AccountSocial) => ({
+        id: social.id,
+        type: social.socials?.type,
+        link: social.socials?.link,
+      })) ?? [],
   };
 };
 

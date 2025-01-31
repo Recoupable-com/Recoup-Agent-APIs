@@ -1,0 +1,25 @@
+graph TD
+    A[GET /api/autopilot?handle=sweetman_eth&type=twitter] --> B[PilotController.run_agent]
+    B --> B1[Extract handle & type from query]
+    B1 --> B2[Validate agent_type]
+    B2 --> C[Generate pilotId using uuidV4]
+    C --> C1[Return pilotId to client]
+    C1 --> D[Start getTwitterAnalysis in background]
+    D --> E[getSocialProfile]
+    E --> F[Profile Found]
+    F --> G[createArtist]
+    G --> H[uploadPfpToIpfs]
+    H --> I[IPFS Upload Success]
+    I --> J[updateArtistProfile]
+    J --> K[Create new account]
+    K --> L[Create account_info]
+    L --> M[Return null instead of new_artist_account.id]
+    M --> N[saveFunnelArtist]
+    N --> O[Query fails - Cannot find account]
+    O --> P[Error: Failed to fetch created artist]
+
+    style O fill:#ff6666
+    style M fill:#ff6666
+    style P fill:#ff6666
+    style C fill:#90EE90
+    style C1 fill:#90EE90

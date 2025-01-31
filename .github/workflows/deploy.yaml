@@ -55,11 +55,11 @@ jobs:
             echo "Git status:"
             git status
 
-            # Install bun globally if not already installed
+            # Install bun if not already installed
             if ! command -v bun &> /dev/null; then
-              echo "Installing bun globally..."
-              sudo curl -fsSL https://bun.sh/install | sudo bash
-              sudo ln -s ~/.bun/bin/bun /usr/local/bin/bun
+              echo "Installing bun..."
+              curl -fsSL https://bun.sh/install | bash
+              source ~/.bashrc
             fi
 
             # Ensure correct Node.js version
@@ -67,22 +67,7 @@ jobs:
             nvm use 20
 
             # Install dependencies
-            bun install
-
-            # Update PM2 environment variables
-            echo "Updating PM2 environment..."
-            cat > ecosystem.config.cjs << 'EOL'
-            module.exports = {
-              apps: [{
-                name: 'recoup-agent-apis',
-                script: 'bun x tsc && nodemon --experimental-specifier-resolution=node --no-warnings ./dist/app.js',
-                env: {
-                  PATH: '/usr/local/bin:/usr/bin:/bin:~/.bun/bin',
-                  NODE_ENV: 'production'
-                }
-              }]
-            }
-            EOL
+            yarn install
 
             # Restart the application
             pm2 restart ecosystem.config.cjs --update-env

@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "14"
+          node-version: "20"
 
       - name: Install dependencies
         run: npm install
@@ -60,6 +60,7 @@ jobs:
             nvm use 20
 
             # Install dependencies
-            npm install
+            yarn install
 
+            # Restart the application
             pm2 restart ecosystem.config.cjs --update-env

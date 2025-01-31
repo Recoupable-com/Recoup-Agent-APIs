@@ -15,13 +15,19 @@ git clone https://github.com/voicefirstai/Recoup-Agent-APIs.git
 cd Recoup-Agent-APIs
 ```
 
-2. Install dependencies
+2. Install pnpm (if not already installed)
 
 ```bash
-yarn install
+npm install -g pnpm
 ```
 
-3. Configure your environment
+3. Install dependencies
+
+```bash
+pnpm install
+```
+
+4. Configure your environment
 
 ```bash
 # Copy the example environment file
@@ -30,16 +36,16 @@ cp .env.example .env
 # Edit the .env file with your configuration
 ```
 
-4. Start the development server
+5. Start the development server
 
 ```bash
-yarn start
+pnpm start
 ```
 
-5. Build for production
+6. Build for production
 
 ```bash
-yarn build
+pnpm build
 ```
 
 ## License

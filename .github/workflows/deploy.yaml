@@ -17,8 +17,11 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install pnpm
+        run: npm install -g pnpm
+
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Debug Secrets
         run: |
@@ -55,12 +58,25 @@ jobs:
             echo "Git status:"
             git status
 
+            # Install bun globally if not already installed
+            if ! command -v bun &> /dev/null; then
+              echo "Installing bun globally..."
+              sudo curl -fsSL https://bun.sh/install | sudo bash
+              sudo ln -s ~/.bun/bin/bun /usr/local/bin/bun
+            fi
+
+            # Install pnpm if not already installed
+            if ! command -v pnpm &> /dev/null; then
+              echo "Installing pnpm globally..."
+              npm install -g pnpm
+            fi
+
             # Ensure correct Node.js version
             source ~/.nvm/nvm.sh
             nvm use 20
 
             # Install dependencies
-            yarn install
+            pnpm install
 
             # Restart the application
             pm2 restart ecosystem.config.cjs --update-env

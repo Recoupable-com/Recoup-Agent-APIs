@@ -2,7 +2,7 @@ import getActorStatus from "../apify/getActorStatus.js";
 import getDataset from "../apify/getDataset.js";
 import { Funnel_Type } from "../funnels.js";
 import { STEP_OF_ANALYSIS } from "../step.js";
-import updateAnalysisStatus from "../supabase/updateAnalysisStatus.js";
+import updateAnalysisStatus from "../supabase/updateAgentStatus.js";
 import getFormattedComments from "./getFormattedComments.js";
 
 const getPostComments = async (

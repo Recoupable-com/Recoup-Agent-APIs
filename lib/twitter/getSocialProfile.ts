@@ -1,7 +1,7 @@
 import { Funnel_Type } from "../funnels";
 import { STEP_OF_ANALYSIS } from "../step";
 import getArtist from "../supabase/getArtist";
-import updateAnalysisStatus from "../supabase/updateAnalysisStatus";
+import updateAnalysisStatus from "../supabase/updateAgentStatus";
 import getFormattedProfile from "./getFormattedProfile";
 import getSocialHandles from "../getSocialHandles";
 

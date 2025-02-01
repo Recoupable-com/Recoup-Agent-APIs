@@ -1,26 +1,22 @@
 import { Scraper } from "agent-twitter-client";
 import { STEP_OF_ANALYSIS } from "../lib/step";
-import beginAnalysis from "../lib/supabase/beginAnalysis";
-import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus";
+import beginAnalysis from "../lib/supabase/initialize";
+import updateAnalysisStatus from "../lib/supabase/updateAgentStatus";
 import { Funnel_Type } from "../lib/funnels";
-import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat";
-import createWrappedAnalysis from "./createWrappedAnalysis";
-import createArtist from "../lib/createArtist";
 import analyzeComments from "../lib/twitter/analyzeComments";
 import analyzeSegments from "../lib/analyzeSegments";
 import getSocialProfile from "../lib/twitter/getSocialProfile";
 import getFanSegments from "../lib/getFanSegments";
 import getSocialProfiles from "../lib/twitter/getSocialProfiles";
+import updateArtist from "../lib/updateArtist";
 
 const scraper = new Scraper();
 
-const getTwitterAnalysis = async (
+const runTwitterAgent = async (
   handle: string,
   pilot_id: string,
   account_id: string | null,
-  address: string | null,
-  isWrapped: boolean,
-  existingArtistId: string | null = null,
+  existingArtistId: string | null,
 ) => {
   const newAnalysis = await beginAnalysis(
     pilot_id,
@@ -37,7 +33,7 @@ const getTwitterAnalysis = async (
       handle,
       existingArtistId,
     );
-    const newArtist = await createArtist(
+    const newArtist = await updateArtist(
       pilot_id,
       analysisId,
       account_id,
@@ -60,27 +56,12 @@ const getTwitterAnalysis = async (
       Funnel_Type.TWITTER,
     );
 
-    await trackFunnelAnalysisChat(
-      address,
-      handle,
-      newArtist?.account_id,
-      pilot_id,
-      isWrapped ? "Wrapped" : "Twitter",
-    );
     await updateAnalysisStatus(
       pilot_id,
       analysisId,
       Funnel_Type.TWITTER,
       STEP_OF_ANALYSIS.FINISHED,
     );
-    if (isWrapped)
-      await createWrappedAnalysis(
-        handle,
-        pilot_id,
-        account_id,
-        address,
-        existingArtistId,
-      );
     const fansSegments = await getFanSegments(segments, comments);
     await getSocialProfiles(scraper, fansSegments, newArtist.account_id);
     return;
@@ -95,4 +76,4 @@ const getTwitterAnalysis = async (
   }
 };
 
-export default getTwitterAnalysis;
+export default runTwitterAgent;

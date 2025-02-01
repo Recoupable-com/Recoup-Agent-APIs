@@ -1,20 +1,14 @@
 import { Funnel_Type } from "../funnels.js";
-import { STEP_OF_ANALYSIS } from "../step.js";
-import updateAnalysisStatus from "../supabase/updateAnalysisStatus.js";
+import { STEP_OF_AGENT } from "../step.js";
+import updateAgentStatus from "../supabase/updateAgentStatus.js";
 import getProfile from "./getProfile.js";
 import getProfileDatasetId from "./getProfileDatasetId.js";
 
 const analyzeProfile = async (
-  pilot_id: string | null,
-  analysisId: string,
+  agent_id: string,
   handle: string,
 ) => {
-  await updateAnalysisStatus(
-    pilot_id,
-    analysisId,
-    Funnel_Type.TIKTOK,
-    STEP_OF_ANALYSIS.PROFILE,
-  );
+  await updateAgentStatus(agent_id, Funnel_Type.TIKTOK, STEP_OF_AGENT.PROFILE)
   const profileDatasetId = await getProfileDatasetId(handle);
   const accountData: any = await getProfile(profileDatasetId);
   if (accountData?.error) {

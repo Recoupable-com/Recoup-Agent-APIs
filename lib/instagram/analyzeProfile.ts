@@ -1,6 +1,6 @@
 import { Funnel_Type } from "../funnels";
 import { STEP_OF_ANALYSIS } from "../step";
-import updateAnalysisStatus from "../supabase/updateAnalysisStatus";
+import updateAnalysisStatus from "../supabase/updateAgentStatus";
 import getProfile from "./getProfile";
 import getProfileDatasetId from "./getProfileDatasetId";
 

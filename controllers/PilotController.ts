@@ -1,30 +1,42 @@
-import getInstagramAnalysis from "../agents/getInstagramAnalysis";
-import getSpotifyAnalysis from "../agents/getSpotifyAnalysis";
-import getTikTokAnalysis from "../agents/getTikTokAnalysis";
-import getTwitterAnalysis from "../agents/getTwitterAnalysis";
+import runInstagramAgent from "../agents/runInstagramAgent";
+import runSpotifyAgent from "../agents/runSpotifyAgent";
+import runTikTokAgent from "../agents/runTikTokAgent";
+import runTwitterAgent from "../agents/runTwitterAgent";
 import { Funnel_Type } from "../lib/funnels";
-import { v4 as uuidV4 } from "uuid";
 import { Request, Response } from "express";
 
 export const run_agent = async (req: Request, res: Response) => {
   try {
-    const { handle, type } = req.query;
+    const { handles, type, artistId } = req.query ;
+    
     const agent_type = Object.values(Funnel_Type).find(
       (value) => value === type,
     );
     if (!agent_type)
       return res.status(500).json({ message: "Agent type is invalid." });
-    const pilotId = uuidV4();
-    res.status(200).json({ pilotId });
+
     const isWrapped = type === Funnel_Type.WRAPPED;
+
     if (isWrapped || type === Funnel_Type.INSTAGRAM)
-      getInstagramAnalysis(handle as string, pilotId, null, null, isWrapped);
+      runInstagramAgent(
+        handles["instagram"],
+        artistId
+      );
     if (isWrapped || type === Funnel_Type.TWITTER)
-      getTwitterAnalysis(handle as string, pilotId, null, null, isWrapped);
+      runTwitterAgent(
+        handles["twitter"],
+        artistId
+      );
     if (isWrapped || type === Funnel_Type.TIKTOK)
-      getTikTokAnalysis(handle as string, pilotId, null, null, isWrapped);
+      runTikTokAgent(
+        handles["tiktok"],
+        artistId
+      );
     if (isWrapped || type === Funnel_Type.SPOTIFY)
-      getSpotifyAnalysis(handle as string, pilotId, null, null, isWrapped);
+      runSpotifyAgent(
+        handles["spotify"],
+        artistId
+      );
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });

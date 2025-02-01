@@ -2,7 +2,7 @@ import getSegments from "./getSegments.js";
 import getSegmentsWithIcons from "./getSegmentsWithIcons.js";
 import { STEP_OF_ANALYSIS } from "./step.js";
 import saveFunnelSegments from "./supabase/saveFunnelSegments.js";
-import updateAnalysisStatus from "./supabase/updateAnalysisStatus.js";
+import updateAnalysisStatus from "./supabase/updateAgentStatus.js";
 
 const analyzeSegments = async (
   pilot_id: string | null,

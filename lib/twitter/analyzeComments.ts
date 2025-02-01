@@ -1,7 +1,7 @@
 import { Funnel_Type } from "../funnels.js";
 import { STEP_OF_ANALYSIS } from "../step.js";
 import saveFunnelComments from "../supabase/saveFunnelComments.js";
-import updateAnalysisStatus from "../supabase/updateAnalysisStatus.js";
+import updateAnalysisStatus from "../supabase/updateAgentStatus.js";
 import getAllTweets from "./getAllTweets.js";
 import getTwitterComments from "./getTwitterComments.js";
 

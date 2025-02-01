@@ -1,7 +1,7 @@
 import getSegments from "../lib/getSegments";
 import getSegmentsWithIcons from "../lib/getSegmentsWithIcons";
-import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat";
-import beginAnalysis from "../lib/supabase/beginAnalysis";
+import trackFunnelAnalysisChat from "../lib/stack/trackAgentEvent";
+import beginAnalysis from "../lib/supabase/initialize";
 import saveFunnelProfile from "../lib/supabase/saveFunnelProfile";
 import saveFunnelSegments from "../lib/supabase/saveFunnelSegments";
 import getAnalyses from "../lib/supabase/getAnalyses";
@@ -14,7 +14,7 @@ import getComments from "../lib/agent/getComments";
 import getAggregatedSocialProfile from "../lib/agent/getAggregatedSocialProfile";
 import checkWrappedCompleted from "../lib/agent/checkWrappedCompleted";
 import { STEP_OF_ANALYSIS } from "../lib/step";
-import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus";
+import updateAnalysisStatus from "../lib/supabase/updateAgentStatus";
 import { Funnel_Type, SOCIAL } from "../lib/funnels";
 
 const createWrappedAnalysis = async (

@@ -1,4 +1,4 @@
-export enum STEP_OF_ANALYSIS {
+export enum STEP_OF_AGENT {
   INITIAL,
   ERROR,
   FINISHED,

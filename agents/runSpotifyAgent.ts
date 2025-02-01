@@ -1,12 +1,11 @@
 import { STEP_OF_ANALYSIS } from "../lib/step";
-import beginAnalysis from "../lib/supabase/beginAnalysis";
-import updateAnalysisStatus from "../lib/supabase/updateAnalysisStatus";
+import beginAnalysis from "../lib/supabase/initialize";
+import updateAnalysisStatus from "../lib/supabase/updateAgentStatus";
 import getSegments from "../lib/getSegments";
 import getSegmentsWithIcons from "../lib/getSegmentsWithIcons";
 import saveFunnelSegments from "../lib/supabase/saveFunnelSegments";
 import { Funnel_Type } from "../lib/funnels";
 import saveFunnelProfile from "../lib/supabase/saveFunnelProfile";
-import trackFunnelAnalysisChat from "../lib/stack/trackFunnelAnalysisChat";
 import saveFunnelArtist from "../lib/supabase/saveFunnelArtist";
 import { getProfile } from "../lib/spotify/getProfile";
 import getAccessToken from "../lib/supabase/getAccessToken";
@@ -14,15 +13,12 @@ import getAlbums from "../lib/spotify/getAlbums";
 import getTopTracks from "../lib/spotify/getTopTracks";
 import saveSpotifyAlbums from "../lib/supabase/saveSpotifyAlbums";
 import saveSpotifyTracks from "../lib/supabase/saveSpotifyTracks";
-import createWrappedAnalysis from "./createWrappedAnalysis";
 import getArtist from "../lib/supabase/getArtist";
 
-const getSpotifyAnalysis = async (
+const runSpotifyAgent = async (
   handle: string,
   pilot_id: string,
   account_id: string | null,
-  address: string | null,
-  isWrapped: boolean,
   existingArtistId: string | null = null,
 ) => {
   const newAnalysis = await beginAnalysis(
@@ -104,27 +100,12 @@ const getSpotifyAnalysis = async (
       Funnel_Type.SPOTIFY,
       STEP_OF_ANALYSIS.SAVING_ANALYSIS,
     );
-    await trackFunnelAnalysisChat(
-      address,
-      handle,
-      newArtist?.account_id,
-      pilot_id,
-      isWrapped ? "Wrapped" : "Spotify",
-    );
     await updateAnalysisStatus(
       pilot_id,
       analysisId,
       Funnel_Type.SPOTIFY,
       STEP_OF_ANALYSIS.FINISHED,
     );
-    if (isWrapped)
-      await createWrappedAnalysis(
-        handle,
-        pilot_id,
-        account_id,
-        address,
-        existingArtistId,
-      );
     return;
   } catch (error) {
     console.error(error);
@@ -137,4 +118,4 @@ const getSpotifyAnalysis = async (
   }
 };
 
-export default getSpotifyAnalysis;
+export default runSpotifyAgent;

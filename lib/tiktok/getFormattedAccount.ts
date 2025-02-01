@@ -11,12 +11,12 @@ const getFormattedAccount = (data: any) => {
       if (!existingAuthor) {
         acc.push({
           username: item.authorMeta.name,
-          name: item.authorMeta.nickName,
           region: item.authorMeta.region,
           avatar: item.authorMeta.avatar,
           bio: item.authorMeta.signature,
           followerCount: item.authorMeta.fans,
           followingCount: item.authorMeta.following,
+          profile_url: `https://tiktok.com/@${item.authorMeta.username}`
         });
       }
       return acc;

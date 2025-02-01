@@ -23,22 +23,23 @@ const getSpotifyAnalysis = async (
   account_id: string | null,
   address: string | null,
   isWrapped: boolean,
-  existingArtistId: string | null = null,
+  existingArtistId: string | null = null
 ) => {
-  const newAnalysis = await beginAnalysis(
-    pilot_id,
-    handle,
-    Funnel_Type.SPOTIFY,
-    existingArtistId,
-  );
-  const analysisId = newAnalysis.id;
+  const newAnalysis = await beginAnalysis(pilot_id, handle);
+
+  if (!newAnalysis?.agentStatus?.id) {
+    console.error("Failed to create analysis");
+    return;
+  }
+
+  const analysisId = newAnalysis.agentStatus.id;
   try {
     const existingArtist = await getArtist(existingArtistId);
     await updateAnalysisStatus(
       pilot_id,
       analysisId,
       Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.PROFILE,
+      STEP_OF_ANALYSIS.PROFILE
     );
     const accessToken = await getAccessToken();
     const data = await getProfile(handle, accessToken);
@@ -48,7 +49,7 @@ const getSpotifyAnalysis = async (
       pilot_id,
       analysisId,
       Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.CREATING_ARTIST,
+      STEP_OF_ANALYSIS.CREATING_ARTIST
     );
     const newArtist = await saveFunnelArtist(
       Funnel_Type.SPOTIFY,
@@ -56,7 +57,7 @@ const getSpotifyAnalysis = async (
       existingArtist?.image || profile?.avatar,
       `https://open.spotify.com/artist/${artistUri}`,
       account_id,
-      existingArtistId,
+      existingArtistId
     );
 
     await saveFunnelProfile({
@@ -71,13 +72,13 @@ const getSpotifyAnalysis = async (
       Funnel_Type.SPOTIFY,
       STEP_OF_ANALYSIS.CREATED_ARTIST,
       0,
-      newArtist,
+      newArtist
     );
     await updateAnalysisStatus(
       pilot_id,
       analysisId,
       Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.ALBUMS,
+      STEP_OF_ANALYSIS.ALBUMS
     );
     const albums = await getAlbums(artistUri, accessToken, analysisId);
     await saveSpotifyAlbums(albums);
@@ -85,7 +86,7 @@ const getSpotifyAnalysis = async (
       pilot_id,
       analysisId,
       Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.TRACKS,
+      STEP_OF_ANALYSIS.TRACKS
     );
     const tracks = await getTopTracks(artistUri, accessToken, analysisId);
     await saveSpotifyTracks(tracks);
@@ -93,7 +94,7 @@ const getSpotifyAnalysis = async (
       pilot_id,
       analysisId,
       Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.SEGMENTS,
+      STEP_OF_ANALYSIS.SEGMENTS
     );
     const segments = await getSegments([...tracks, ...albums]);
     const segmentsWithIcons = await getSegmentsWithIcons(segments, analysisId);
@@ -102,20 +103,20 @@ const getSpotifyAnalysis = async (
       pilot_id,
       analysisId,
       Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.SAVING_ANALYSIS,
+      STEP_OF_ANALYSIS.SAVING_ANALYSIS
     );
     await trackFunnelAnalysisChat(
       address,
       handle,
       newArtist?.account_id,
       pilot_id,
-      isWrapped ? "Wrapped" : "Spotify",
+      isWrapped ? "Wrapped" : "Spotify"
     );
     await updateAnalysisStatus(
       pilot_id,
       analysisId,
       Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.FINISHED,
+      STEP_OF_ANALYSIS.FINISHED
     );
     if (isWrapped)
       await createWrappedAnalysis(
@@ -123,7 +124,7 @@ const getSpotifyAnalysis = async (
         pilot_id,
         account_id,
         address,
-        existingArtistId,
+        existingArtistId
       );
     return;
   } catch (error) {
@@ -132,7 +133,7 @@ const getSpotifyAnalysis = async (
       pilot_id,
       analysisId,
       Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.ERROR,
+      STEP_OF_ANALYSIS.ERROR
     );
   }
 };

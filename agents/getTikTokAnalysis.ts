@@ -17,15 +17,16 @@ const getTikTokAnalysis = async (
   account_id: string | null,
   address: string | null,
   isWrapped: boolean,
-  existingArtistId: string | null = null,
+  existingArtistId: string | null = null
 ) => {
-  const newAnalysis = await beginAnalysis(
-    pilot_id,
-    handle,
-    Funnel_Type.TIKTOK,
-    existingArtistId,
-  );
-  const analysisId = newAnalysis.id;
+  const newAnalysis = await beginAnalysis(pilot_id, handle);
+
+  if (!newAnalysis?.agentStatus?.id) {
+    console.error("Failed to create analysis");
+    return;
+  }
+
+  const analysisId = newAnalysis.agentStatus.id;
   try {
     const { scrapedVideoUrls, scrapedProfile, analyzedProfileError } =
       await getSocialProfile(pilot_id, analysisId, handle, existingArtistId);
@@ -34,7 +35,7 @@ const getTikTokAnalysis = async (
         pilot_id,
         analysisId,
         Funnel_Type.TIKTOK,
-        analyzedProfileError?.status,
+        analyzedProfileError?.status
       );
       return;
     }
@@ -45,13 +46,13 @@ const getTikTokAnalysis = async (
       existingArtistId,
       scrapedProfile,
       "tiktok",
-      `https://tiktok.com/@${scrapedProfile?.username}`,
+      `https://tiktok.com/@${scrapedProfile?.username}`
     );
 
     const videoComments = await analyzeVideoComments(
       scrapedVideoUrls,
       pilot_id,
-      analysisId,
+      analysisId
     );
     if (isWrapped) {
     }
@@ -59,20 +60,20 @@ const getTikTokAnalysis = async (
       pilot_id,
       analysisId,
       videoComments,
-      Funnel_Type.TIKTOK,
+      Funnel_Type.TIKTOK
     );
     await trackFunnelAnalysisChat(
       address,
       handle,
       newArtist?.account_id,
       pilot_id,
-      isWrapped ? "Wrapped" : "TikTok",
+      isWrapped ? "Wrapped" : "TikTok"
     );
     await updateAnalysisStatus(
       pilot_id,
       analysisId,
       Funnel_Type.TIKTOK,
-      STEP_OF_ANALYSIS.FINISHED,
+      STEP_OF_ANALYSIS.FINISHED
     );
     if (isWrapped)
       await createWrappedAnalysis(
@@ -80,7 +81,7 @@ const getTikTokAnalysis = async (
         pilot_id,
         account_id,
         address,
-        existingArtistId,
+        existingArtistId
       );
     const fansSegments = await getFanSegments(segments, videoComments);
     await getSocialProfiles(fansSegments, newArtist.account_id);
@@ -91,7 +92,7 @@ const getTikTokAnalysis = async (
       pilot_id,
       analysisId,
       Funnel_Type.TIKTOK,
-      STEP_OF_ANALYSIS.ERROR,
+      STEP_OF_ANALYSIS.ERROR
     );
   }
 };

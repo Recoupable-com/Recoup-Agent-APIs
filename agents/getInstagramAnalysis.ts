@@ -15,15 +15,14 @@ const getInstagramAnalysis = async (
   account_id: string | null,
   address: string | null,
   isWrapped: boolean,
-  existingArtistId: string | null = null,
+  existingArtistId: string | null = null
 ) => {
-  const newAnalysis = await beginAnalysis(
-    pilot_id,
-    handle,
-    Funnel_Type.INSTAGRAM,
-    existingArtistId,
-  );
-  const analysisId = newAnalysis.id;
+  const newAnalysis = await beginAnalysis(pilot_id, handle);
+  if (!newAnalysis?.agentStatus?.id) {
+    console.error("Failed to create analysis");
+    return;
+  }
+  const analysisId = newAnalysis.agentStatus.id;
   try {
     const { scrapedPostUrls, scrapedProfile, analyzedProfileError } =
       await getSocialProfile(pilot_id, analysisId, handle, existingArtistId);
@@ -32,7 +31,7 @@ const getInstagramAnalysis = async (
         pilot_id,
         analysisId,
         Funnel_Type.INSTAGRAM,
-        analyzedProfileError?.status,
+        analyzedProfileError?.status
       );
       return;
     }
@@ -43,19 +42,19 @@ const getInstagramAnalysis = async (
       existingArtistId,
       scrapedProfile,
       "instagram",
-      `https://instagram.com/${scrapedProfile?.username}`,
+      `https://instagram.com/${scrapedProfile?.username}`
     );
 
     const postComments = await analyzeComments(
       pilot_id,
       analysisId,
-      scrapedPostUrls,
+      scrapedPostUrls
     );
     await analyzeSegments(
       pilot_id,
       analysisId,
       postComments,
-      Funnel_Type.INSTAGRAM,
+      Funnel_Type.INSTAGRAM
     );
     if (address) {
       await trackFunnelAnalysisChat(
@@ -63,14 +62,14 @@ const getInstagramAnalysis = async (
         handle,
         newArtist?.account_id,
         pilot_id,
-        isWrapped ? "Wrapped" : "Instagram",
+        isWrapped ? "Wrapped" : "Instagram"
       );
     }
     await updateAnalysisStatus(
       pilot_id,
       analysisId,
       Funnel_Type.INSTAGRAM,
-      STEP_OF_ANALYSIS.FINISHED,
+      STEP_OF_ANALYSIS.FINISHED
     );
     if (isWrapped)
       await createWrappedAnalysis(
@@ -78,7 +77,7 @@ const getInstagramAnalysis = async (
         pilot_id,
         account_id,
         address,
-        existingArtistId,
+        existingArtistId
       );
     return;
   } catch (error) {
@@ -87,7 +86,7 @@ const getInstagramAnalysis = async (
       pilot_id,
       analysisId,
       Funnel_Type.INSTAGRAM,
-      STEP_OF_ANALYSIS.ERROR,
+      STEP_OF_ANALYSIS.ERROR
     );
   }
 };

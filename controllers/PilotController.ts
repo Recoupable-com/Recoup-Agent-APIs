@@ -28,7 +28,7 @@ export const run_agent = async (req: Request, res: Response) => {
     if (isWrapped || type === Funnel_Type.INSTAGRAM)
       runInstagramAgent(agent.id, handles["instagram"], artistId as string);
     if (isWrapped || type === Funnel_Type.SPOTIFY)
-      runSpotifyAgent(agent.id, handles["instagram"], artistId as string);
+      runSpotifyAgent(agent.id, handles["spotify"], artistId as string);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });

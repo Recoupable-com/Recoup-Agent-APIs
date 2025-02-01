@@ -15,14 +15,17 @@ const getFanProfile = async (scraper: any, handle: string) => {
         bio,
         followerCount,
         followingCount,
-        type: "TWITTER",
-        link: `https://twitter.com/${handle}`,
+        profile_url: `https://twitter.com/${handle}`,
         username: handle,
       },
       email,
     };
   } catch (error) {
-    throw new Error(error as string);
+    console.error(error);
+    return {
+      profile: null,
+      email: null,
+    };
   }
 };
 

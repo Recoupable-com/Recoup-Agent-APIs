@@ -1,46 +1,40 @@
-import getActorStatus from "../apify/getActorStatus.js";
-import getDataset from "../apify/getDataset.js";
-import { Funnel_Type } from "../funnels.js";
-import { STEP_OF_ANALYSIS } from "../step.js";
-import updateAnalysisStatus from "../supabase/updateAgentStatus.js";
-import getFormattedComments from "./getFormattedComments.js";
+import { Post } from "../../types/agent";
+import getActorStatus from "../apify/getActorStatus";
+import getDataset from "../apify/getDataset";
+import { STEP_OF_AGENT } from "../step";
+import updateAgentStatus from "../supabase/updateAgentStatus";
+import getFormattedComments from "./getFormattedComments";
+import getPostCommentsDatasetId from "./getPostCommentsDatasetId";
 
 const getPostComments = async (
-  datasetId: string,
-  pilot_id: string | null = null,
-  analysisId: string,
+  agent_status_id: string | any,
+  scraping_posts: Post[],
 ) => {
+  const postUrls = scraping_posts.map(
+    (scraping_post) => scraping_post.post_url,
+  );
   try {
+    const datasetId = await getPostCommentsDatasetId(postUrls);
     let attempts = 0;
     const maxAttempts = 30;
     let progress = 0;
     while (1) {
       attempts++;
       progress = (attempts / maxAttempts) * 100;
-      if (progress < 20)
-        await updateAnalysisStatus(
-          pilot_id,
-          analysisId,
-          Funnel_Type.INSTAGRAM,
-          STEP_OF_ANALYSIS.POSTURLS,
-          progress,
-        );
-      if (progress > 20)
-        await updateAnalysisStatus(
-          pilot_id,
-          analysisId,
-          Funnel_Type.INSTAGRAM,
-          STEP_OF_ANALYSIS.POST_COMMENTS,
-          progress,
-        );
+      await updateAgentStatus(
+        agent_status_id,
+        STEP_OF_AGENT.POST_COMMENTS,
+        progress,
+      );
       await new Promise((resolve) => setTimeout(resolve, 3000));
       const data = await getDataset(datasetId);
-      const formattedData = getFormattedComments(data, analysisId);
+      const formattedData = getFormattedComments(data, scraping_posts);
       const status = await getActorStatus(datasetId);
       if (status === "SUCCEEDED" || progress > 95) return formattedData;
     }
+    return [];
   } catch (error) {
-    throw new Error(error as string);
+    return [];
   }
 };
 

@@ -2,7 +2,7 @@ import saveAccount from "../supabase/saveAccount";
 import saveAccountEmail from "../supabase/saveAccountEmail";
 import saveFanSegment from "../supabase/saveFanSegment";
 import saveSocial from "../supabase/saveSocial";
-import getFanProfile from "./getFanProfile";
+import getFanProfile from "./getProfile";
 
 const getSocialProfiles = async (
   scraper: any,

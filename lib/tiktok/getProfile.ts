@@ -1,31 +1,47 @@
-import getDataset from "../apify/getDataset.js";
-import { Funnel_Type } from "../funnels.js";
-import { STEP_OF_AGENT } from "../step.js";
-import { UNKNOWN_PROFILE_ERROR } from "../twitter/errors.js";
-import getFormattedAccount from "./getFormattedAccount.js";
+import { Database } from "../../types/database.types";
+import getDataset from "../apify/getDataset";
+import getFormattedAccount from "./getFormattedAccount";
+import getProfileDatasetId from "./getProfileDatasetId";
+
+type Social = Database["public"]["Tables"]["socials"]["Row"];
 
 const getProfile = async (
-  datasetId: string,
-) => {
+  handle: string,
+): Promise<{
+  error: any;
+  profile: null | Social;
+  videoUrls: null | string[];
+}> => {
   try {
+    const profileDatasetId = await getProfileDatasetId(handle);
     while (1) {
-      const datasetItems: any = await getDataset(datasetId);
-      const errorMessage = datasetItems?.[0]?.error;
-      if (errorMessage === UNKNOWN_PROFILE_ERROR) {
-        const error = {
-          status: STEP_OF_AGENT.UNKNOWN_PROFILE,
-          funnel_type: Funnel_Type.INSTAGRAM,
-          error: errorMessage,
+      const datasetItems: any = await getDataset(profileDatasetId);
+      const error = datasetItems?.[0]?.error;
+      if (error)
+        return {
+          error,
+          profile: null,
+          videoUrls: null,
         };
-        return { error };
-      }
-      if (errorMessage) throw new Error(errorMessage);
       const formattedAccount = getFormattedAccount(datasetItems);
-      if (formattedAccount) return formattedAccount;
+      if (formattedAccount)
+        return {
+          error: null,
+          profile: formattedAccount.profile,
+          videoUrls: formattedAccount.videoUrls,
+        };
     }
+    throw new Error();
   } catch (error) {
     console.error(error);
-    throw new Error(error as string);
+    return {
+      profile: null,
+      videoUrls: null,
+      error:
+        error instanceof Error
+          ? error
+          : new Error("Unknown error scraping profile"),
+    };
   }
 };
 

@@ -8,37 +8,26 @@ import { createAgent } from "../lib/supabase/createAgent";
 
 export const run_agent = async (req: Request, res: Response) => {
   try {
-    const { handles, type, artistId } = req.query ;
-    
+    const { handles, type, artistId } = req.body;
+
     const agent_type = Object.values(Funnel_Type).find(
       (value) => value === type,
     );
     if (!agent_type)
       return res.status(500).json({ message: "Agent type is invalid." });
-    
+
     const isWrapped = type === Funnel_Type.WRAPPED;
-    const agent = await createAgent()
+    const { agent } = await createAgent();
+    if (!agent?.id || !handles) return;
+
     if (isWrapped || type === Funnel_Type.TIKTOK)
-      runTikTokAgent(
-        agent.agent?.id,
-        handles["tiktok"],
-        artistId
-      );
-    // if (isWrapped || type === Funnel_Type.INSTAGRAM)
-    //   runInstagramAgent(
-    //     handles["instagram"],
-    //     artistId
-    //   );
-    // if (isWrapped || type === Funnel_Type.TWITTER)
-    //   runTwitterAgent(
-    //     handles["twitter"],
-    //     artistId
-    //   );
-    // if (isWrapped || type === Funnel_Type.SPOTIFY)
-    //   runSpotifyAgent(
-    //     handles["spotify"],
-    //     artistId
-    //   );
+      runTikTokAgent(agent.id, handles["tiktok"], artistId as string);
+    if (isWrapped || type === Funnel_Type.TWITTER)
+      runTwitterAgent(agent.id, handles["twitter"], artistId as string);
+    if (isWrapped || type === Funnel_Type.INSTAGRAM)
+      runInstagramAgent(agent.id, handles["instagram"], artistId as string);
+    if (isWrapped || type === Funnel_Type.SPOTIFY)
+      runSpotifyAgent(agent.id, handles["instagram"], artistId as string);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });

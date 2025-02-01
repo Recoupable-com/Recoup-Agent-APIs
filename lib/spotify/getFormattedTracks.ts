@@ -1,10 +1,8 @@
-const getFormattedTracks = (tracks: any, analysis_id: string) => {
+const getFormattedTracks = (tracks: any) => {
   return tracks.map((track: any) => ({
     uri: track.uri,
     name: track.name,
     popularity: track.popularity,
-    artist_name: track.artists?.[0]?.name || track.album.artists?.[0]?.name,
-    analysis_id,
   }));
 };
 

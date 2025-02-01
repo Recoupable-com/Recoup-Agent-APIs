@@ -1,78 +1,85 @@
 import { Scraper } from "agent-twitter-client";
-import { STEP_OF_ANALYSIS } from "../lib/step";
-import beginAnalysis from "../lib/supabase/initialize";
-import updateAnalysisStatus from "../lib/supabase/updateAgentStatus";
-import { Funnel_Type } from "../lib/funnels";
-import analyzeComments from "../lib/twitter/analyzeComments";
-import analyzeSegments from "../lib/analyzeSegments";
-import getSocialProfile from "../lib/twitter/getSocialProfile";
-import getFanSegments from "../lib/getFanSegments";
-import getSocialProfiles from "../lib/twitter/getSocialProfiles";
-import updateArtist from "../lib/updateArtist";
+import { STEP_OF_AGENT } from "../lib/step";
+import createSocial from "../lib/supabase/createSocial";
+import createAgentStatus from "../lib/supabase/createAgentStatus";
+import getProfile from "../lib/twitter/getProfile";
+import updateAgentStatus from "../lib/supabase/updateAgentStatus";
+import setArtistImage from "../lib/supabase/setArtistImage";
+import updateSocial from "../lib/supabase/updateSocial";
+import connectSocialToArtist from "../lib/supabase/connectSocialToArtist";
+import getAllTweets from "../lib/twitter/getAllTweets";
+import setNewPosts from "../lib/supabase/setNewPosts";
+import connectPostsToSocial from "../lib/supabase/connectPostsToSocial";
+import connectCommentsToSocial from "../lib/supabase/connectCommentsToSocial";
+import getTwitterCommentsPosts from "../lib/twitter/getTwitterCommentsPosts";
 
 const scraper = new Scraper();
 
 const runTwitterAgent = async (
+  agent_id: string,
   handle: string,
-  pilot_id: string,
-  account_id: string | null,
-  existingArtistId: string | null,
+  artist_id: string,
 ) => {
-  const newAnalysis = await beginAnalysis(
-    pilot_id,
-    handle,
-    Funnel_Type.TWITTER,
-    existingArtistId,
-  );
-  const analysisId = newAnalysis.id;
   try {
-    const scrappedProfile = await getSocialProfile(
-      scraper,
-      pilot_id,
-      analysisId,
-      handle,
-      existingArtistId,
-    );
-    const newArtist = await updateArtist(
-      pilot_id,
-      analysisId,
-      account_id,
-      existingArtistId,
-      scrappedProfile,
-      "twitter",
-      `https://x.com/${scrappedProfile?.username}`,
-    );
-    const comments = await analyzeComments(
-      scraper,
-      pilot_id,
-      analysisId,
-      handle,
-    );
+    const { social } = await createSocial({
+      username: handle,
+      profile_url: `https://x.com/${handle}`,
+    });
+    if (!social?.id) return;
 
-    const segments = await analyzeSegments(
-      pilot_id,
-      analysisId,
-      comments,
-      Funnel_Type.TWITTER,
+    const { agent_status } = await createAgentStatus(
+      agent_id,
+      social.id,
+      STEP_OF_AGENT.PROFILE,
     );
+    if (!agent_status?.id) return;
 
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.TWITTER,
-      STEP_OF_ANALYSIS.FINISHED,
-    );
-    const fansSegments = await getFanSegments(segments, comments);
-    await getSocialProfiles(scraper, fansSegments, newArtist.account_id);
+    const { profile } = await getProfile(scraper, handle);
+    if (!profile) {
+      await updateAgentStatus(agent_status.id, STEP_OF_AGENT.UNKNOWN_PROFILE);
+      return;
+    }
+
+    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.SETTING_UP_ARTIST);
+    await setArtistImage(artist_id, profile.avatar);
+    await updateSocial(social.id, profile);
+    await connectSocialToArtist(artist_id, social);
+
+    const allTweets = await getAllTweets(scraper, handle);
+    const { comments, postUrls } = getTwitterCommentsPosts(allTweets);
+
+    if (!postUrls?.length) {
+      await updateAgentStatus(agent_status.id, STEP_OF_AGENT.MISSING_POSTS);
+      return;
+    }
+
+    if (!comments?.length) {
+      await updateAgentStatus(agent_status.id, STEP_OF_AGENT.ERROR);
+      return;
+    }
+
+    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);
+    await setNewPosts(postUrls);
+    const posts = await connectPostsToSocial(social, postUrls);
+    const commentsWithPostId = comments
+      .map((comment: any) => {
+        const post = posts.find((ele) => ele.post_url === comment.post_url);
+        if (post)
+          return {
+            comment: comment.comment,
+            username: comment.username,
+            commented_at: comment.commented_at,
+            post_id: post.id,
+            profile_url: comment.profile_url,
+          };
+        return null;
+      })
+      .filter((ele: any) => ele !== null);
+
+    await connectCommentsToSocial(commentsWithPostId);
     return;
   } catch (error) {
     console.error(error);
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.TWITTER,
-      STEP_OF_ANALYSIS.ERROR,
-    );
   }
 };
 

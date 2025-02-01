@@ -1,21 +1,23 @@
-const getFormattedComments = (data: any, analysis_id: string) => {
-  const sorteddata = data.sort(
-    (a: any, b: any) => b?.createTime || 0 - a?.createTime || 0,
-  );
+import { Post } from "../../types/agent";
 
-  const comments = sorteddata.map((comment: any) => {
-    const { videoWebUrl, text, uniqueId, createTime } = comment;
-    return {
-      comment: text,
-      username: uniqueId,
-      post_url: videoWebUrl,
-      type: "TIKTOK",
-      analysis_id,
-      timestamp: new Date(createTime).getTime(),
-    };
-  });
+const getFormattedComments = (data: any, posts: Post[]) => {
+  const comments =
+    data?.map(async (comment: any) => {
+      const { videoWebUrl, text, createTime, uniqueId } = comment;
+      const post = posts.find((ele) => ele.post_url === videoWebUrl);
+      if (post && uniqueId)
+        return {
+          comment: text,
+          username: uniqueId,
+          commented_at: new Date(createTime).toISOString(),
+          post_id: post.id,
+          profile_url: `https://tiktok.com/@${uniqueId}`,
+        };
 
-  return comments;
+      return null;
+    }) || [];
+
+  return comments.filter((comment: any) => comment !== null);
 };
 
 export default getFormattedComments;

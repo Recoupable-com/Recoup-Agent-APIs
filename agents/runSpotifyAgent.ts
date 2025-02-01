@@ -1,120 +1,78 @@
-import { STEP_OF_ANALYSIS } from "../lib/step";
-import beginAnalysis from "../lib/supabase/initialize";
+import { STEP_OF_AGENT } from "../lib/step";
 import updateAnalysisStatus from "../lib/supabase/updateAgentStatus";
-import getSegments from "../lib/getSegments";
-import getSegmentsWithIcons from "../lib/getSegmentsWithIcons";
-import saveFunnelSegments from "../lib/supabase/saveFunnelSegments";
-import { Funnel_Type } from "../lib/funnels";
-import saveFunnelProfile from "../lib/supabase/saveFunnelProfile";
-import saveFunnelArtist from "../lib/supabase/saveFunnelArtist";
-import { getProfile } from "../lib/spotify/getProfile";
 import getAccessToken from "../lib/supabase/getAccessToken";
 import getAlbums from "../lib/spotify/getAlbums";
 import getTopTracks from "../lib/spotify/getTopTracks";
-import saveSpotifyAlbums from "../lib/supabase/saveSpotifyAlbums";
-import saveSpotifyTracks from "../lib/supabase/saveSpotifyTracks";
-import getArtist from "../lib/supabase/getArtist";
+import updateAgentStatus from "../lib/supabase/updateAgentStatus";
+import getArtist from "../lib/spotify/getArtist";
+import searchArtist from "../lib/spotify/searchArtist";
+import createSocial from "../lib/supabase/createSocial";
+import getProfile from "../lib/spotify/getProfile";
+import createAgentStatus from "../lib/supabase/createAgentStatus";
+import setArtistImage from "../lib/supabase/setArtistImage";
+import updateSocial from "../lib/supabase/updateSocial";
+import connectSocialToArtist from "../lib/supabase/connectSocialToArtist";
+import setNewAlbums from "../lib/supabase/setNewAlbums";
+import connectAlbumsToSocial from "../lib/supabase/connectAlbumsToSocial";
+import setNewTracks from "../lib/supabase/setNewTracks";
+import connectTracksToSocial from "../lib/supabase/connectTracksToSocial";
 
 const runSpotifyAgent = async (
+  agent_id: string,
   handle: string,
-  pilot_id: string,
-  account_id: string | null,
-  existingArtistId: string | null = null,
+  artist_id: string,
 ) => {
-  const newAnalysis = await beginAnalysis(
-    pilot_id,
-    handle,
-    Funnel_Type.SPOTIFY,
-    existingArtistId,
-  );
-  const analysisId = newAnalysis.id;
   try {
-    const existingArtist = await getArtist(existingArtistId);
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.PROFILE,
-    );
     const accessToken = await getAccessToken();
-    const data = await getProfile(handle, accessToken);
-    const profile = data.profile;
-    const artistUri = data.artistId;
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.CREATING_ARTIST,
-    );
-    const newArtist = await saveFunnelArtist(
-      Funnel_Type.SPOTIFY,
-      existingArtist?.name || profile?.name,
-      existingArtist?.image || profile?.avatar,
-      `https://open.spotify.com/artist/${artistUri}`,
-      account_id,
-      existingArtistId,
-    );
+    const { artist: searchedArtist } = await searchArtist(handle, accessToken);
+    let artistdata = null;
+    let profile_url = null;
+    if (!searchedArtist) {
+      const { artist } = await getArtist(handle, accessToken);
+      if (artist) artistdata = getProfile(artist);
+    } else artistdata = getProfile(searchedArtist);
 
-    await saveFunnelProfile({
-      ...profile,
-      type: "SPOTIFY",
-      analysis_id: analysisId,
-      artistId: newArtist.id,
+    const { social } = await createSocial({
+      username: handle,
+      profile_url: profile_url || `https://open.spotify.com/artist/${handle}`,
     });
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.CREATED_ARTIST,
-      0,
-      newArtist,
+
+    if (!social?.id) return;
+
+    const { agent_status } = await createAgentStatus(
+      agent_id,
+      social.id,
+      STEP_OF_AGENT.PROFILE,
     );
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.ALBUMS,
-    );
-    const albums = await getAlbums(artistUri, accessToken, analysisId);
-    await saveSpotifyAlbums(albums);
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.TRACKS,
-    );
-    const tracks = await getTopTracks(artistUri, accessToken, analysisId);
-    await saveSpotifyTracks(tracks);
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.SEGMENTS,
-    );
-    const segments = await getSegments([...tracks, ...albums]);
-    const segmentsWithIcons = await getSegmentsWithIcons(segments, analysisId);
-    await saveFunnelSegments(segmentsWithIcons);
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.SAVING_ANALYSIS,
-    );
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.FINISHED,
-    );
+    if (!agent_status?.id) return;
+
+    if (!artistdata?.profile) {
+      await updateAgentStatus(agent_status.id, STEP_OF_AGENT.UNKNOWN_PROFILE);
+      return;
+    }
+
+    const profile = artistdata.profile;
+    const artistUri = artistdata.artistId;
+
+    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.SETTING_UP_ARTIST);
+    await setArtistImage(artist_id, profile.avatar);
+    await updateSocial(social.id, profile);
+    await connectSocialToArtist(artist_id, social);
+
+    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.ALBUMS);
+    const albums = await getAlbums(artistUri, accessToken);
+    await setNewAlbums(albums);
+    await connectAlbumsToSocial(social, albums);
+
+    await updateAnalysisStatus(agent_status.id, STEP_OF_AGENT.TRACKS);
+    const tracks = await getTopTracks(artistUri, accessToken);
+    await setNewTracks(tracks);
+    await connectTracksToSocial(social, tracks);
+
+    await updateAnalysisStatus(agent_status.id, STEP_OF_AGENT.FINISHED);
     return;
   } catch (error) {
     console.error(error);
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.SPOTIFY,
-      STEP_OF_ANALYSIS.ERROR,
-    );
   }
 };
 

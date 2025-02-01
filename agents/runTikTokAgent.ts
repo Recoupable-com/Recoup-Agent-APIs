@@ -1,63 +1,68 @@
-import { Funnel_Type } from "../lib/funnels";
-import updateAnalysisStatus from "../lib/supabase/updateAgentStatus";
-import analyzeSegments from "../lib/analyzeSegments";
-import analyzeVideoComments from "../lib/tiktok/analyzeVideoComments";
-import getSocialProfile from "../lib/tiktok/getSocialProfile";
-import getFanSegments from "../lib/getFanSegments";
-import getSocialProfiles from "../lib/tiktok/getSocialProfiles";
 import updateAgentStatus from "../lib/supabase/updateAgentStatus";
-import updateArtist from "../lib/updateArtist";
+import createSocial from "../lib/supabase/createSocial";
+import createAgentStatus from "../lib/supabase/createAgentStatus";
+import { STEP_OF_AGENT } from "../lib/step";
+import getProfile from "../lib/tiktok/getProfile";
+import setArtistImage from "../lib/supabase/setArtistImage";
+import updateSocial from "../lib/supabase/updateSocial";
+import connectSocialToArtist from "../lib/supabase/connectSocialToArtist";
+import setNewPosts from "../lib/supabase/setNewPosts";
+import getScrapingPosts from "../lib/supabase/getScrapingPosts";
+import connectPostsToSocial from "../lib/supabase/connectPostsToSocial";
+import getVideoComments from "../lib/tiktok/getVideoComments";
+import connectCommentsToSocial from "../lib/supabase/connectCommentsToSocial";
 
 const runTikTokAgent = async (
   agent_id: string,
   handle: string,
-  artistId: string,
+  artist_id: string,
 ) => {
   try {
-    const { scrapedVideoUrls, scrapedProfile, analyzedProfileError } =
-      await getSocialProfile(agent_id, handle);
-    if (!scrapedProfile || analyzedProfileError) {
-      await updateAgentStatus(
-        agent_id,
-        Funnel_Type.TIKTOK,
-        analyzedProfileError?.status
-      );
+    const { social } = await createSocial({
+      username: handle,
+      profile_url: `https://tiktok.com/@${handle}`,
+    });
+    if (!social?.id) return;
+
+    const { agent_status } = await createAgentStatus(
+      agent_id,
+      social.id,
+      STEP_OF_AGENT.PROFILE,
+    );
+    if (!agent_status?.id) return;
+
+    const { profile, videoUrls } = await getProfile(handle);
+    if (!profile) {
+      await updateAgentStatus(agent_status.id, STEP_OF_AGENT.UNKNOWN_PROFILE);
       return;
     }
-    const newArtist = await updateArtist(
-      artistId,
-      scrapedProfile
-    );
 
-    const videoComments = await analyzeVideoComments(
-      scrapedVideoUrls,
-      pilot_id,
-      analysisId,
-    );
-  
-    const segments = await analyzeSegments(
-      pilot_id,
-      analysisId,
-      videoComments,
-      Funnel_Type.TIKTOK,
-    );
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.TIKTOK,
-      STEP_OF_ANALYSIS.FINISHED,
-    );
-    const fansSegments = await getFanSegments(segments, videoComments);
-    await getSocialProfiles(fansSegments, newArtist.account_id);
+    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.SETTING_UP_ARTIST);
+    await setArtistImage(artist_id, profile.avatar);
+    await updateSocial(social.id, profile);
+    await connectSocialToArtist(artist_id, social);
+
+    if (!videoUrls?.length) {
+      await updateAgentStatus(agent_status.id, STEP_OF_AGENT.MISSING_POSTS);
+      return;
+    }
+
+    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);
+    await setNewPosts(videoUrls);
+    await connectPostsToSocial(social, videoUrls);
+    const scrapingPosts = await getScrapingPosts(videoUrls);
+    const comments = await getVideoComments(agent_status.id, scrapingPosts);
+
+    if (!comments.length) {
+      await updateAgentStatus(agent_status.id, STEP_OF_AGENT.ERROR);
+      return;
+    }
+
+    await connectCommentsToSocial(comments);
+    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.FINISHED);
     return;
   } catch (error) {
     console.error(error);
-    await updateAnalysisStatus(
-      pilot_id,
-      analysisId,
-      Funnel_Type.TIKTOK,
-      STEP_OF_ANALYSIS.ERROR,
-    );
   }
 };
 

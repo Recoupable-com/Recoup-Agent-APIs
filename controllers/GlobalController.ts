@@ -8,7 +8,9 @@ import { z } from "zod";
 import { Scraper } from "agent-twitter-client";
 import getFansProfiles from "../lib/getFansSegments";
 import getTikTokFanProfile from "../lib/tiktok/getFanProfile";
-import getTwitterFanProfile from "../lib/twitter/getFanProfile";
+import getTwitterFanProfile from "../lib/twitter/getProfile";
+import getSegments from "../lib/getSegments";
+import getSegmentsWithIcons from "../lib/getSegmentsWithIcons";
 
 export const get_fans_segments = async (req: Request, res: Response) => {
   try {
@@ -135,28 +137,41 @@ export const get_social_handles = async (req: Request, res: Response) => {
 };
 
 export const get_autopilot = async (req: Request, res: Response) => {
-  const { pilotId } = req.query;
+  const { agentId } = req.query;
   try {
     const { data } = await supabase
-      .from("funnel_analytics")
+      .from("agents")
       .select(
-        `*,
-      funnel_analytics_segments (
-        *
-      ),
-      funnel_analytics_profile (
+        `
         *,
-        artists (
+        agent_status (
           *,
-          artist_social_links (
-            *
+          social:socials (
+            *,
+            social_posts (
+              *,
+              post_comments (
+                *
+              )
+            )
           )
         )
-      )`,
+      `,
       )
-      .eq("pilot_id", pilotId);
-
+      .eq("id", agentId);
     return res.status(200).json({ data });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error });
+  }
+};
+
+export const get_segments = async (req: Request, res: Response) => {
+  try {
+    const { comments } = req.body;
+    const segments = await getSegments(comments);
+    const segments_with_icons = await getSegmentsWithIcons(segments);
+    return res.status(200).json({ segments_with_icons });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });

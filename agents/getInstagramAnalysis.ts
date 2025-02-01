@@ -58,12 +58,6 @@ const getInstagramAnalysis = async (
 
     analysisId = agentStatus.id;
 
-    // Create enriched profile with social ID
-    const enrichedProfile = {
-      ...scrapedProfile,
-      id: social.id,
-    };
-
     const postComments = await analyzeComments(
       pilot_id,
       analysisId,

@@ -6,9 +6,6 @@ import loadCookies from "./loadCookies.js";
 import saveCookies from "./saveCookies.js";
 
 export const getAllTweets = async (scraper: any, handle: string) => {
-  console.log("getAllTweets");
-  console.log("handle", handle);
-  console.log("scraper", scraper);
   const allTweets = new Map();
   let previousCount = 0;
   let stagnantBatches = 0;
@@ -20,83 +17,47 @@ export const getAllTweets = async (scraper: any, handle: string) => {
   const cookies_path = path.join(
     process.cwd(),
     "cookies",
-    `${username}_cookies.json`
+    `${username}_cookies.json`,
   );
-  console.log("cookies_path", cookies_path);
 
   try {
-    // First try with guest auth
+    await loadCookies(scraper, cookies_path);
+    const isLoggedIn = await scraper.isLoggedIn();
+    if (!isLoggedIn) {
+      await scraper.login(username, password, email);
+      const isNewLoggedIn = await scraper.isLoggedIn();
+      if (isNewLoggedIn) await saveCookies(scraper, cookies_path);
+    }
+
     const searchResults = scraper.searchTweets(
       `to:${handle}`,
       MAX_TWEETS,
-      SearchMode.Latest
+      SearchMode.Latest,
     );
 
-    // Only attempt login if guest auth fails
-    let loginAttempted = false;
-    let retryCount = 0;
-    const MAX_RETRIES = 3;
+    for await (const tweet of searchResults) {
+      if (tweet && !allTweets.has(tweet.id)) {
+        const processedTweet = processTweetData(tweet);
+        if (processedTweet) {
+          allTweets.set(tweet.id, processedTweet);
 
-    try {
-      for await (const tweet of searchResults) {
-        if (tweet && !allTweets.has(tweet.id)) {
-          const processedTweet = processTweetData(tweet);
-          if (processedTweet) {
-            allTweets.set(tweet.id, processedTweet);
-          }
-        }
-      }
-    } catch (searchError) {
-      // If guest auth fails, try login
-      if (!loginAttempted) {
-        loginAttempted = true;
-        console.log("Guest auth failed, attempting login...");
-
-        // Try to load existing cookies first
-        await loadCookies(scraper, cookies_path);
-        let isLoggedIn = await scraper.isLoggedIn();
-
-        while (!isLoggedIn && retryCount < MAX_RETRIES) {
-          try {
-            await new Promise((resolve) => setTimeout(resolve, 2000)); // Add delay between attempts
-            await scraper.login(username, password, email);
-            isLoggedIn = await scraper.isLoggedIn();
-            if (isLoggedIn) {
-              await saveCookies(scraper, cookies_path);
-              console.log("Login successful");
-
-              // Retry search with authenticated client
-              const authSearchResults = scraper.searchTweets(
-                `to:${handle}`,
-                MAX_TWEETS,
-                SearchMode.Latest
-              );
-
-              for await (const tweet of authSearchResults) {
-                if (tweet && !allTweets.has(tweet.id)) {
-                  const processedTweet = processTweetData(tweet);
-                  if (processedTweet) {
-                    allTweets.set(tweet.id, processedTweet);
-                  }
-                }
+          if (allTweets.size % 100 === 0) {
+            if (allTweets.size === previousCount) {
+              stagnantBatches++;
+              if (stagnantBatches >= MAX_STAGNANT_BATCHES) {
+                break;
               }
-              break;
+            } else {
+              stagnantBatches = 0;
             }
-          } catch (loginError) {
-            console.error(
-              `Login attempt ${retryCount + 1} failed:`,
-              loginError
-            );
-            retryCount++;
+            previousCount = allTweets.size;
           }
         }
       }
     }
-
     return Array.from(allTweets.values());
   } catch (error) {
-    console.error("Fatal error in getAllTweets:", error);
-    throw error;
+    throw new Error(error as string);
   }
 };
 

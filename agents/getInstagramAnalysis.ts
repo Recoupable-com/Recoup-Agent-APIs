@@ -6,7 +6,6 @@ import createWrappedAnalysis from "./createWrappedAnalysis";
 import analyzeComments from "../lib/instagram/analyzeComments";
 import analyzeSegments from "../lib/analyzeSegments";
 import getSocialProfile from "../lib/instagram/getSocialProfile";
-import { createOrGetSocial } from "../lib/supabase/createOrGetSocial";
 
 const getInstagramAnalysis = async (
   handle: string,
@@ -40,10 +39,10 @@ const getInstagramAnalysis = async (
       0
     );
 
-    const { scrapedProfile, scrapedPostUrls, analyzedProfileError } =
+    const { scrapedProfile, scrapedPostUrls, analyzedProfileError, socialId } =
       await getSocialProfile(pilot_id, "", handle, existingArtistId);
 
-    if (!scrapedProfile || analyzedProfileError) {
+    if (!scrapedProfile || analyzedProfileError || !socialId) {
       console.error(
         "❌ [getInstagramAnalysis] Failed to get Instagram profile:",
         analyzedProfileError
@@ -63,40 +62,11 @@ const getInstagramAnalysis = async (
     );
     console.log("📝 [getInstagramAnalysis] Post URLs:", scrapedPostUrls);
 
-    // Create or get social record
-    console.log("📝 [getInstagramAnalysis] Creating/getting social record...");
-    const { social, error: socialError } = await createOrGetSocial(
-      scrapedProfile.username,
-      `https://instagram.com/${scrapedProfile.username}`,
-      scrapedProfile.avatar,
-      scrapedProfile.bio,
-      scrapedProfile.followerCount,
-      scrapedProfile.followingCount,
-      null // region is not available from Instagram
-    );
-
-    console.log("📝 [getInstagramAnalysis] Social record result:", social);
-
-    if (socialError || !social) {
-      console.error(
-        "❌ [getInstagramAnalysis] Failed to create/get social record:",
-        socialError
-      );
-      await updateAnalysisStatus(
-        pilot_id,
-        "",
-        Funnel_Type.INSTAGRAM,
-        STEP_OF_ANALYSIS.ERROR,
-        0
-      );
-      return;
-    }
-
     // Now create the analysis with the social ID
     console.log("📝 [getInstagramAnalysis] Beginning analysis...");
     const { agentStatus, error: analysisError } = await beginAnalysis(
       pilot_id,
-      social.id
+      socialId
     );
 
     if (analysisError || !agentStatus) {

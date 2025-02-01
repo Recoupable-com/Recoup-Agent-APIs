@@ -40,8 +40,35 @@ const getInstagramAnalysis = async (
       0
     );
 
+    // Create or get social record first so we can use its ID for saving posts
+    console.log("📝 [getInstagramAnalysis] Creating/getting social record...");
+    const { social, error: socialError } = await createOrGetSocial(
+      handle, // Use handle initially, will update later if needed
+      `https://instagram.com/${handle}`,
+      null, // Will update these fields after getting profile
+      null,
+      null,
+      null,
+      null
+    );
+
+    if (socialError || !social) {
+      console.error(
+        "❌ [getInstagramAnalysis] Failed to create/get social record:",
+        socialError
+      );
+      await updateAnalysisStatus(
+        pilot_id,
+        "",
+        Funnel_Type.INSTAGRAM,
+        STEP_OF_ANALYSIS.ERROR,
+        0
+      );
+      return;
+    }
+
     const { scrapedProfile, scrapedPostUrls, analyzedProfileError } =
-      await getSocialProfile(pilot_id, "", handle, existingArtistId);
+      await getSocialProfile(pilot_id, "", handle, existingArtistId, social.id);
 
     if (!scrapedProfile || analyzedProfileError) {
       console.error(
@@ -63,24 +90,28 @@ const getInstagramAnalysis = async (
     );
     console.log("📝 [getInstagramAnalysis] Post URLs:", scrapedPostUrls);
 
-    // Create or get social record
-    console.log("📝 [getInstagramAnalysis] Creating/getting social record...");
-    const { social, error: socialError } = await createOrGetSocial(
-      scrapedProfile.username,
-      `https://instagram.com/${scrapedProfile.username}`,
-      scrapedProfile.avatar,
-      scrapedProfile.bio,
-      scrapedProfile.followerCount,
-      scrapedProfile.followingCount,
-      null // region is not available from Instagram
+    // Update social record with profile data
+    console.log("📝 [getInstagramAnalysis] Updating social record...");
+    const { social: updatedSocial, error: updateSocialError } =
+      await createOrGetSocial(
+        scrapedProfile.username,
+        `https://instagram.com/${scrapedProfile.username}`,
+        scrapedProfile.avatar,
+        scrapedProfile.bio,
+        scrapedProfile.followerCount,
+        scrapedProfile.followingCount,
+        null // region is not available from Instagram
+      );
+
+    console.log(
+      "📝 [getInstagramAnalysis] Social record result:",
+      updatedSocial
     );
 
-    console.log("📝 [getInstagramAnalysis] Social record result:", social);
-
-    if (socialError || !social) {
+    if (updateSocialError || !updatedSocial) {
       console.error(
-        "❌ [getInstagramAnalysis] Failed to create/get social record:",
-        socialError
+        "❌ [getInstagramAnalysis] Failed to update social record:",
+        updateSocialError
       );
       await updateAnalysisStatus(
         pilot_id,
@@ -96,7 +127,7 @@ const getInstagramAnalysis = async (
     console.log("📝 [getInstagramAnalysis] Beginning analysis...");
     const { agentStatus, error: analysisError } = await beginAnalysis(
       pilot_id,
-      social.id
+      updatedSocial.id
     );
 
     if (analysisError || !agentStatus) {

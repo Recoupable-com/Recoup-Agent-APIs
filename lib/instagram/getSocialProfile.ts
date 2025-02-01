@@ -6,13 +6,19 @@ const getSocialProfile = async (
   pilot_id: string | null,
   analysisId: string,
   handle: string,
-  existingArtistId: string | null
+  existingArtistId: string | null,
+  socialId?: string
 ) => {
   console.log(
     "🚀 [getSocialProfile] Starting profile scrape for handle:",
     handle
   );
-  console.log("📝 Parameters:", { pilot_id, analysisId, existingArtistId });
+  console.log("📝 Parameters:", {
+    pilot_id,
+    analysisId,
+    existingArtistId,
+    socialId,
+  });
 
   let scrapedProfile, scrapedPostUrls, analyzedProfileError;
 
@@ -20,7 +26,8 @@ const getSocialProfile = async (
   const { profile, latestPosts, error } = await analyzeProfile(
     pilot_id,
     analysisId,
-    handle
+    handle,
+    socialId
   );
 
   scrapedProfile = profile;
@@ -40,7 +47,8 @@ const getSocialProfile = async (
     const { profile, latestPosts, error } = await analyzeProfile(
       pilot_id,
       analysisId,
-      handles.instagram.replace(/@/g, "")
+      handles.instagram.replace(/@/g, ""),
+      socialId
     );
     analyzedProfileError = error;
     scrapedProfile = profile;

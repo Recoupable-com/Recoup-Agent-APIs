@@ -11,7 +11,7 @@ export const run_agent = async (req: Request, res: Response) => {
     const { handles, type, artistId } = req.body;
 
     const agent_type = Object.values(Funnel_Type).find(
-      (value) => value === type,
+      (value) => value === type
     );
     if (!agent_type)
       return res.status(500).json({ message: "Agent type is invalid." });

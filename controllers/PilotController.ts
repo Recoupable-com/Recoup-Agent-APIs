@@ -11,7 +11,7 @@ export const run_agent = async (req: Request, res: Response) => {
     const { handles, type, artistId } = req.body;
 
     const agent_type = Object.values(Funnel_Type).find(
-      (value) => value === type
+      (value) => value === type,
     );
     if (!agent_type)
       return res.status(500).json({ message: "Agent type is invalid." });
@@ -19,6 +19,7 @@ export const run_agent = async (req: Request, res: Response) => {
     const isWrapped = type === Funnel_Type.WRAPPED;
     const { agent } = await createAgent();
     if (!agent?.id || !handles) return;
+    res.status(200).json({ agentId: agent.id });
 
     if (isWrapped || type === Funnel_Type.TIKTOK)
       runTikTokAgent(agent.id, handles["tiktok"], artistId as string);

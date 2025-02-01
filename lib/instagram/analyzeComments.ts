@@ -1,4 +1,4 @@
-import saveFunnelComments from "../supabase/saveFunnelComments";
+import savePostComments from "../supabase/savePostComments";
 import getPostComments from "./getPostComments";
 import getPostCommentsDatasetId from "./getPostCommentsDatasetId";
 
@@ -14,7 +14,15 @@ const analyzeComments = async (
     analysisId
   );
   console.log("📝 [analyzeComments] Post comments:", postComments);
-  await saveFunnelComments(postComments);
+
+  // Save to post_comments table with comment author's social IDs
+  const formattedComments = postComments.map((comment: any) => ({
+    text: comment.comment,
+    timestamp: new Date(comment.timestamp).toISOString(),
+    ownerUsername: comment.username,
+    postUrl: comment.post_url,
+  }));
+  await savePostComments(formattedComments);
 
   return postComments;
 };

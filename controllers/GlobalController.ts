@@ -137,28 +137,35 @@ export const get_social_handles = async (req: Request, res: Response) => {
 export const get_autopilot = async (req: Request, res: Response) => {
   const { pilotId } = req.query;
   try {
-    const { data } = await supabase
-      .from("funnel_analytics")
-      .select(
-        `*,
-      funnel_analytics_segments (
-        *
-      ),
-      funnel_analytics_profile (
-        *,
-        artists (
-          *,
-          artist_social_links (
-            *
-          )
-        )
-      )`,
-      )
-      .eq("pilot_id", pilotId);
+    // Get the latest agent_status record for this pilot
+    const { data: agentStatus, error: statusError } = await supabase
+      .from("agent_status")
+      .select("id, agent_id, social_id, status, progress, updated_at")
+      .eq("agent_id", pilotId)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single();
 
-    return res.status(200).json({ data });
+    if (statusError) {
+      console.error("Failed to fetch agent status:", statusError);
+      return res.status(500).json({ error: statusError });
+    }
+
+    if (!agentStatus) {
+      return res
+        .status(404)
+        .json({ error: "No analysis found for this pilot ID" });
+    }
+
+    return res.status(200).json({
+      data: {
+        status: agentStatus.status,
+        progress: agentStatus.progress,
+        updated_at: agentStatus.updated_at,
+      },
+    });
   } catch (error) {
-    console.error(error);
+    console.error("Error in get_autopilot:", error);
     return res.status(500).json({ error });
   }
 };

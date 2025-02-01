@@ -12,19 +12,16 @@ const createArtist = async (
   existingArtistId: string | null,
   profile: any,
   funnel_type: string,
-  socialUrl: any
+  socialUrl: any,
 ) => {
-  console.log("profile", profile);
   try {
     const existingArtist = await getArtist(existingArtistId);
-    console.log("existingArtist", existingArtist);
     const avatar = await uploadPfpToIpfs(profile.avatar);
-    console.log("avatar", avatar);
     await updateAnalysisStatus(
       pilot_id,
       analysisId,
       funnel_type,
-      STEP_OF_ANALYSIS.CREATING_ARTIST
+      STEP_OF_ANALYSIS.CREATING_ARTIST,
     );
     const newArtist = await saveFunnelArtist(
       funnel_type,
@@ -32,7 +29,7 @@ const createArtist = async (
       existingArtist?.image || avatar,
       socialUrl,
       account_id,
-      existingArtistId
+      existingArtistId,
     );
 
     await saveFunnelProfile({
@@ -47,7 +44,7 @@ const createArtist = async (
       funnel_type,
       STEP_OF_ANALYSIS.CREATED_ARTIST,
       0,
-      newArtist
+      newArtist,
     );
 
     return newArtist;

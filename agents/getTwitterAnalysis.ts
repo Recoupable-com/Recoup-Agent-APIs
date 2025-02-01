@@ -11,6 +11,8 @@ import analyzeSegments from "../lib/analyzeSegments";
 import getSocialProfile from "../lib/twitter/getSocialProfile";
 import getFanSegments from "../lib/getFanSegments";
 import getSocialProfiles from "../lib/twitter/getSocialProfiles";
+import { createOrGetSocial } from "../lib/supabase/createOrGetSocial";
+import type { Database } from "../types/database.types";
 
 const scraper = new Scraper();
 
@@ -20,77 +22,94 @@ const getTwitterAnalysis = async (
   account_id: string | null,
   address: string | null,
   isWrapped: boolean,
-  existingArtistId: string | null = null,
+  existingArtistId: string | null = null
 ) => {
-  const newAnalysis = await beginAnalysis(
-    pilot_id,
-    handle,
-    Funnel_Type.TWITTER,
-    existingArtistId,
-  );
-  const analysisId = newAnalysis.id;
+  console.log("getTwitterAnalysis");
+  let analysisId;
   try {
+    // Get Twitter profile first
     const scrappedProfile = await getSocialProfile(
       scraper,
       pilot_id,
-      analysisId,
+      "", // Empty string instead of null for analysisId
       handle,
-      existingArtistId,
+      existingArtistId
     );
-    const newArtist = await createArtist(
+
+    // Create or get social record
+    const { social, error: socialError } = await createOrGetSocial(
+      scrappedProfile.username,
+      `https://twitter.com/${scrappedProfile.username}`,
+      scrappedProfile.avatar,
+      scrappedProfile.bio,
+      scrappedProfile.followerCount,
+      scrappedProfile.followingCount,
+      null // region is not available from Twitter
+    );
+
+    console.log("social", social);
+
+    if (socialError || !social) {
+      console.error("Failed to create/get social record:", socialError);
+      throw socialError;
+    }
+
+    // Now create the analysis with the social ID
+    const { agentStatus, error: analysisError } = await beginAnalysis(
       pilot_id,
-      analysisId,
-      account_id,
-      existingArtistId,
-      scrappedProfile,
-      "twitter",
-      `https://x.com/${scrappedProfile?.username}`,
+      social.id
     );
+
+    if (analysisError || !agentStatus) {
+      console.error("Failed to create analysis:", analysisError);
+      throw analysisError;
+    }
+
+    console.log("agentStatus", agentStatus);
+    analysisId = agentStatus.id;
+
     const comments = await analyzeComments(
       scraper,
       pilot_id,
       analysisId,
-      handle,
+      handle
     );
 
     const segments = await analyzeSegments(
       pilot_id,
       analysisId,
       comments,
-      Funnel_Type.TWITTER,
+      Funnel_Type.TWITTER
     );
 
-    await trackFunnelAnalysisChat(
-      address,
-      handle,
-      newArtist?.account_id,
-      pilot_id,
-      isWrapped ? "Wrapped" : "Twitter",
-    );
     await updateAnalysisStatus(
       pilot_id,
       analysisId,
       Funnel_Type.TWITTER,
-      STEP_OF_ANALYSIS.FINISHED,
+      STEP_OF_ANALYSIS.FINISHED
     );
-    if (isWrapped)
+
+    if (isWrapped) {
       await createWrappedAnalysis(
         handle,
         pilot_id,
         account_id,
         address,
-        existingArtistId,
+        existingArtistId
       );
+    }
+
     const fansSegments = await getFanSegments(segments, comments);
-    await getSocialProfiles(scraper, fansSegments, newArtist.account_id);
+    await getSocialProfiles(scraper, fansSegments, account_id);
     return;
   } catch (error) {
     console.error(error);
     await updateAnalysisStatus(
-      pilot_id,
+      // We can't update the analysis status if we don't have an analysisId
+      pilot_id, // This is expected if the error occurred before analysis creation
       analysisId,
       Funnel_Type.TWITTER,
-      STEP_OF_ANALYSIS.ERROR,
+      STEP_OF_ANALYSIS.ERROR
     );
   }
 };

@@ -7,7 +7,7 @@ import getFanProfile from "./getFanProfile";
 const getSocialProfiles = async (
   scraper: any,
   fansSegments: any,
-  artistId: string,
+  artistId: string | null
 ) => {
   try {
     const socialProfilesPromise = fansSegments.map(async (fanSegment: any) => {

@@ -22,26 +22,30 @@ const createWrappedAnalysis = async (
   pilot_id: string,
   account_id: string | null,
   address: string | null,
-  existingArtistId: string | null,
+  existingArtistId: string | null
 ) => {
   const funnel_analyses = await getAnalyses(pilot_id);
   const wrappedCompleted = checkWrappedCompleted(funnel_analyses);
   if (!wrappedCompleted) return;
   const newAnalysis = await beginAnalysis(pilot_id, handle);
-  const analysisId = newAnalysis.id;
+  if (!newAnalysis?.agentStatus?.id) {
+    console.error("Failed to create analysis");
+    return;
+  }
+  const analysisId = newAnalysis.agentStatus.id;
   try {
     const artist = getAggregatedArtist(funnel_analyses);
     const existingArtist = await getArtist(existingArtistId);
     const aggregatedArtistProfile = getAggregatedProfile(
       artist,
-      existingArtist,
+      existingArtist
     );
 
     const artistId = await updateArtistProfile(
       account_id,
       aggregatedArtistProfile.image,
       aggregatedArtistProfile.name,
-      existingArtistId,
+      existingArtistId
     );
 
     aggregatedArtistProfile.account_socials.forEach(async (link: SOCIAL) => {
@@ -50,7 +54,7 @@ const createWrappedAnalysis = async (
 
     const aggregatedSocialProfile = getAggregatedSocialProfile(
       funnel_analyses,
-      existingArtist,
+      existingArtist
     );
     await saveFunnelProfile({
       ...aggregatedSocialProfile,
@@ -69,14 +73,14 @@ const createWrappedAnalysis = async (
         handle,
         artistId,
         pilot_id,
-        "Wrapped",
+        "Wrapped"
       );
     }
     await updateAnalysisStatus(
       pilot_id,
       analysisId,
       Funnel_Type.WRAPPED,
-      STEP_OF_ANALYSIS.WRAPPED_COMPLETED,
+      STEP_OF_ANALYSIS.WRAPPED_COMPLETED
     );
     return;
   } catch (error) {

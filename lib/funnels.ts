@@ -1,12 +1,11 @@
 export const Funnel_Type = {
+  NONE: "none",
   TIKTOK: "tiktok",
-  YOUTUBE: "youtube",
-  INSTAGRAM: "instagram",
   TWITTER: "twitter",
   SPOTIFY: "spotify",
-  APPLE: "apple",
+  INSTAGRAM: "instagram",
   WRAPPED: "wrapped",
-} as const;
+};
 
 export type SOCIAL = {
   id: string;

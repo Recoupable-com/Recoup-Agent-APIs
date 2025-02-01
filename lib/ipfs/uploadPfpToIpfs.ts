@@ -7,7 +7,6 @@ const uploadPfpToIpfs = async (image: string) => {
     const { blob, type } = await getBlob(image);
     const avatarBlob = new Blob([blob], { type });
     const avatarCid = await uploadToIpfs(avatarBlob);
-    console.log("avatarCid", avatarCid);
     if (!avatarCid) return "";
     return `https://ipfs.decentralized-content.com/ipfs/${avatarCid}`;
   } catch (error) {

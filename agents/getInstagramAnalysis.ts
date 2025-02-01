@@ -16,6 +16,7 @@ const getInstagramAnalysis = async (
   isWrapped: boolean,
   existingArtistId: string | null = null
 ) => {
+  let analysisId;
   try {
     // Get Instagram profile first
     const { scrapedProfile, scrapedPostUrls, analyzedProfileError } =
@@ -55,7 +56,7 @@ const getInstagramAnalysis = async (
       return;
     }
 
-    const analysisId = agentStatus.id;
+    analysisId = agentStatus.id;
 
     // Create enriched profile with social ID
     const enrichedProfile = {
@@ -95,6 +96,13 @@ const getInstagramAnalysis = async (
     return;
   } catch (error) {
     console.error("Error in getInstagramAnalysis:", error);
+
+    await updateAnalysisStatus(
+      pilot_id,
+      analysisId,
+      Funnel_Type.INSTAGRAM,
+      STEP_OF_ANALYSIS.ERROR
+    );
   }
 };
 

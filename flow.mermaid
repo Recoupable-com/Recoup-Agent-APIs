@@ -1,25 +1,80 @@
 graph TD
+    %% Twitter Funnel
+    subgraph Twitter
     A[GET /api/autopilot?handle=sweetman_eth&type=twitter] --> B[PilotController.run_agent]
     B --> B1[Extract handle & type from query]
     B1 --> B2[Validate agent_type]
-    B2 --> C[Generate pilotId using uuidV4]
-    C --> C1[Return pilotId to client]
-    C1 --> D[Start getTwitterAnalysis in background]
+    B2 --> C[Create record in agents table]
+    C --> C1[Get pilotId from agents.id]
+    C1 --> C2[Return pilotId to client]
+    C2 --> D[Start getTwitterAnalysis in background]
     D --> E[getSocialProfile]
-    E --> F[Profile Found]
-    F --> G[createArtist]
+    E --> E1[Profile Found]
+    E1 --> E2[createOrGetSocial]
+    E2 --> E3[Social record created/retrieved]
+    E3 --> F[beginAnalysis]
+    F --> F1[Create record in agent_status table]
+    F1 --> G[createArtist]
     G --> H[uploadPfpToIpfs]
     H --> I[IPFS Upload Success]
     I --> J[updateArtistProfile]
     J --> K[Create new account]
     K --> L[Create account_info]
-    L --> M[Return null instead of new_artist_account.id]
-    M --> N[saveFunnelArtist]
-    N --> O[Query fails - Cannot find account]
-    O --> P[Error: Failed to fetch created artist]
+    L --> M[analyzeComments]
+    M --> N[analyzeSegments]
+    N --> O[Update agent_status to FINISHED]
 
-    style O fill:#ff6666
-    style M fill:#ff6666
-    style P fill:#ff6666
+    %% Twitter Error states
+    E --Profile Not Found--> ERR1[Update agent_status to ERROR]
+    E2 --Social Creation Failed--> ERR2[Update agent_status to ERROR]
+    F --Analysis Creation Failed--> ERR3[Update agent_status to ERROR]
+    end
+
+    %% Instagram Funnel
+    subgraph Instagram
+    IA[GET /api/autopilot?handle=user&type=instagram] --> IB[PilotController.run_agent]
+    IB --> IB1[Extract handle & type from query]
+    IB1 --> IB2[Validate agent_type]
+    IB2 --> IC[Create record in agents table]
+    IC --> IC1[Get pilotId from agents.id]
+    IC1 --> IC2[Return pilotId to client]
+    IC2 --> ID[Start getInstagramAnalysis in background]
+    ID --> IE[getSocialProfile]
+    IE --> IE1[Profile & Post URLs Found]
+    IE1 --> IE2[createOrGetSocial]
+    IE2 --> IE3[Social record created/retrieved]
+    IE3 --> IF[beginAnalysis]
+    IF --> IF1[Create record in agent_status table]
+    IF1 --> IG[createArtist]
+    IG --> IH[uploadPfpToIpfs]
+    IH --> II[IPFS Upload Success]
+    II --> IJ[updateArtistProfile]
+    IJ --> IK[Create new account]
+    IK --> IL[Create account_info]
+    IL --> IM[analyzeComments]
+    IM --> IN[analyzeSegments]
+    IN --> IO[Update agent_status to FINISHED]
+
+    %% Instagram Error states
+    IE --Profile Not Found--> IERR1[Update agent_status to ERROR]
+    IE2 --Social Creation Failed--> IERR2[Update agent_status to ERROR]
+    IF --Analysis Creation Failed--> IERR3[Update agent_status to ERROR]
+    end
+
     style C fill:#90EE90
     style C1 fill:#90EE90
+    style C2 fill:#90EE90
+    style E2 fill:#90EE90
+    style F1 fill:#90EE90
+    style ERR1 fill:#ff6666
+    style ERR2 fill:#ff6666
+    style ERR3 fill:#ff6666
+
+    style IC fill:#90EE90
+    style IC1 fill:#90EE90
+    style IC2 fill:#90EE90
+    style IE2 fill:#90EE90
+    style IF1 fill:#90EE90
+    style IERR1 fill:#ff6666
+    style IERR2 fill:#ff6666
+    style IERR3 fill:#ff6666

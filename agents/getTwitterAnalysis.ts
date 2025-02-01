@@ -25,7 +25,7 @@ const getTwitterAnalysis = async (
   existingArtistId: string | null = null
 ) => {
   console.log("getTwitterAnalysis");
-
+  let analysisId;
   try {
     // Get Twitter profile first
     const scrappedProfile = await getSocialProfile(
@@ -66,13 +66,7 @@ const getTwitterAnalysis = async (
     }
 
     console.log("agentStatus", agentStatus);
-    const analysisId = agentStatus.id;
-
-    // Create enriched profile with social ID
-    const enrichedProfile = {
-      ...scrappedProfile,
-      id: social.id,
-    };
+    analysisId = agentStatus.id;
 
     const comments = await analyzeComments(
       scraper,
@@ -110,8 +104,13 @@ const getTwitterAnalysis = async (
     return;
   } catch (error) {
     console.error(error);
-    // We can't update the analysis status if we don't have an analysisId
-    // This is expected if the error occurred before analysis creation
+    await updateAnalysisStatus(
+      // We can't update the analysis status if we don't have an analysisId
+      pilot_id, // This is expected if the error occurred before analysis creation
+      analysisId,
+      Funnel_Type.TWITTER,
+      STEP_OF_ANALYSIS.ERROR
+    );
   }
 };
 

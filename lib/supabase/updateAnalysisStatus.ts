@@ -6,25 +6,22 @@ const updateAnalysisStatus = async (
   funnel_type: string,
   status: number,
   progress = 0,
-  extra_data: any = null,
+  extra_data: any = null
 ) => {
   if (!analysis_id || !pilot_id) return;
-  const { data } = await supabase
-    .from("funnel_analytics")
-    .select("*")
-    .eq("id", analysis_id)
-    .single();
 
+  // Update agent_status table instead of funnel_analytics
   const { data: newAnalysis } = await supabase
-    .from("funnel_analytics")
+    .from("agent_status")
     .update({
-      ...data,
       status,
+      progress,
     })
     .eq("id", analysis_id)
     .select("*")
     .single();
 
+  // Still emit the event for real-time updates
   global.io.emit(`${pilot_id}`, { status, progress, extra_data, funnel_type });
   return newAnalysis;
 };

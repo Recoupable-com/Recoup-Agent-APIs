@@ -5,14 +5,15 @@ import getPostCommentsDatasetId from "./getPostCommentsDatasetId";
 const analyzeComments = async (
   pilot_id: string | null,
   analysisId: string,
-  latestPosts: any,
+  latestPosts: any
 ) => {
   const commentsDatasetId = await getPostCommentsDatasetId(latestPosts);
   const postComments = await getPostComments(
     commentsDatasetId,
     pilot_id,
-    analysisId,
+    analysisId
   );
+  console.log("📝 [analyzeComments] Post comments:", postComments);
   await saveFunnelComments(postComments);
 
   return postComments;

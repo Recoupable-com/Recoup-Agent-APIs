@@ -48,7 +48,7 @@ socketIo.on("connection", async (socket) => {
         msg?.account_id,
         msg?.address,
         msg?.isWrapped,
-        msg?.existingArtistId,
+        msg?.existingArtistId
       );
   });
 
@@ -60,7 +60,7 @@ socketIo.on("connection", async (socket) => {
         msg?.account_id,
         msg?.address,
         msg?.isWrapped,
-        msg?.existingArtistId,
+        msg?.existingArtistId
       );
   });
 
@@ -72,7 +72,7 @@ socketIo.on("connection", async (socket) => {
         msg?.account_id,
         msg?.address,
         msg?.isWrapped,
-        msg?.existingArtistId,
+        msg?.existingArtistId
       );
   });
 
@@ -84,7 +84,7 @@ socketIo.on("connection", async (socket) => {
         msg?.account_id,
         msg?.address,
         msg?.isWrapped,
-        msg?.existingArtistId,
+        msg?.existingArtistId
       );
   });
 

@@ -23,10 +23,7 @@ const connectCommentsToSocial = async (comments: ScrapedComment[]) => {
       }
     });
     await Promise.all(connectPromise);
-    await supabase
-      .from("post_comments")
-      .insert(connectedComments)
-      .select("*");
+    await supabase.from("post_comments").insert(connectedComments).select("*");
     return;
   } catch (error) {
     console.error(error);

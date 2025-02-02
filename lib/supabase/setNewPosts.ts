@@ -7,12 +7,11 @@ const setNewPosts = async (postUrls: Array<string>) => {
       parseInt(Number(postUrls.length / chunkSize).toFixed(0), 10) + 1;
 
     for (let i = 0; i < chunkCount; i++) {
-      const chunkPostUrls = postUrls.slice(chunkSize * i, (chunkSize + 1) * i);
+      const chunkPostUrls = postUrls.slice(chunkSize * i, chunkSize * (i + 1));
       const { data: existing_posts } = await supabase
         .from("posts")
         .select("*, post_comments(*)")
         .in("post_url", chunkPostUrls);
-      console.log("ZIAD existing_posts", existing_posts);
       const missing_post_urls = chunkPostUrls.filter(
         (postUrl) =>
           !existing_posts?.some(

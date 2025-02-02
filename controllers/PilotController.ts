@@ -9,7 +9,6 @@ import { createAgent } from "../lib/supabase/createAgent";
 export const run_agent = async (req: Request, res: Response) => {
   try {
     const { handles, type, artistId } = req.body;
-
     const agent_type = Object.values(Funnel_Type).find(
       (value) => value === type,
     );

@@ -49,6 +49,7 @@ const runTwitterAgent = async (
     const allTweets = await getAllTweets(scraper, handle);
     const { comments, postUrls } = getTwitterCommentsPosts(allTweets);
 
+    console.log("ZIAD", comments.length);
     if (!postUrls?.length) {
       await updateAgentStatus(agent_status.id, STEP_OF_AGENT.MISSING_POSTS);
       return;
@@ -62,6 +63,7 @@ const runTwitterAgent = async (
     await setNewPosts(postUrls);
     const posts = await connectPostsToSocial(social, postUrls);
 
+    console.log("ZIAD", posts.length);
     const commentsWithPostId = comments
       .map((comment: any) => {
         const post = posts.find((ele) => ele.post_url === comment.post_url);

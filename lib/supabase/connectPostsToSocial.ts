@@ -6,6 +6,7 @@ const connectPostsToSocial = async (
   postUrls: string[],
 ): Promise<Post[]> => {
   try {
+    console.log("ZIAD postUrls", postUrls)
     const { data: posts } = await supabase
       .from("posts")
       .select("*")

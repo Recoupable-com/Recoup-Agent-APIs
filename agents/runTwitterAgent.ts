@@ -63,7 +63,7 @@ const runTwitterAgent = async (
     await setNewPosts(postUrls);
     const posts = await connectPostsToSocial(social, postUrls);
 
-    console.log("ZIAD", posts.length);
+    console.log("ZIAD", posts);
     const commentsWithPostId = comments
       .map((comment: any) => {
         const post = posts.find((ele) => ele.post_url === comment.post_url);

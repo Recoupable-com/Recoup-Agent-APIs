@@ -6,6 +6,7 @@ const setNewPosts = async (postUrls: Array<string>) => {
       .from("posts")
       .select("*, post_comments(*)")
       .in("post_url", postUrls);
+    console.log("ZIAD existing_posts", existing_posts)
     const missing_post_urls = postUrls.filter(
       (postUrl) =>
         !existing_posts?.some(

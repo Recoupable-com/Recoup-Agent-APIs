@@ -17,8 +17,7 @@ const setNewTracks = async (tracks: Array<string>) => {
       .from("spotify_tracks")
       .insert(missing_tracks)
       .select("*");
-    console.log("ZIAD", new_tracks);
-    return;
+    return new_tracks;
   } catch (error) {
     console.error(error);
     return;

@@ -12,6 +12,7 @@ import getTwitterFanProfile from "../lib/twitter/getProfile";
 import getSegments from "../lib/getSegments";
 import getSegmentsWithIcons from "../lib/getSegmentsWithIcons";
 import getPostComments from "../lib/agent/getPostComments";
+import isAgentRunning from "../lib/isAgentRunning";
 
 export const get_fans_segments = async (req: Request, res: Response) => {
   try {
@@ -140,7 +141,7 @@ export const get_social_handles = async (req: Request, res: Response) => {
 export const get_agent = async (req: Request, res: Response) => {
   const { agentId } = req.query;
   try {
-    const { data } = await supabase
+    const { data: agent } = await supabase
       .from("agents")
       .select(
         `
@@ -173,8 +174,10 @@ export const get_agent = async (req: Request, res: Response) => {
       )
       .eq("id", agentId)
       .single();
-    const comments = await getPostComments(data.agent_status);
-    return res.status(200).json({ data, comments });
+    if (isAgentRunning(agent.agent_status))
+      return res.status(200).json({ agent });
+    const comments = await getPostComments(agent.agent_status);
+    return res.status(200).json({ agent, comments });
   } catch (error) {
     console.error("Error in get_autopilot:", error);
     return res.status(500).json({ error });

@@ -136,7 +136,7 @@ export const get_social_handles = async (req: Request, res: Response) => {
   }
 };
 
-export const get_autopilot = async (req: Request, res: Response) => {
+export const get_agent = async (req: Request, res: Response) => {
   const { agentId } = req.query;
   try {
     const { data } = await supabase
@@ -151,6 +151,18 @@ export const get_autopilot = async (req: Request, res: Response) => {
             social_posts (
               *,
               post_comments (
+                *
+              )
+            ),
+            social_spotify_tracks (
+              *,
+              spotify_tracks (
+                *
+              )
+            ),
+            social_spotify_albums (
+              *,
+              spotify_albums (
                 *
               )
             )

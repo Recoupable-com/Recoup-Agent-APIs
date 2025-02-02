@@ -16,8 +16,8 @@ routes.get('/get_dataset_status', GlobalController.get_dataset_status as any);
 
 routes.get('/get_social_handles', GlobalController.get_social_handles as any);
 
-routes.post('/autopilot/run' , PilotController.run_agent as any) ;
-routes.get('/autopilot/status' , GlobalController.get_autopilot as any) ;
+routes.post('/agentkit/run' , PilotController.run_agent as any) ;
+routes.get('/agentkit/status' , GlobalController.get_agent as any) ;
 
 routes.get('/get_profile', GlobalController.get_profile as any);
 routes.get('/get_fans_segments', GlobalController.get_fans_segments as any);

@@ -7,7 +7,7 @@ const savePostComments = async (
     timestamp: string;
     ownerUsername: string;
     postUrl: string;
-  }>
+  }>,
 ): Promise<void> => {
   try {
     // First, get the post_ids for the post_urls

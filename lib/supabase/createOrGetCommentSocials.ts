@@ -3,7 +3,7 @@ import supabase from "./serverClient";
 const createOrGetCommentSocials = async (
   comments: Array<{
     ownerUsername: string;
-  }>
+  }>,
 ): Promise<{ [username: string]: string }> => {
   try {
     // Get unique usernames
@@ -28,12 +28,12 @@ const createOrGetCommentSocials = async (
         acc[social.username] = social.id;
         return acc;
       },
-      {}
+      {},
     );
 
     // Find usernames that don't have social records yet
     const missingUsernames = usernames.filter(
-      (username) => !usernameToId[username]
+      (username) => !usernameToId[username],
     );
 
     if (missingUsernames.length > 0) {
@@ -44,7 +44,7 @@ const createOrGetCommentSocials = async (
           missingUsernames.map((username) => ({
             username,
             profile_url: `https://instagram.com/${username}`,
-          }))
+          })),
         )
         .select("id, username");
 

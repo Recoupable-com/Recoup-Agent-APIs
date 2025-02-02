@@ -11,11 +11,15 @@ const updateAgentStatus = async (
     .eq("id", agent_status_id)
     .single();
 
-  await supabase.from("agent_status").update({
-    ...agent_status,
-    status,
-    progress: agent_status.progress || progress,
-  });
+  await supabase
+    .from("agent_status")
+    .update({
+      ...agent_status,
+      status,
+      progress: agent_status.progress || progress,
+    })
+    .eq("id", agent_status_id)
+    .select("*");
 };
 
 export default updateAgentStatus;

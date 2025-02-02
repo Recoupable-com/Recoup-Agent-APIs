@@ -23,11 +23,10 @@ const connectCommentsToSocial = async (comments: ScrapedComment[]) => {
       }
     });
     await Promise.all(connectPromise);
-    const { error } = await supabase
+    await supabase
       .from("post_comments")
       .insert(connectedComments)
       .select("*");
-    console.log("ZIAD connect comments to social", error);
     return;
   } catch (error) {
     console.error(error);

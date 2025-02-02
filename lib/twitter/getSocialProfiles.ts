@@ -2,12 +2,12 @@ import saveAccount from "../supabase/saveAccount";
 import saveAccountEmail from "../supabase/saveAccountEmail";
 import saveFanSegment from "../supabase/saveFanSegment";
 import saveSocial from "../supabase/saveSocial";
-import getFanProfile from "./getFanProfile";
+import getFanProfile from "./getProfile";
 
 const getSocialProfiles = async (
   scraper: any,
   fansSegments: any,
-  artistId: string | null
+  artistId: string | null,
 ) => {
   try {
     const socialProfilesPromise = fansSegments.map(async (fanSegment: any) => {

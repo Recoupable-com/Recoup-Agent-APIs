@@ -1,6 +1,15 @@
-const getFormattedAccount = (data: any) => {
+import { Database } from "../../types/database.types";
+
+type Social = Database["public"]["Tables"]["socials"]["Row"];
+
+const getFormattedAccount = (
+  data: any,
+): {
+  profile: Social | null;
+  videoUrls: Array<string> | null;
+} | null => {
   try {
-    const videoUrls: any = [];
+    const videoUrls: Array<string> = [];
     if (data?.length === 0 || data?.error) return null;
     const aggregatedData = data.reduce((acc: any, item: any) => {
       const existingAuthor = acc.find(
@@ -11,23 +20,27 @@ const getFormattedAccount = (data: any) => {
       if (!existingAuthor) {
         acc.push({
           username: item.authorMeta.name,
-          name: item.authorMeta.nickName,
           region: item.authorMeta.region,
           avatar: item.authorMeta.avatar,
           bio: item.authorMeta.signature,
           followerCount: item.authorMeta.fans,
           followingCount: item.authorMeta.following,
+          profile_url: `https://tiktok.com/@${item.authorMeta.name}`,
         });
       }
       return acc;
     }, []);
 
     return {
-      profile: Object.values(aggregatedData),
+      profile: Object.values(aggregatedData)?.[0] as any,
       videoUrls,
     };
   } catch (error) {
-    return null;
+    console.error(error);
+    return {
+      profile: null,
+      videoUrls: null,
+    };
   }
 };
 

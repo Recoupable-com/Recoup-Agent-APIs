@@ -7,12 +7,20 @@ const getArtist = async (id: string, accessToken: string) => {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    if (!response.ok) return { error: true };
+    if (!response.ok)
+      return { error: new Error("Spotify api request failed"), artist: null };
     const data = await response.json();
 
-    return data;
+    return { error: null, artist: data };
   } catch (error) {
-    return { error };
+    console.error(error);
+    return {
+      artist: null,
+      error:
+        error instanceof Error
+          ? error
+          : new Error("Unknown error scraping profile"),
+    };
   }
 };
 

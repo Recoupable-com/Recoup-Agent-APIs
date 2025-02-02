@@ -1,10 +1,6 @@
 import getFormattedTracks from "./getFormattedTracks";
 
-const getTopTracks = async (
-  artistId: string,
-  accessToken: string,
-  analysisId: string,
-) => {
+const getTopTracks = async (artistId: string, accessToken: string) => {
   try {
     const response = await fetch(
       `https://api.spotify.com/v1/artists/${artistId}/top-tracks`,
@@ -19,7 +15,7 @@ const getTopTracks = async (
 
     const data = await response.json();
     const topTracks = data?.tracks || [];
-    const formattedTracks = getFormattedTracks(topTracks, analysisId);
+    const formattedTracks = getFormattedTracks(topTracks);
     return formattedTracks;
   } catch (error) {
     throw new Error(error as string);

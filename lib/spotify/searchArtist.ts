@@ -13,14 +13,23 @@ const searchArtist = async (handle: string, accessToken: string) => {
       },
     );
 
-    if (!response.ok) return { error: true };
+    if (!response.ok)
+      return { error: new Error("Spotify api request failed"), artist: null };
+
     const data = await response.json();
 
     if (data.artists.items.length === 0)
-      return { error: UNKNOWN_PROFILE_ERROR };
-    return data.artists.items?.[0];
+      return { error: UNKNOWN_PROFILE_ERROR, artist: null };
+    return { artist: data.artists.items?.[0], error: null };
   } catch (error) {
-    return { error };
+    console.error(error);
+    return {
+      artist: null,
+      error:
+        error instanceof Error
+          ? error
+          : new Error("Unknown error searching profile"),
+    };
   }
 };
 

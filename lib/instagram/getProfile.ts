@@ -1,39 +1,38 @@
 import getDataset from "../apify/getDataset";
-import { Funnel_Type } from "../funnels";
-import { STEP_OF_ANALYSIS } from "../step";
-import { RATE_LIMIT_EXCEEDED, UNKNOWN_PROFILE_ERROR } from "../twitter/errors";
 import getFormattedAccount from "./getFormattedAccount";
+import getProfileDatasetId from "./getProfileDatasetId";
 
-const getProfile = async (datasetId: string, pilot_id: string | null) => {
+const getProfile = async (handle: string) => {
   try {
+    const profileDatasetId = await getProfileDatasetId(handle);
     while (1) {
-      const datasetItems: any = await getDataset(datasetId);
-      const errorMessage = datasetItems?.[0]?.error;
-      if (errorMessage === UNKNOWN_PROFILE_ERROR) {
-        const error = {
-          error: errorMessage,
-          status: STEP_OF_ANALYSIS.UNKNOWN_PROFILE,
-          funnel_type: Funnel_Type.INSTAGRAM,
+      const datasetItems: any = await getDataset(profileDatasetId);
+      const error = datasetItems?.[0]?.error;
+      if (error)
+        return {
+          error,
+          profile: null,
+          postUrls: null,
         };
-        global.io.emit(`${pilot_id}`, error);
-        return { error };
-      }
-      if (errorMessage === RATE_LIMIT_EXCEEDED) {
-        const error = {
-          status: STEP_OF_ANALYSIS.RATE_LIMIT_EXCEEDED,
-          funnel_type: Funnel_Type.INSTAGRAM,
-          error: errorMessage,
-        };
-        global.io.emit(`${pilot_id}`, error);
-        return { error };
-      }
-      if (errorMessage) throw new Error(errorMessage);
       const formattedAccount = getFormattedAccount(datasetItems);
-      if (formattedAccount) return formattedAccount;
+      if (formattedAccount)
+        return {
+          error: null,
+          profile: formattedAccount.profile,
+          postUrls: formattedAccount.postUrls,
+        };
     }
+    throw new Error();
   } catch (error) {
     console.error(error);
-    throw new Error(error as string);
+    return {
+      profile: null,
+      postUrls: null,
+      error:
+        error instanceof Error
+          ? error
+          : new Error("Unknown error scraping profile"),
+    };
   }
 };
 

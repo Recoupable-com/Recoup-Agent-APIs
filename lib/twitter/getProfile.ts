@@ -1,6 +1,6 @@
 import extracMails from "../extracMails";
 
-const getFanProfile = async (scraper: any, handle: string) => {
+const getProfile = async (scraper: any, handle: string) => {
   try {
     const profile: any = await scraper.getProfile(handle);
     const avatar = profile.avatar;
@@ -15,15 +15,18 @@ const getFanProfile = async (scraper: any, handle: string) => {
         bio,
         followerCount,
         followingCount,
-        type: "TWITTER",
-        link: `https://twitter.com/${handle}`,
+        profile_url: `https://x.com/${handle}`,
         username: handle,
       },
       email,
     };
   } catch (error) {
-    throw new Error(error as string);
+    console.error(error);
+    return {
+      profile: null,
+      email: null,
+    };
   }
 };
 
-export default getFanProfile;
+export default getProfile;

@@ -1,25 +1,22 @@
-const getFormattedComments = (data: any, analysis_id: string) => {
-  if (data?.error) return [];
-  const sorteddata = data
-    .sort(
-      (a: any, b: any) =>
-        new Date(b?.timestamp).getTime() ||
-        0 - new Date(a?.timestamp).getTime() ||
-        0,
-    )
-    .filter((item: any) => item?.postUrl);
+import { Post } from "../../types/agent";
 
-  const comments = sorteddata.map((comment: any) => {
-    const { postUrl, text, timestamp, ownerUsername } = comment;
-    return {
-      comment: text || "",
-      username: ownerUsername || "",
-      post_url: postUrl || "",
-      type: "INSTAGRAM",
-      analysis_id,
-      timestamp: new Date(timestamp).getTime(),
-    };
-  });
+const getFormattedComments = (data: any, posts: Post[]) => {
+  const comments = data
+    ?.filter((item: any) => item?.postUrl)
+    .map((comment: any) => {
+      const { postUrl, text, timestamp, ownerUsername } = comment;
+      const post = posts.find((ele) => ele.post_url === postUrl);
+      if (post && ownerUsername)
+        return {
+          comment: text,
+          username: ownerUsername,
+          commented_at: new Date(timestamp).toISOString(),
+          post_id: post.id,
+          profile_url: `https://instagram.com/${ownerUsername}`,
+        };
+
+      return null;
+    });
 
   return comments;
 };

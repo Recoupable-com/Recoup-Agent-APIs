@@ -8,7 +8,11 @@ import { z } from "zod";
 import { Scraper } from "agent-twitter-client";
 import getFansProfiles from "../lib/getFansSegments";
 import getTikTokFanProfile from "../lib/tiktok/getFanProfile";
-import getTwitterFanProfile from "../lib/twitter/getFanProfile";
+import getTwitterFanProfile from "../lib/twitter/getProfile";
+import getSegments from "../lib/getSegments";
+import getSegmentsWithIcons from "../lib/getSegmentsWithIcons";
+import getPostComments from "../lib/agent/getPostComments";
+import isAgentRunning from "../lib/isAgentRunning";
 
 export const get_fans_segments = async (req: Request, res: Response) => {
   try {
@@ -134,38 +138,42 @@ export const get_social_handles = async (req: Request, res: Response) => {
   }
 };
 
-export const get_autopilot = async (req: Request, res: Response) => {
-  const { pilotId } = req.query;
+export const get_agent = async (req: Request, res: Response) => {
+  const { agentId } = req.query;
   try {
-    // Get the latest agent_status record for this pilot
-    const { data: agentStatus, error: statusError } = await supabase
-      .from("agent_status")
-      .select("id, agent_id, social_id, status, progress, updated_at")
-      .eq("agent_id", pilotId)
-      .order("updated_at", { ascending: false })
-      .limit(1)
+    const { data: agent } = await supabase
+      .from("agents")
+      .select(
+        `
+        *,
+        agent_status (
+          *,
+          social:socials (
+            *
+          )
+        )
+      `,
+      )
+      .eq("id", agentId)
       .single();
-
-    if (statusError) {
-      console.error("Failed to fetch agent status:", statusError);
-      return res.status(500).json({ error: statusError });
-    }
-
-    if (!agentStatus) {
-      return res
-        .status(404)
-        .json({ error: "No analysis found for this pilot ID" });
-    }
-
-    return res.status(200).json({
-      data: {
-        status: agentStatus.status,
-        progress: agentStatus.progress,
-        updated_at: agentStatus.updated_at,
-      },
-    });
+    if (isAgentRunning(agent.agent_status))
+      return res.status(200).json({ agent });
+    const comments = await getPostComments(agent.agent_status);
+    return res.status(200).json({ agent, comments });
   } catch (error) {
     console.error("Error in get_autopilot:", error);
+    return res.status(500).json({ error });
+  }
+};
+
+export const get_segments = async (req: Request, res: Response) => {
+  try {
+    const { comments } = req.body;
+    const segments = await getSegments(comments);
+    const segments_with_icons = await getSegmentsWithIcons(segments);
+    return res.status(200).json({ segments_with_icons });
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({ error });
   }
 };

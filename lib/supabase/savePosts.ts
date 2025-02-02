@@ -2,7 +2,7 @@ import supabase from "./serverClient";
 
 const savePosts = async (
   postUrls: string[],
-  socialId: string
+  socialId: string,
 ): Promise<void> => {
   try {
     // First, insert all posts
@@ -11,7 +11,7 @@ const savePosts = async (
       .upsert(
         postUrls.map((url) => ({
           post_url: url,
-        }))
+        })),
       )
       .select("*");
 
@@ -27,7 +27,7 @@ const savePosts = async (
         posts.map((post) => ({
           post_id: post.id,
           social_id: socialId,
-        }))
+        })),
       );
 
     if (socialPostsError) {

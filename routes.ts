@@ -16,12 +16,13 @@ routes.get('/get_dataset_status', GlobalController.get_dataset_status as any);
 
 routes.get('/get_social_handles', GlobalController.get_social_handles as any);
 
-routes.get('/autopilot' , PilotController.run_agent as any) ;
-routes.get('/autopilot/status' , GlobalController.get_autopilot as any) ;
+routes.post('/agentkit/run' , PilotController.run_agent as any) ;
+routes.get('/agentkit' , GlobalController.get_agent as any) ;
 
 routes.get('/get_profile', GlobalController.get_profile as any);
 routes.get('/get_fans_segments', GlobalController.get_fans_segments as any);
 routes.get('/get_tiktok_profile', GlobalController.get_tiktok_profile as any);
 routes.get('/get_twitter_profile', GlobalController.get_twitter_profile as any);
+routes.get('/get_segments', GlobalController.get_segments as any);
 
 export default routes;

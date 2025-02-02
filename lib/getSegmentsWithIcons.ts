@@ -2,10 +2,7 @@ import { ICONS } from "./consts.js";
 import getChatCompletions from "./getChatCompletions.js";
 import { instructions } from "./instructions.js";
 
-const getSegmentsWithIcons = async (
-  segments: any,
-  analysisId: string | null = null,
-) => {
+const getSegmentsWithIcons = async (segments: any) => {
   try {
     const content = await getChatCompletions([
       {
@@ -34,7 +31,6 @@ const getSegmentsWithIcons = async (
           name: Object.keys(segment)[0],
           icon: icon || "",
           size: Object.values(segment)[0],
-          analysis_id: analysisId,
         };
       });
 

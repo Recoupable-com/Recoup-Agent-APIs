@@ -147,28 +147,7 @@ export const get_agent = async (req: Request, res: Response) => {
         `
         *,
         agent_status (
-          *,
-          social:socials (
-            *,
-            social_posts (
-              *,
-              posts (
-                *
-              )
-            ),
-            social_spotify_tracks (
-              *,
-              spotify_tracks (
-                *
-              )
-            ),
-            social_spotify_albums (
-              *,
-              spotify_albums (
-                *
-              )
-            )
-          )
+          *
         )
       `,
       )

@@ -1,4 +1,4 @@
-import { Post, Social } from "../../types/agent";
+import { Social } from "../../types/agent";
 import supabase from "./serverClient";
 
 const connectAlbumsToSocial = async (social: Social, albums: any) => {

@@ -1,5 +1,4 @@
 import { Post } from "../../types/agent";
-import { Database } from "../../types/database.types";
 import getActorStatus from "../apify/getActorStatus";
 import getDataset from "../apify/getDataset";
 import { STEP_OF_AGENT } from "../step";

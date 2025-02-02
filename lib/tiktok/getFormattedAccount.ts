@@ -25,7 +25,7 @@ const getFormattedAccount = (
           bio: item.authorMeta.signature,
           followerCount: item.authorMeta.fans,
           followingCount: item.authorMeta.following,
-          profile_url: `https://tiktok.com/@${item.authorMeta.username}`,
+          profile_url: `https://tiktok.com/@${item.authorMeta.name}`,
         });
       }
       return acc;

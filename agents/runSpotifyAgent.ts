@@ -31,10 +31,12 @@ const runSpotifyAgent = async (
       const { artist } = await getArtist(handle, accessToken);
       if (artist) artistdata = getProfile(artist);
     } else artistdata = getProfile(searchedArtist);
+    if (!artistdata?.profile) return;
 
     const { social } = await createSocial({
       username: handle,
-      profile_url: profile_url || `https://open.spotify.com/artist/${handle}`,
+      profile_url:
+        profile_url || `https://open.spotify.com/artist/${artistdata.artistId}`,
     });
 
     if (!social?.id) return;

@@ -6,7 +6,6 @@ const setNewPosts = async (postUrls: Array<string>) => {
       .from("posts")
       .select("*, post_comments(*)")
       .in("post_url", postUrls);
-    console.log("ZIAD existing posts", postUrls);
     const missing_post_urls = postUrls.filter(
       (postUrl) =>
         !existing_posts?.some(
@@ -20,8 +19,7 @@ const setNewPosts = async (postUrls: Array<string>) => {
       .from("posts")
       .insert(missing_posts)
       .select("*");
-    console.log("ZIAD", new_posts);
-    return;
+    return new_posts;
   } catch (error) {
     console.error(error);
     return;

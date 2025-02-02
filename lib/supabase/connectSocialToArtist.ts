@@ -1,9 +1,6 @@
-import { Database } from "../../types/database.types";
+import { Account_Social, Social } from "../../types/agent";
 import getSocialPlatformByLink from "../getSocialPlatformByLink";
 import supabase from "./serverClient";
-
-type Social = Database["public"]["Tables"]["socials"]["Row"];
-type Account_Social = Database["public"]["Tables"]["account_socials"]["Row"];
 
 const connectSocialToArtist = async (artist_id: string, social: Social) => {
   try {

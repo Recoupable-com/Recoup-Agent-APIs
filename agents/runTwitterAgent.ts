@@ -45,6 +45,7 @@ const runTwitterAgent = async (
     await updateSocial(social.id, profile);
     await connectSocialToArtist(artist_id, social);
 
+    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);
     const allTweets = await getAllTweets(scraper, handle);
     const { comments, postUrls } = getTwitterCommentsPosts(allTweets);
 
@@ -58,7 +59,6 @@ const runTwitterAgent = async (
       return;
     }
 
-    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);
     await setNewPosts(postUrls);
     const posts = await connectPostsToSocial(social, postUrls);
     const commentsWithPostId = comments
@@ -77,6 +77,7 @@ const runTwitterAgent = async (
       .filter((ele: any) => ele !== null);
 
     await connectCommentsToSocial(commentsWithPostId);
+    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.FINISHED);
     return;
   } catch (error) {
     console.error(error);

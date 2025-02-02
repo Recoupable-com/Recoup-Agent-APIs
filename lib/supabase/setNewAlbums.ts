@@ -17,7 +17,7 @@ const setNewAlbums = async (albums: Array<string>) => {
       .from("spotify_albums")
       .insert(missing_albums)
       .select("*");
-    console.log("ZIAD", new_albums);
+    return new_albums;
     return;
   } catch (error) {
     console.error(error);

@@ -23,7 +23,6 @@ const runInstagramAgent = async (
       profile_url: `https://instagram.com/${handle}`,
     });
     if (!social?.id) return;
-
     const { agent_status } = await createAgentStatus(
       agent_id,
       social.id,
@@ -32,7 +31,6 @@ const runInstagramAgent = async (
     if (!agent_status?.id) return;
 
     const { profile, postUrls } = await getProfile(handle);
-
     if (!profile) {
       await updateAgentStatus(agent_status.id, STEP_OF_AGENT.UNKNOWN_PROFILE);
       return;
@@ -52,14 +50,12 @@ const runInstagramAgent = async (
     await setNewPosts(postUrls);
     await connectPostsToSocial(social, postUrls);
     const scrapingPosts = await getScrapingPosts(postUrls);
-    const comments = await getPostComments(agent_status.id, scrapingPosts);
 
-    if (!comments.length) {
-      await updateAgentStatus(agent_status.id, STEP_OF_AGENT.ERROR);
-      return;
+    if (scrapingPosts.length) {
+      const comments = await getPostComments(agent_status.id, scrapingPosts);
+      await connectCommentsToSocial(comments);
     }
 
-    await connectCommentsToSocial(comments);
     await updateAgentStatus(agent_status.id, STEP_OF_AGENT.FINISHED);
   } catch (error) {
     console.error(error);

@@ -2,7 +2,7 @@ import { Post } from "../../types/agent";
 
 const getFormattedComments = (data: any, posts: Post[]) => {
   const comments =
-    data?.map(async (comment: any) => {
+    data?.map((comment: any) => {
       const { videoWebUrl, text, createTime, uniqueId } = comment;
       const post = posts.find((ele) => ele.post_url === videoWebUrl);
       if (post && uniqueId)

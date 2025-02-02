@@ -4,8 +4,8 @@ import supabase from "./serverClient";
 type AgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 
 const createAgentStatus = async (
-  social_id: string,
   agent_id: string,
+  social_id: string,
   status: number,
 ): Promise<{
   agent_status: AgentStatus | null;
@@ -19,27 +19,32 @@ const createAgentStatus = async (
       .eq("agent_id", agent_id)
       .single();
     if (existing_status) {
-      const { data: updated_status } = await supabase
+      const { data: updated_status, error: update_statis_error } =
+        await supabase
+          .from("agent_status")
+          .update({
+            ...existing_status,
+            status,
+          })
+          .eq("id", agent_id)
+          .select("*")
+          .single();
+      return { agent_status: updated_status, error: update_statis_error };
+    }
+
+    const { data: new_agent_status, error: new_agent_status_error } =
+      await supabase
         .from("agent_status")
-        .update({
-          ...existing_status,
+        .insert({
+          agent_id,
+          social_id,
           status,
+          progress: 0,
         })
         .select("*")
         .single();
-      return { agent_status: updated_status, error: null };
-    }
 
-    const { data: new_agent_status } = await supabase
-      .from("agent_status")
-      .insert({
-        agent_id,
-        social_id,
-        status,
-        progress: 0,
-      });
-
-    return { agent_status: new_agent_status, error: null };
+    return { agent_status: new_agent_status, error: new_agent_status_error };
   } catch (error) {
     console.error("Error creating social:", error);
     return {

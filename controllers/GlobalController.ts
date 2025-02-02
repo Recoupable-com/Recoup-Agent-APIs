@@ -139,7 +139,7 @@ export const get_social_handles = async (req: Request, res: Response) => {
 export const get_agent = async (req: Request, res: Response) => {
   const { agentId } = req.query;
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("agents")
       .select(
         `
@@ -171,7 +171,7 @@ export const get_agent = async (req: Request, res: Response) => {
       `,
       )
       .eq("id", agentId);
-    return res.status(200).json({ data });
+    return res.status(200).json({ data, error });
   } catch (error) {
     console.error("Error in get_autopilot:", error);
     return res.status(500).json({ error });

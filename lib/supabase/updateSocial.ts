@@ -13,13 +13,17 @@ const updateSocial = async (
       .eq("id", social_id)
       .single();
     if (existing_social) {
+      console.log("ZIAD OKAY", {
+        ...existing_social,
+        ...socialdata,
+      })
       const { error } = await supabase
       .from("socials")
       .update({
         ...existing_social,
         ...socialdata,
       })
-      .eq("id", social_id)
+      .eq("id", existing_social.id)
       .select("*")
       .single();
       console.log("ZIAD", error)

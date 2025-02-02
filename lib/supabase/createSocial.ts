@@ -32,7 +32,7 @@ const createSocial = async (
     const { data: social, error: socialError } = await supabase
       .from("socials")
       .insert(socialdata)
-      .select()
+      .select("*")
       .single();
 
     if (socialError) {

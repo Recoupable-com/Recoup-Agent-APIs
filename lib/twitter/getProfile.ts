@@ -15,7 +15,7 @@ const getProfile = async (scraper: any, handle: string) => {
         bio,
         followerCount,
         followingCount,
-        profile_url: `https://twitter.com/${handle}`,
+        profile_url: `https://x.com/${handle}`,
         username: handle,
       },
       email,

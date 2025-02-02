@@ -42,7 +42,6 @@ const runTwitterAgent = async (
 
     await updateAgentStatus(agent_status.id, STEP_OF_AGENT.SETTING_UP_ARTIST);
     await setArtistImage(artist_id, profile.avatar);
-    console.log("ZIAD profile", profile);
     await updateSocial(social.id, profile);
     await connectSocialToArtist(artist_id, social);
 

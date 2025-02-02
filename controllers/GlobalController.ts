@@ -176,7 +176,8 @@ export const get_agent = async (req: Request, res: Response) => {
         )
       `,
       )
-      .eq("id", agentId);
+      .eq("id", agentId)
+      .single();
     return res.status(200).json({ data, error });
   } catch (error) {
     console.error("Error in get_autopilot:", error);

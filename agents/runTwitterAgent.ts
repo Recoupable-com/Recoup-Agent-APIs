@@ -49,7 +49,7 @@ const runTwitterAgent = async (
     const allTweets = await getAllTweets(scraper, handle);
     const { comments, postUrls } = getTwitterCommentsPosts(allTweets);
 
-    console.log("ZIAD", comments.length);
+    console.log("ZIAD", comments.length, postUrls.length, comments.slice(0, 5), postUrls.slice(0, 5));
     if (!postUrls?.length) {
       await updateAgentStatus(agent_status.id, STEP_OF_AGENT.MISSING_POSTS);
       return;

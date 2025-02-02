@@ -32,6 +32,7 @@ const getPostComments = async (agent_status: any) => {
       .select("*")
       .single();
 
+    console.log("ZIAD", agent_status.social_id, data)
     if (data) {
       const post_ids = data.social_posts.map(
         (social_post: any) => social_post.post_id,

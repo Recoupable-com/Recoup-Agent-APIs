@@ -24,7 +24,7 @@ const getProfile = async (
           videoUrls: null,
         };
       const formattedAccount = getFormattedAccount(datasetItems);
-      if (formattedAccount)
+      if (formattedAccount?.profile)
         return {
           error: null,
           profile: formattedAccount.profile,

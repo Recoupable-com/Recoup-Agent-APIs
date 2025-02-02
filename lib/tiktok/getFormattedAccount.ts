@@ -5,8 +5,8 @@ type Social = Database["public"]["Tables"]["socials"]["Row"];
 const getFormattedAccount = (
   data: any,
 ): {
-  profile: Social;
-  videoUrls: Array<string>;
+  profile: Social | null;
+  videoUrls: Array<string> | null;
 } | null => {
   try {
     const videoUrls: Array<string> = [];
@@ -37,7 +37,10 @@ const getFormattedAccount = (
     };
   } catch (error) {
     console.error(error);
-    return null;
+    return {
+      profile: null,
+      videoUrls: null,
+    };
   }
 };
 

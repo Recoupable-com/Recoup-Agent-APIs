@@ -13,6 +13,7 @@ const updateSocial = async (
       .eq("id", social_id)
       .single();
     if (existing_social) {
+      console.log("ZIAD existing_social", existing_social)
       await supabase
         .from("socials")
         .update({

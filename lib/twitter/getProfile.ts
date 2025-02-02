@@ -3,6 +3,7 @@ import extracMails from "../extracMails";
 const getFanProfile = async (scraper: any, handle: string) => {
   try {
     const profile: any = await scraper.getProfile(handle);
+    console.log("ZIAD HERE", profile)
     const avatar = profile.avatar;
     const bio = profile.biography;
     const followerCount = profile.followersCount;

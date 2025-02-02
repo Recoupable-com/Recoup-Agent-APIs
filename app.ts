@@ -4,10 +4,6 @@ import routes from "./routes";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 
-declare global {
-  var io: any;
-}
-
 dotenv.config();
 
 const app = express();

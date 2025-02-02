@@ -24,43 +24,45 @@ const runTikTokAgent = async (
     });
     if (!social?.id) return;
 
-    const { agent_status } = await createAgentStatus(
-      agent_id,
-      social.id,
-      STEP_OF_AGENT.PROFILE,
-    );
-    if (!agent_status?.id) return;
-
-    const { profile, videoUrls } = await getProfile(handle);
-    if (!profile) {
-      await updateAgentStatus(agent_status.id, STEP_OF_AGENT.UNKNOWN_PROFILE);
-      return;
-    }
-
-    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.SETTING_UP_ARTIST);
-    await setArtistImage(artist_id, profile.avatar);
-    await updateSocial(social.id, profile);
-    await connectSocialToArtist(artist_id, social);
-
-    if (!videoUrls?.length) {
-      await updateAgentStatus(agent_status.id, STEP_OF_AGENT.MISSING_POSTS);
-      return;
-    }
-
-    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);
-    await setNewPosts(videoUrls);
-    await connectPostsToSocial(social, videoUrls);
-    const scrapingPosts = await getScrapingPosts(videoUrls);
-    const comments = await getVideoComments(agent_status.id, scrapingPosts);
-
-    if (!comments.length) {
-      await updateAgentStatus(agent_status.id, STEP_OF_AGENT.ERROR);
-      return;
-    }
-
-    await connectCommentsToSocial(comments);
-    await updateAgentStatus(agent_status.id, STEP_OF_AGENT.FINISHED);
+    console.log("ZIAD", social);
     return;
+    // const { agent_status } = await createAgentStatus(
+    //   agent_id,
+    //   social.id,
+    //   STEP_OF_AGENT.PROFILE,
+    // );
+    // if (!agent_status?.id) return;
+
+    // const { profile, videoUrls } = await getProfile(handle);
+    // if (!profile) {
+    //   await updateAgentStatus(agent_status.id, STEP_OF_AGENT.UNKNOWN_PROFILE);
+    //   return;
+    // }
+
+    // await updateAgentStatus(agent_status.id, STEP_OF_AGENT.SETTING_UP_ARTIST);
+    // await setArtistImage(artist_id, profile.avatar);
+    // await updateSocial(social.id, profile);
+    // await connectSocialToArtist(artist_id, social);
+
+    // if (!videoUrls?.length) {
+    //   await updateAgentStatus(agent_status.id, STEP_OF_AGENT.MISSING_POSTS);
+    //   return;
+    // }
+
+    // await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);
+    // await setNewPosts(videoUrls);
+    // await connectPostsToSocial(social, videoUrls);
+    // const scrapingPosts = await getScrapingPosts(videoUrls);
+    // const comments = await getVideoComments(agent_status.id, scrapingPosts);
+
+    // if (!comments.length) {
+    //   await updateAgentStatus(agent_status.id, STEP_OF_AGENT.ERROR);
+    //   return;
+    // }
+
+    // await connectCommentsToSocial(comments);
+    // await updateAgentStatus(agent_status.id, STEP_OF_AGENT.FINISHED);
+    // return;
   } catch (error) {
     console.error(error);
   }

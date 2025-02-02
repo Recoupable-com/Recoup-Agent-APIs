@@ -146,15 +146,15 @@ export const get_agent = async (req: Request, res: Response) => {
         *,
         agent_status (
           *,
-          artist:social:socials (
+          social:socials (
             *,
-            posts:social_posts (
+            social_posts (
               *,
               posts (
                 *,
                 comments:post_comments (
                   *,
-                  fan:social:socials (
+                  fan:socials (
                     *
                   )
                 )

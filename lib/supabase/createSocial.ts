@@ -15,6 +15,7 @@ const createSocial = async (
       .select("*")
       .eq("profile_url", socialdata.profile_url)
       .single();
+
     if (existing_social) {
       const { data: updated_social } = await supabase
         .from("socials")
@@ -22,6 +23,7 @@ const createSocial = async (
           ...existing_social,
           username: socialdata.username,
         })
+        .eq("id", existing_social.id)
         .select("*")
         .single();
 

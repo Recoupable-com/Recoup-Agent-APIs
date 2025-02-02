@@ -16,8 +16,13 @@ const connectSocialToArtist = async (artist_id: string, social: Social) => {
         getSocialPlatformByLink(account_social.social.profile_url) ===
         getSocialPlatformByLink(social.profile_url),
     );
-    if (existing_social) return;
-
+    if (existing_social) {
+      await supabase
+        .from("account_socials")
+        .delete()
+        .eq("account_id", artist_id)
+        .eq("social_id", existing_social.id);
+    }
     await supabase
       .from("account_socials")
       .delete()

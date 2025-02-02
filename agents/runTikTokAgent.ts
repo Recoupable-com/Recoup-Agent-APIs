@@ -54,7 +54,6 @@ const runTikTokAgent = async (
     if (scrapingPosts.length) {
       const comments = await getVideoComments(agent_status.id, scrapingPosts);
       await connectCommentsToSocial(comments);
-      return comments;
     }
 
     await updateAgentStatus(agent_status.id, STEP_OF_AGENT.FINISHED);

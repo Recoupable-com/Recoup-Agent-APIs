@@ -18,24 +18,19 @@ export const run_agent = async (req: Request, res: Response) => {
     }
     console.log("✅ [PilotController] Agent type valid:", agent_type);
 
-    let test_res: any = null;
     const isWrapped = type === Funnel_Type.WRAPPED;
     const { agent } = await createAgent();
     if (!agent?.id || !handles) return;
 
     if (isWrapped || type === Funnel_Type.TIKTOK)
-      test_res = await runTikTokAgent(
-        agent.id,
-        handles["tiktok"],
-        artistId as string,
-      );
+      runTikTokAgent(agent.id, handles["tiktok"], artistId as string);
     if (isWrapped || type === Funnel_Type.TWITTER)
       runTwitterAgent(agent.id, handles["twitter"], artistId as string);
     if (isWrapped || type === Funnel_Type.INSTAGRAM)
       runInstagramAgent(agent.id, handles["instagram"], artistId as string);
     if (isWrapped || type === Funnel_Type.SPOTIFY)
       runSpotifyAgent(agent.id, handles["spotify"], artistId as string);
-    return res.status(200).json({ agentId: agent.id, test_res });
+    return res.status(200).json({ agentId: agent.id });
   } catch (error) {
     console.error("❌ [PilotController] Error in run_agent:", error);
     return res.status(500).json({ error });

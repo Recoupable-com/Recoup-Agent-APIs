@@ -13,15 +13,16 @@ const updateSocial = async (
       .eq("id", social_id)
       .single();
     if (existing_social) {
-      await supabase
-        .from("socials")
-        .update({
-          ...existing_social,
-          ...socialdata,
-        })
-        .eq("id", social_id)
-        .select("*")
-        .single();
+      const { error } = await supabase
+      .from("socials")
+      .update({
+        ...existing_social,
+        ...socialdata,
+      })
+      .eq("id", social_id)
+      .select("*")
+      .single();
+      console.log("ZIAD", error)
       return { error: null };
     }
     return { error: null };

@@ -7,7 +7,7 @@ const getPostComments = async (agent_status: any) => {
       .from("socials")
       .select(
         `
-          *
+          *,
           social_posts (
             *,
             posts (
@@ -26,15 +26,14 @@ const getPostComments = async (agent_status: any) => {
               *
             )
           )
-    `,
+      `,
       )
       .eq("id", agent_status.social_id)
-      .select("*")
       .single();
 
-    console.log("ZIAD", agent_status.social_id, data)
     if (data) {
-      const post_ids = data.social_posts.map(
+      const socialPosts = data.social_posts;
+      const post_ids = socialPosts.map(
         (social_post: any) => social_post.post_id,
       );
       const chunkSize = 100;

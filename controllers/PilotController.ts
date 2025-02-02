@@ -12,8 +12,11 @@ export const run_agent = async (req: Request, res: Response) => {
     const agent_type = Object.values(Funnel_Type).find(
       (value) => value === type,
     );
-    if (!agent_type)
+    if (!agent_type) {
+      console.error("❌ [PilotController] Invalid agent_type:", type);
       return res.status(500).json({ message: "Agent type is invalid." });
+    }
+    console.log("✅ [PilotController] Agent type valid:", agent_type);
 
     const isWrapped = type === Funnel_Type.WRAPPED;
     const { agent } = await createAgent();
@@ -29,7 +32,7 @@ export const run_agent = async (req: Request, res: Response) => {
     if (isWrapped || type === Funnel_Type.SPOTIFY)
       runSpotifyAgent(agent.id, handles["spotify"], artistId as string);
   } catch (error) {
-    console.error(error);
+    console.error("❌ [PilotController] Error in run_agent:", error);
     return res.status(500).json({ error });
   }
 };

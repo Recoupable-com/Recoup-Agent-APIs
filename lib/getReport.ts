@@ -8,33 +8,43 @@ import {
 
 const getReport = async (context: any) => {
   try {
-    const reportContent = await getChatCompletions([
-      {
-        role: "user",
-        content: `
-                Context: ${JSON.stringify(context)}
-                Question: Please, create a fan segment report.`,
-      },
-      {
-        role: "system",
-        content: `${instructions.get_segements_report}
-              ${HTML_RESPONSE_FORMAT_INSTRUCTIONS}
-              NOTE: ${FULL_REPORT_NOTE}`,
-      },
-    ]);
+    let reportContent = "";
+    while (1) {
+      reportContent = await getChatCompletions([
+        {
+          role: "user",
+          content: `
+                  Context: ${JSON.stringify(context)}
+                  Question: Please, create a fan segment report.`,
+        },
+        {
+          role: "system",
+          content: `${instructions.get_segements_report}
+                ${HTML_RESPONSE_FORMAT_INSTRUCTIONS}
+                NOTE: ${FULL_REPORT_NOTE}`,
+        },
+      ]);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      if (reportContent) break;
+    }
 
-    const nextSteps = await getChatCompletions([
-      {
-        role: "user",
-        content: `Context: ${JSON.stringify(context)}`,
-      },
-      {
-        role: "system",
-        content: `${instructions.get_segments_report_next_step}
-              ${HTML_RESPONSE_FORMAT_INSTRUCTIONS}
-              NOTE: ${REPORT_NEXT_STEP_NOTE}`,
-      },
-    ]);
+    let nextSteps = "";
+    while (1) {
+      nextSteps = await getChatCompletions([
+        {
+          role: "user",
+          content: `Context: ${JSON.stringify(context)}`,
+        },
+        {
+          role: "system",
+          content: `${instructions.get_segments_report_next_step}
+                ${HTML_RESPONSE_FORMAT_INSTRUCTIONS}
+                NOTE: ${REPORT_NEXT_STEP_NOTE}`,
+        },
+      ]);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      if (nextSteps) break;
+    }
 
     return {
       nextSteps,

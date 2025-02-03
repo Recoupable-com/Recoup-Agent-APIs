@@ -1,9 +1,12 @@
+import supabase from "../supabase/serverClient";
+
 const getAggregatedAgentSocials = async (agentId: string) => {
   try {
-    const response = await fetch(`/api/agent?agentId=${agentId}`);
-
-    const data = await response.json();
-    const agent = data?.data;
+    const { data: agent } = await supabase
+      .from("agents")
+      .select("*, agent_status(*)")
+      .eq("id", agentId)
+      .single();
 
     if (!agent)
       return {

@@ -41,7 +41,7 @@ const getReport = async (context: any) => {
       ],
     });
 
-    console.log("ZIAD HERE", response);
+    console.log("ZIAD HERE", response.choices[0].message);
     return {
       nextSteps: "",
       reportContent: "",

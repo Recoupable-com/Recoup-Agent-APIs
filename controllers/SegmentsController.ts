@@ -55,8 +55,8 @@ export const get_full_report = async (req: Request, res: Response) => {
 
     sendReportEmail(
       reportContent,
-      username,
       avatar,
+      username,
       email as string,
       `${segmentName} Report`,
     );

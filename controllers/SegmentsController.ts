@@ -8,36 +8,62 @@ import {
 import getChatCompletions from "../lib/getChatCompletions";
 import sendReportEmail from "../lib/email/sendReportEmail";
 import { Request, Response } from "express";
+import supabase from "../lib/supabase/serverClient";
+import getAgents from "../lib/stack/getAgents";
+import { Address } from "viem";
+import getSegmentsTotalSize from "../lib/agent/getSegmentsTotalSize";
+import getAggregatedAgentSocials from "../lib/agent/getAggregatedAgentSocials";
+import getReport from "../lib/getReport";
 
 export const get_full_report = async (req: Request, res: Response) => {
   try {
-    const data = req.body;
-    const content = await getChatCompletions(
-      [
-        {
-          role: "user",
-          content: `
-        Context: ${JSON.stringify(data)}
-        Question: Please, create a fan segment report.`,
-        },
-        {
-          role: "system",
-          content: `${instructions.get_segements_report}
-        ${HTML_RESPONSE_FORMAT_INSTRUCTIONS}
-        NOTE: ${FULL_REPORT_NOTE}`,
-        },
-      ],
-      2222,
+    const { agentId, address, segmentName, email } = req.body;
+
+    const { segments, commentIds } = await getAgents(
+      agentId as string,
+      address as Address,
+    );
+    const segment = segments.find(
+      (segmentEle: any) => segmentEle.name === segmentName,
+    );
+    const totalSegmentSize = getSegmentsTotalSize(segments);
+    const { followerCount, username, avatar } = await getAggregatedAgentSocials(
+      agentId as string,
     );
 
+    const segmentSize = (followerCount / totalSegmentSize) * segment.size;
+    const segmentPercentage = Number(
+      (segment.size / totalSegmentSize) * 100,
+    ).toFixed(2);
+    const segmentNames =
+      segments?.map((segmentEle: any) => segmentEle?.name || "") || [];
+
+    const { data: post_comments } = await supabase
+      .from("post_comments")
+      .select("*")
+      .in("id", commentIds.slice(0, 100) || []);
+    const comments = post_comments?.map((comment) => comment.comment) || [];
+
+    const context = {
+      segments: segmentNames,
+      comments,
+      segmentName,
+      segmentSize,
+      segmentPercentage,
+    };
+    const { reportContent, nextSteps } = await getReport(context);
+
     sendReportEmail(
-      content,
-      data?.artistImage,
-      data?.artistName,
-      data?.email || "",
-      `${data?.segment_name} Report`,
+      reportContent,
+      avatar,
+      username,
+      email as string,
+      `${segmentName} Report`,
     );
-    if (content) return res.status(200).json({ content });
+    if (reportContent && nextSteps)
+      return res
+        .status(200)
+        .json({ reportContent, nextSteps, username, avatar });
     return res.status(500).json({ error: "No content received from OpenAI" });
   } catch (error) {
     console.error(error);

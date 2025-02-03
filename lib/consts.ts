@@ -7,6 +7,7 @@ export const APIFY_TOKEN = process.env.APIFY_TOKEN;
 export const MAX_TWEETS = 1000;
 export const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID as string;
 export const CHAT_POINT_SYSTEM_ID = 4172;
+export const AGENT_RUN = "agent_run";
 export const MESSAGE_SENT_POINT = 1;
 export const MESSAGE_SENT_EVENT = "message_sent";
 

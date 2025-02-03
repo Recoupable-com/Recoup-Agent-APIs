@@ -37,8 +37,11 @@ const runTikTokAgent = async (
     }
 
     await updateAgentStatus(agent_status.id, STEP_OF_AGENT.SETTING_UP_ARTIST);
-    await setArtistImage(artist_id, profile.avatar);
-    await updateSocial(social.id, profile);
+    const newImage = await setArtistImage(artist_id, profile.avatar);
+    await updateSocial(social.id, {
+      ...profile,
+      avatar: newImage,
+    });
     await connectSocialToArtist(artist_id, social);
 
     if (!videoUrls?.length) {

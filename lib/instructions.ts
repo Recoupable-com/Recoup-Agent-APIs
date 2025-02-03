@@ -15,7 +15,7 @@ export const instructions = {
           **Crucially, 1 section MUST be formatted as follows:**
           [Simple AI-generated words (less than 15 characters) representing the segment's potential.] 🎭 **<br/>**
           Segment Name: [Segment Name] **<br/>**
-          Segment Size: [Number] fans ([Percentage]% of total audience) **<br/>**
+          Segment Size: [Segment Size] fans ([Segment Percentage]% of total audience) **<br/>**
 
           **Example:**
             1. Fan Report Musical Theater Enthusiasts**

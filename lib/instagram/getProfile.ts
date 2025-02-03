@@ -7,7 +7,6 @@ const getProfile = async (handle: string) => {
     const profileDatasetId = await getProfileDatasetId(handle);
     while (1) {
       const datasetItems: any = await getDataset(profileDatasetId);
-      console.log("ZIAD", datasetItems)
       const error = datasetItems?.[0]?.error;
       if (error)
         return {
@@ -16,7 +15,7 @@ const getProfile = async (handle: string) => {
           postUrls: null,
         };
       const formattedAccount = getFormattedAccount(datasetItems);
-      if (formattedAccount)
+      if (formattedAccount?.profile)
         return {
           error: null,
           profile: formattedAccount.profile,

@@ -17,7 +17,7 @@ import getReport from "../lib/getReport";
 
 export const get_full_report = async (req: Request, res: Response) => {
   try {
-    const { agentId, address, segmentName, email } = req.query;
+    const { agentId, address, segmentName, email } = req.body;
 
     const { segments, commentIds } = await getAgents(
       agentId as string,

@@ -47,7 +47,7 @@ const getPostComments = async (agent_status: any) => {
           .in("id", chunkPostIds);
         if (posts) {
           const post_comments = posts.map((post) => post.post_comments);
-          comments.push(post_comments);
+          comments.push(post_comments.flat());
           if (comments.flat().length > 500) break;
         }
       }

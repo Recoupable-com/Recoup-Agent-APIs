@@ -43,7 +43,6 @@ export const get_full_report = async (req: Request, res: Response) => {
       .select("*")
       .in("id", commentIds.slice(0, 100) || []);
     const comments = post_comments?.map((comment) => comment.comment) || [];
-    console.log("ZIAD", comments, commentIds);
 
     const context = {
       segments: segmentNames,

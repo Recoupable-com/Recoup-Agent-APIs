@@ -8,33 +8,20 @@ import {
 
 const getReport = async (context: any) => {
   try {
-    const reportContent = await getChatCompletions(
-      [
-        {
-          role: "user",
-          content: `
+    const reportContent = await getChatCompletions([
+      {
+        role: "user",
+        content: `
                 Context: ${JSON.stringify(context)}
                 Question: Please, create a fan segment report.`,
-        },
-        {
-          role: "system",
-          content: `${instructions.get_segements_report}
+      },
+      {
+        role: "system",
+        content: `${instructions.get_segements_report}
               ${HTML_RESPONSE_FORMAT_INSTRUCTIONS}
               NOTE: ${FULL_REPORT_NOTE}`,
-        },
-        {
-          role: "user",
-          content: `Context: ${JSON.stringify(context)}`,
-        },
-        {
-          role: "system",
-          content: `${instructions.get_segments_report_next_step}
-                ${HTML_RESPONSE_FORMAT_INSTRUCTIONS}
-                NOTE: ${REPORT_NEXT_STEP_NOTE}`,
-        },
-      ],
-      2222,
-    );
+      },
+    ]);
 
     const nextSteps = await getChatCompletions([
       {

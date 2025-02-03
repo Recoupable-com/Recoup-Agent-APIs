@@ -39,8 +39,8 @@ export const get_full_report = async (req: Request, res: Response) => {
         {
           role: "user",
           content: `
-        Context: ${JSON.stringify(context)}
-        Question: Please, create a fan segment report.`,
+          Context: ${JSON.stringify(context)}
+          Question: Please, create a fan segment report.`,
         },
         {
           role: "system",

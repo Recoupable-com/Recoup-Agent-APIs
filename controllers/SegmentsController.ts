@@ -17,21 +17,27 @@ export const get_full_report = async (req: Request, res: Response) => {
       commentIds,
       segmentName,
       segmentSize,
+      segmentPercentage,
       artistImage,
       artistName,
       email,
     } = req.body;
 
-    const comments = await supabase
+    const { data: post_comments } = await supabase
       .from("post_comments")
       .select("*")
       .in("id", commentIds || []);
 
+    const comments = post_comments?.map((comment) => comment.comment) || [];
+    const segmentNames =
+      segments?.map((segmentEle: any) => segmentEle?.name || "") || [];
+
     const context = {
-      segments,
+      segments: segmentNames,
       comments,
       segmentName,
       segmentSize,
+      segmentPercentage,
       artistName,
     };
     const content = await getChatCompletions(

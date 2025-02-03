@@ -8,16 +8,38 @@ import {
 import getChatCompletions from "../lib/getChatCompletions";
 import sendReportEmail from "../lib/email/sendReportEmail";
 import { Request, Response } from "express";
+import supabase from "../lib/supabase/serverClient";
 
 export const get_full_report = async (req: Request, res: Response) => {
   try {
-    const data = req.body;
+    const {
+      segments,
+      commentIds,
+      segmentName,
+      segmentSize,
+      artistImage,
+      artistName,
+      email,
+    } = req.body;
+
+    const comments = await supabase
+      .from("post_comments")
+      .select("*")
+      .in("id", commentIds || []);
+
+    const context = {
+      segments,
+      comments,
+      segmentName,
+      segmentSize,
+      artistName,
+    };
     const content = await getChatCompletions(
       [
         {
           role: "user",
           content: `
-        Context: ${JSON.stringify(data)}
+        Context: ${JSON.stringify(context)}
         Question: Please, create a fan segment report.`,
         },
         {
@@ -32,10 +54,10 @@ export const get_full_report = async (req: Request, res: Response) => {
 
     sendReportEmail(
       content,
-      data?.artistImage,
-      data?.artistName,
-      data?.email || "",
-      `${data?.segment_name} Report`,
+      artistImage,
+      artistName,
+      email || "",
+      `${segmentName} Report`,
     );
     if (content) return res.status(200).json({ content });
     return res.status(500).json({ error: "No content received from OpenAI" });

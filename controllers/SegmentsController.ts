@@ -104,37 +104,6 @@ export const get_next_steps = async (req: Request, res: Response) => {
   }
 };
 
-export const get_segments = async (req: Request, res: Response) => {
-  try {
-    const body = req.body;
-    const content = await getChatCompletions([
-      {
-        role: "user",
-        content: `Context: ${JSON.stringify(body)}`,
-      },
-      {
-        role: "system",
-        content: `${instructions.get_fan_segments} \n Response should be in JSON format. {"data": [{ "string": number }, { "string": number }]}.`,
-      },
-    ]);
-
-    if (content)
-      return res.status(200).json({
-        data:
-          JSON.parse(
-            content
-              ?.replace(/\n/g, "")
-              ?.replace(/json/g, "")
-              ?.replace(/```/g, ""),
-          )?.data || [],
-      });
-    return res.status(500).json({ error: "No content received from OpenAI" });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "API request failed" });
-  }
-};
-
 export const get_segments_icons = async (req: Request, res: Response) => {
   try {
     const body = req.body;

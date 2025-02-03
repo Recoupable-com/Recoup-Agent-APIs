@@ -43,9 +43,13 @@ const getPostComments = async (agent_status: any) => {
         const chunkPostIds = post_ids.slice(chunkSize * i, chunkSize * (i + 1));
         const { data: posts } = await supabase
           .from("posts")
-          .select("*, post_comments(*, social:socials(*))")
+          .select("*, post_comments(*)")
           .in("id", chunkPostIds);
-        comments.push(posts);
+        if (posts) {
+          const post_comments = posts.map((post) => post.post_comments);
+          comments.push(post_comments);
+          if (comments.flat().length > 500) break;
+        }
       }
     }
   });

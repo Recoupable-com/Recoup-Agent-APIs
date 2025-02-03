@@ -36,7 +36,7 @@ const getPostComments = async (agent_status: any) => {
       const post_ids = socialPosts.map(
         (social_post: any) => social_post.post_id,
       );
-      const chunkSize = 100;
+      const chunkSize = 10;
       const chunkCount =
         parseInt(Number(post_ids.length / chunkSize).toFixed(0), 10) + 1;
       for (let i = 0; i < chunkCount; i++) {

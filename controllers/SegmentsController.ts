@@ -13,6 +13,7 @@ import getAgents from "../lib/stack/getAgents";
 import { Address } from "viem";
 import getSegmentsTotalSize from "../lib/agent/getSegmentsTotalSize";
 import getAggregatedAgentSocials from "../lib/agent/getAggregatedAgentSocials";
+import getReport from "../lib/getReport";
 
 export const get_full_report = async (req: Request, res: Response) => {
   try {
@@ -51,32 +52,19 @@ export const get_full_report = async (req: Request, res: Response) => {
       segmentSize,
       segmentPercentage,
     };
-    const content = await getChatCompletions(
-      [
-        {
-          role: "user",
-          content: `
-          Context: ${JSON.stringify(context)}
-          Question: Please, create a fan segment report.`,
-        },
-        {
-          role: "system",
-          content: `${instructions.get_segements_report}
-        ${HTML_RESPONSE_FORMAT_INSTRUCTIONS}
-        NOTE: ${FULL_REPORT_NOTE}`,
-        },
-      ],
-      2222,
-    );
+    const { reportContent, nextSteps } = await getReport(context);
 
     sendReportEmail(
-      content,
+      reportContent,
       username,
       avatar,
       email as string,
       `${segmentName} Report`,
     );
-    if (content) return res.status(200).json({ content, username, avatar });
+    if (reportContent && nextSteps)
+      return res
+        .status(200)
+        .json({ reportContent, nextSteps, username, avatar });
     return res.status(500).json({ error: "No content received from OpenAI" });
   } catch (error) {
     console.error(error);

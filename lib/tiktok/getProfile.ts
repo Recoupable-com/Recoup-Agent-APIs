@@ -23,7 +23,9 @@ const getProfile = async (
           profile: null,
           videoUrls: null,
         };
+      console.log("ZIAD datasetItems", datasetItems);
       const formattedAccount = getFormattedAccount(datasetItems);
+      console.log("ZIAD formattedAccount", formattedAccount);
       if (formattedAccount?.profile)
         return {
           error: null,

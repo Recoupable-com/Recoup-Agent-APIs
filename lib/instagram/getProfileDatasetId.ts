@@ -17,7 +17,7 @@ const getProfileDatasetId = async (handle: string) => {
     return response;
   } catch (error) {
     console.error(error);
-    throw new Error(error as string);
+    return null
   }
 };
 

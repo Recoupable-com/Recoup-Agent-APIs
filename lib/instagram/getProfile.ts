@@ -7,6 +7,7 @@ const getProfile = async (handle: string) => {
     const profileDatasetId = await getProfileDatasetId(handle);
     while (1) {
       const datasetItems: any = await getDataset(profileDatasetId);
+      console.log("ZIAD", datasetItems?.[0]?.error)
       const error = datasetItems?.[0]?.error;
       if (error)
         return {

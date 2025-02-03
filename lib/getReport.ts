@@ -18,19 +18,13 @@ const getReport = async (context: any) => {
       messages: [
         {
           role: "user",
-          content: `
-                Context: ${JSON.stringify(context)}
-                Question: Please, create a fan segment report.`,
+          content: `Context: ${JSON.stringify(context)}`,
         },
         {
           role: "system",
           content: `${instructions.get_segements_report}
               ${HTML_RESPONSE_FORMAT_INSTRUCTIONS}
               NOTE: ${FULL_REPORT_NOTE}`,
-        },
-        {
-          role: "user",
-          content: `Context: ${JSON.stringify(context)}`,
         },
         {
           role: "system",
@@ -41,7 +35,7 @@ const getReport = async (context: any) => {
       ],
     });
 
-    console.log("ZIAD HERE", response.choices[0].message);
+    console.log("ZIAD HERE", response.choices[0]);
     return {
       nextSteps: "",
       reportContent: "",

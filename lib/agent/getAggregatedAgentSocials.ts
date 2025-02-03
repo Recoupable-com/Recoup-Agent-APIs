@@ -4,7 +4,7 @@ const getAggregatedAgentSocials = async (agentId: string) => {
   try {
     const { data: agent } = await supabase
       .from("agents")
-      .select("*, agent_status(*)")
+      .select("*, agent_status(*, social:socials(*))")
       .eq("id", agentId)
       .single();
 

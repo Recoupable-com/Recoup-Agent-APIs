@@ -76,7 +76,7 @@ export const get_full_report = async (req: Request, res: Response) => {
       email as string,
       `${segmentName} Report`,
     );
-    if (content) return res.status(200).json({ content });
+    if (content) return res.status(200).json({ content, username, avatar });
     return res.status(500).json({ error: "No content received from OpenAI" });
   } catch (error) {
     console.error(error);

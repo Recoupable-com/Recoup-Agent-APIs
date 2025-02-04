@@ -11,11 +11,12 @@ const connectFansSegmentsToArtist = async (
   artistId: string,
 ) => {
   try {
-    const { data: account_socials } = await supabase
+    const { data: account_socials, error } = await supabase
       .from("account_socials")
       .select("*, social:socials(*)")
       .eq("account_id", artistId);
 
+    console.log("ZIAD", account_socials, error)
     if (!account_socials) return;
     const artist_socials: any = {};
     account_socials.map((account_social) => {
@@ -23,6 +24,7 @@ const connectFansSegmentsToArtist = async (
         `${getSocialPlatformByLink(account_social.profile_url).toLowerCase()}`
       ] = account_social.id;
     });
+    console.log("ZIAD", artist_socials)
     const connectPromise = fansSegments.map(async (fanSegment: any) => {
       try {
         const segmentName = Object.values(fanSegment)[0];

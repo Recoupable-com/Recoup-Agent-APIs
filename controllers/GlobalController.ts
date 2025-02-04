@@ -41,7 +41,7 @@ export const get_fans_segments = async (req: Request, res: Response) => {
     while (1) {
       const fansSegments = await getFanSegments(segments, comments.flat().slice(0, 500));
       if (fansSegments.length) {
-        return res.status(500).json({ data: fansSegments });
+        return res.status(200).json({ data: fansSegments });
       }
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }

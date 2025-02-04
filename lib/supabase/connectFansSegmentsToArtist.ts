@@ -11,6 +11,7 @@ const connectFansSegmentsToArtist = async (
   artistId: string,
 ) => {
   try {
+    console.log("ZIAD artistId", artistId)
     const { data: account_socials, error } = await supabase
       .from("account_socials")
       .select("*, social:socials(*)")

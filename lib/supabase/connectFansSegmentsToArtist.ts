@@ -21,7 +21,7 @@ const connectFansSegmentsToArtist = async (
     account_socials.map((account_social) => {
       artist_socials[
         `${getSocialPlatformByLink(account_social.social.profile_url).toLowerCase()}`
-      ] = account_social.id;
+      ] = account_social.social.id;
     });
     const connectPromise = fansSegments.map(async (fanSegment: any) => {
       try {

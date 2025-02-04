@@ -13,8 +13,8 @@ const getFanSegments = async (segmentsNames: any, comments: any) => {
         {
           role: "user",
           content: `
-            [COMMENTS]: ${JSON.stringify(latestComments)}
-            [SEGMENTS]: ${JSON.stringify(segmentsNames)}`,
+            [COMMENTS]: ${JSON.stringify(latestComments.slice(0, 200))}
+            [SEGMENTS NAMES]: ${JSON.stringify(segmentsNames)}`,
         },
         {
           role: "system",

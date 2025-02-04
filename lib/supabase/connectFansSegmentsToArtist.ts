@@ -36,44 +36,42 @@ const connectFansSegmentsToArtist = async (
         if (social) {
           const socialPlatform = getSocialPlatformByLink(social.profile_url);
           let fanProfile: any = {
-            profile: null,
+            profile: social,
           };
           if (socialPlatform === "TWITTER")
             fanProfile = await getTwitterFanProfile(scraper, username);
           if (socialPlatform === "TIKTOK")
             fanProfile = await getTikTokFanProfile(username);
+          const profile = fanProfile?.profile || social;
+          await supabase
+            .from("socials")
+            .update({
+              ...social,
+              ...profile,
+            })
+            .eq("id", social.id)
+            .select("*")
+            .single();
 
-          if (fanProfile?.profile) {
+          if (artist_socials[`${socialPlatform.toLowerCase()}`]) {
             await supabase
-              .from("socials")
-              .update({
-                ...social,
-                ...fanProfile?.profile,
+              .from("artist_fan_segment")
+              .delete()
+              .eq("fan_social_id", social.id)
+              .eq(
+                "artist_social_id",
+                artist_socials[`${socialPlatform.toLowerCase()}`],
+              );
+            await supabase
+              .from("artist_fan_segment")
+              .insert({
+                segment_name: segmentName,
+                artist_social_id:
+                  artist_socials[`${socialPlatform.toLowerCase()}`],
+                fan_social_id: social.id,
               })
-              .eq("id", social.id)
               .select("*")
               .single();
-
-            if (artist_socials[`${socialPlatform.toLowerCase()}`]) {
-              await supabase
-                .from("artist_fan_segment")
-                .delete()
-                .eq("fan_social_id", social.id)
-                .eq(
-                  "artist_social_id",
-                  artist_socials[`${socialPlatform.toLowerCase()}`],
-                );
-              await supabase
-                .from("artist_fan_segment")
-                .insert({
-                  segment_name: segmentName,
-                  artist_social_id:
-                    artist_socials[`${socialPlatform.toLowerCase()}`],
-                  fan_social_id: social.id,
-                })
-                .select("*")
-                .single();
-            }
           }
         }
       } catch (error) {

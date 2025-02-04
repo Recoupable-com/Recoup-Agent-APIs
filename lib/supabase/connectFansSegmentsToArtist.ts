@@ -49,6 +49,7 @@ const connectFansSegmentsToArtist = async (
                 ...social,
                 ...fanProfile?.profile,
               })
+              .eq("id", social.id)
               .select("*")
               .single();
           }

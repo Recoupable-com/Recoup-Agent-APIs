@@ -36,8 +36,6 @@ export const get_fans_segments = async (req: Request, res: Response) => {
       }
     }
 
-    console.log("ZIAD", segments, comments.flat())
-
     while (1) {
       const fansSegments = await getFanSegments(segments, comments.flat().slice(0, 500));
       if (fansSegments.length) {

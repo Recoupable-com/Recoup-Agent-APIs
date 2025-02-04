@@ -54,7 +54,6 @@ const connectFansSegmentsToArtist = async (
               .select("*")
               .single();
 
-            console.log("ziad", artist_socials[`${socialPlatform.toLowerCase()}`], fanProfile)
             if (artist_socials[`${socialPlatform.toLowerCase()}`]) {
               await supabase
                 .from("artist_fan_segment")
@@ -64,14 +63,16 @@ const connectFansSegmentsToArtist = async (
                   "artist_social_id",
                   artist_socials[`${socialPlatform.toLowerCase()}`],
                 );
-              const { data  } = await supabase.from("artist_fan_segment").insert({
-                segment_name: segmentName,
-                artist_social_id:
-                  artist_socials[`${socialPlatform.toLowerCase()}`],
-                fan_social_id: social.id,
-              }).select("*").single();
-
-              console.log("ZIAD", data)
+              await supabase
+                .from("artist_fan_segment")
+                .insert({
+                  segment_name: segmentName,
+                  artist_social_id:
+                    artist_socials[`${socialPlatform.toLowerCase()}`],
+                  fan_social_id: social.id,
+                })
+                .select("*")
+                .single();
             }
           }
         }

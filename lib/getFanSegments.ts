@@ -4,7 +4,7 @@ import { instructions } from "./instructions";
 const getFanSegments = async (segmentsNames: any, comments: any) => {
   try {
     const latestComments = comments.map((comment: any) => ({
-      username: comment.username,
+      username: comment.social.username,
       comment: comment.comment,
     }));
 

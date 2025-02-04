@@ -16,7 +16,26 @@ import isAgentRunning from "../lib/isAgentRunning";
 
 export const get_fans_segments = async (req: Request, res: Response) => {
   try {
-    const { segments, comments } = req.query;
+    const { segments, commentIds } = req.body;
+    const comments = [];
+    const chunkSize = 100;
+    const chunkCount =
+      parseInt(Number(commentIds.length / chunkSize).toFixed(0), 10) + 1;
+    for (let i = 0; i < chunkCount; i++) {
+      const chunkCommentIds = commentIds.slice(
+        chunkSize * i,
+        chunkSize * (i + 1),
+      );
+      const { data: post_comments } = await supabase
+        .from("post_comments")
+        .select("*, social:socials(*)")
+        .in("id", chunkCommentIds);
+      if (post_comments) {
+        comments.push(post_comments.flat());
+        if (comments.flat().length > 500) break;
+      }
+    }
+
     while (1) {
       const fansSegments = await getFanSegments(segments, comments);
       if (fansSegments.length) {

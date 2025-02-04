@@ -11,21 +11,18 @@ const connectFansSegmentsToArtist = async (
   artistId: string,
 ) => {
   try {
-    console.log("ZIAD artistId", artistId)
-    const { data: account_socials, error } = await supabase
+    const { data: account_socials } = await supabase
       .from("account_socials")
       .select("*, social:socials(*)")
       .eq("account_id", artistId);
 
-    console.log("ZIAD", account_socials, error)
     if (!account_socials) return;
     const artist_socials: any = {};
     account_socials.map((account_social) => {
       artist_socials[
-        `${getSocialPlatformByLink(account_social.profile_url).toLowerCase()}`
+        `${getSocialPlatformByLink(account_social.social.profile_url).toLowerCase()}`
       ] = account_social.id;
     });
-    console.log("ZIAD", artist_socials)
     const connectPromise = fansSegments.map(async (fanSegment: any) => {
       try {
         const segmentName = Object.values(fanSegment)[0];
@@ -36,7 +33,6 @@ const connectFansSegmentsToArtist = async (
           .select("*")
           .eq("username", username)
           .single();
-        console.log("ZIAD social", social, username);
         if (social) {
           const socialPlatform = getSocialPlatformByLink(social.profile_url);
           let fanProfile: any = {
@@ -56,28 +52,23 @@ const connectFansSegmentsToArtist = async (
               .eq("id", social.id)
               .select("*")
               .single();
-          }
 
-          console.log(
-            "ZIAD artist socials",
-            artist_socials[`${socialPlatform.toLowerCase()}`],
-          );
-
-          if (artist_socials[`${socialPlatform.toLowerCase()}`]) {
-            await supabase
-              .from("artist_fan_segment")
-              .delete()
-              .eq("fan_social_id", social.id)
-              .eq(
-                "artist_social_id",
-                artist_socials[`${socialPlatform.toLowerCase()}`],
-              );
-            await supabase.from("fan_segment").insert({
-              segment_name: segmentName,
-              artist_social_id:
-                artist_socials[`${socialPlatform.toLowerCase()}`],
-              fan_social_id: social.id,
-            });
+            if (artist_socials[`${socialPlatform.toLowerCase()}`]) {
+              await supabase
+                .from("artist_fan_segment")
+                .delete()
+                .eq("fan_social_id", social.id)
+                .eq(
+                  "artist_social_id",
+                  artist_socials[`${socialPlatform.toLowerCase()}`],
+                );
+              await supabase.from("fan_segment").insert({
+                segment_name: segmentName,
+                artist_social_id:
+                  artist_socials[`${socialPlatform.toLowerCase()}`],
+                fan_social_id: social.id,
+              });
+            }
           }
         }
       } catch (error) {

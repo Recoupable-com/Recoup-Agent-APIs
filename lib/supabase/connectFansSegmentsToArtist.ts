@@ -33,6 +33,7 @@ const connectFansSegmentsToArtist = async (
           .select("*")
           .eq("username", username)
           .single();
+        console.log("ZIAD social", social, username);
         if (social) {
           const socialPlatform = getSocialPlatformByLink(social.profile_url);
           let fanProfile: any = {
@@ -53,6 +54,11 @@ const connectFansSegmentsToArtist = async (
               .select("*")
               .single();
           }
+
+          console.log(
+            "ZIAD artist socials",
+            artist_socials[`${socialPlatform.toLowerCase()}`],
+          );
 
           if (artist_socials[`${socialPlatform.toLowerCase()}`]) {
             await supabase

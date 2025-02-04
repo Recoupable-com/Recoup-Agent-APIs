@@ -11,6 +11,18 @@ const connectFansSegmentsToArtist = async (
   artistId: string,
 ) => {
   try {
+    const { data: account_socials } = await supabase
+      .from("account_socials")
+      .select("*, social:socials(*)")
+      .eq("account_id", artistId);
+
+    if (!account_socials) return;
+    const artist_socials: any = {};
+    account_socials.map((account_social) => {
+      artist_socials[
+        `${getSocialPlatformByLink(account_social.profile_url).toLowerCase()}`
+      ] = account_social.id;
+    });
     const connectPromise = fansSegments.map(async (fanSegment: any) => {
       try {
         const segmentName = Object.values(fanSegment)[0];
@@ -23,8 +35,8 @@ const connectFansSegmentsToArtist = async (
           .single();
         if (social) {
           const socialPlatform = getSocialPlatformByLink(social.profile_url);
-          let fanProfile = {
-            profile: social,
+          let fanProfile: any = {
+            profile: null,
           };
           if (socialPlatform === "TWITTER")
             fanProfile = await getTwitterFanProfile(scraper, username);
@@ -41,16 +53,22 @@ const connectFansSegmentsToArtist = async (
               .single();
           }
 
-          await supabase
-            .from("fan_segment")
-            .delete()
-            .eq("social_id", social.id)
-            .eq("artist_id", artistId);
-          await supabase.from("fan_segment").insert({
-            segment_name: segmentName,
-            artist_id: artistId,
-            social_id: social.id,
-          });
+          if (artist_socials[`${socialPlatform.toLowerCase()}`]) {
+            await supabase
+              .from("artist_fan_segment")
+              .delete()
+              .eq("fan_social_id", social.id)
+              .eq(
+                "artist_social_id",
+                artist_socials[`${socialPlatform.toLowerCase()}`],
+              );
+            await supabase.from("fan_segment").insert({
+              segment_name: segmentName,
+              artist_social_id:
+                artist_socials[`${socialPlatform.toLowerCase()}`],
+              fan_social_id: social.id,
+            });
+          }
         }
       } catch (error) {
         console.error(error);

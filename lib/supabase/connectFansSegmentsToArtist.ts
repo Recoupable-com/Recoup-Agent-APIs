@@ -23,7 +23,6 @@ const connectFansSegmentsToArtist = async (
         `${getSocialPlatformByLink(account_social.social.profile_url).toLowerCase()}`
       ] = account_social.id;
     });
-    console.log("ZIAD artist_socials", artist_socials);
     const connectPromise = fansSegments.map(async (fanSegment: any) => {
       try {
         const segmentName = Object.values(fanSegment)[0];
@@ -34,7 +33,6 @@ const connectFansSegmentsToArtist = async (
           .select("*")
           .eq("username", username)
           .single();
-        console.log("ZIAD social", social, username);
         if (social) {
           const socialPlatform = getSocialPlatformByLink(social.profile_url);
           let fanProfile: any = {
@@ -45,7 +43,6 @@ const connectFansSegmentsToArtist = async (
           if (socialPlatform === "TIKTOK")
             fanProfile = await getTikTokFanProfile(username);
 
-          console.log("ZIAD artist socials", fanProfile?.profile);
           if (fanProfile?.profile) {
             await supabase
               .from("socials")
@@ -66,7 +63,7 @@ const connectFansSegmentsToArtist = async (
                   "artist_social_id",
                   artist_socials[`${socialPlatform.toLowerCase()}`],
                 );
-              await supabase.from("fan_segment").insert({
+              await supabase.from("artist_fan_segment").insert({
                 segment_name: segmentName,
                 artist_social_id:
                   artist_socials[`${socialPlatform.toLowerCase()}`],

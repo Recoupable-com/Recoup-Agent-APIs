@@ -17,7 +17,7 @@ import connectFansSegmentsToArtist from "../lib/supabase/connectFansSegmentsToAr
 
 export const get_fans_segments = async (req: Request, res: Response) => {
   try {
-    const { segments, commentIds } = req.body;
+    const { segmentNames, commentIds } = req.body;
     const comments = [];
     const chunkSize = 100;
     const chunkCount =
@@ -39,7 +39,7 @@ export const get_fans_segments = async (req: Request, res: Response) => {
 
     while (1) {
       const fansSegments = await getFanSegments(
-        segments,
+        segmentNames,
         comments.flat().slice(0, 500),
       );
       if (fansSegments.length) {

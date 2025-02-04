@@ -57,6 +57,14 @@ const connectFansSegmentsToArtist = async (
           if (artist_socials[`${socialPlatform.toLowerCase()}`]) {
             await supabase
               .from("artist_fan_segment")
+              .delete()
+              .eq(
+                "artist_social_id",
+                artist_socials[`${socialPlatform.toLowerCase()}`],
+              )
+              .eq("fan_social_id", social.id);
+            await supabase
+              .from("artist_fan_segment")
               .insert({
                 segment_name: segmentName,
                 artist_social_id:

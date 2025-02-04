@@ -20,6 +20,7 @@ routes.get('/agentkit' , GlobalController.get_agent as any) ;
 
 routes.get('/get_profile', GlobalController.get_profile as any);
 routes.post('/get_fans_segments', GlobalController.get_fans_segments as any);
+routes.post('/connect_fans_segments_to_artist', GlobalController.connect_fans_segments_to_artist as any);
 routes.get('/get_tiktok_profile', GlobalController.get_tiktok_profile as any);
 routes.get('/get_twitter_profile', GlobalController.get_twitter_profile as any);
 routes.post('/get_segments', GlobalController.get_segments as any);

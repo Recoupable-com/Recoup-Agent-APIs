@@ -13,6 +13,7 @@ import getSegments from "../lib/getSegments";
 import getSegmentsWithIcons from "../lib/getSegmentsWithIcons";
 import getPostComments from "../lib/agent/getPostComments";
 import isAgentRunning from "../lib/isAgentRunning";
+import connectFansSegmentsToArtist from "../lib/supabase/connectFansSegmentsToArtist";
 
 export const get_fans_segments = async (req: Request, res: Response) => {
   try {
@@ -37,12 +38,29 @@ export const get_fans_segments = async (req: Request, res: Response) => {
     }
 
     while (1) {
-      const fansSegments = await getFanSegments(segments, comments.flat().slice(0, 500));
+      const fansSegments = await getFanSegments(
+        segments,
+        comments.flat().slice(0, 500),
+      );
       if (fansSegments.length) {
         return res.status(200).json({ data: fansSegments });
       }
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error });
+  }
+};
+
+export const connect_fans_segments_to_artist = async (
+  req: Request,
+  res: Response,
+) => {
+  const { fansSegments, artistId } = req.body;
+  try {
+    await connectFansSegmentsToArtist(fansSegments, artistId);
+    return res.status(200).json({ success: true });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });

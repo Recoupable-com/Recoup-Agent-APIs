@@ -6,7 +6,7 @@ import { Stagehand } from "@browserbasehq/stagehand";
 import { Request, Response } from "express";
 import { z } from "zod";
 import { Scraper } from "agent-twitter-client";
-import getFansProfiles from "../lib/getFansSegments";
+import getFanSegments from "../lib/getFanSegments";
 import getTikTokFanProfile from "../lib/tiktok/getFanProfile";
 import getTwitterFanProfile from "../lib/twitter/getProfile";
 import getSegments from "../lib/getSegments";
@@ -16,10 +16,14 @@ import isAgentRunning from "../lib/isAgentRunning";
 
 export const get_fans_segments = async (req: Request, res: Response) => {
   try {
-    const { reportId } = req.query;
-    const fansSegments = await getFansProfiles(reportId as string);
-
-    return res.status(500).json({ data: fansSegments });
+    const { segments, comments } = req.query;
+    while (1) {
+      const fansSegments = await getFanSegments(segments, comments);
+      if (fansSegments.length) {
+        return res.status(500).json({ data: fansSegments });
+      }
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });

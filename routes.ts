@@ -19,7 +19,7 @@ routes.post('/agentkit/run' , PilotController.run_agent as any) ;
 routes.get('/agentkit' , GlobalController.get_agent as any) ;
 
 routes.get('/get_profile', GlobalController.get_profile as any);
-routes.get('/get_fans_segments', GlobalController.get_fans_segments as any);
+routes.post('/get_fans_segments', GlobalController.get_fans_segments as any);
 routes.get('/get_tiktok_profile', GlobalController.get_tiktok_profile as any);
 routes.get('/get_twitter_profile', GlobalController.get_twitter_profile as any);
 routes.post('/get_segments', GlobalController.get_segments as any);

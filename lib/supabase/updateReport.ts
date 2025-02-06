@@ -14,11 +14,16 @@ const updateReport = async (
 
     if (existingError) return { report: null, error: existingError };
 
-    const { data, error } = await supabase.from("segment_reports").update({
-      ...existingReport,
-      report,
-      next_steps,
-    });
+    const { data, error } = await supabase
+      .from("segment_reports")
+      .update({
+        ...existingReport,
+        report,
+        next_steps,
+      })
+      .eq("id", reportId)
+      .select("*")
+      .single();
 
     return { report: data, error };
   } catch (error) {

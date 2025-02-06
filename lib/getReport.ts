@@ -9,7 +9,7 @@ import {
 const getReport = async (context: any) => {
   try {
     let reportContent = "";
-    while (1) {
+    while (true) {
       reportContent = await getChatCompletions([
         {
           role: "user",

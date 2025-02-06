@@ -5,7 +5,7 @@ import * as PilotController from "./controllers/PilotController"
 
 const routes = express.Router();
 
-routes.post('/get_full_report' , SegmentsController.get_full_report as any) ;
+routes.post('/create_report' , SegmentsController.create_report as any) ;
 routes.post('/get_pitch_report' , SegmentsController.get_pitch_report as any) ;
 routes.post('/get_next_steps' , SegmentsController.get_next_steps as any) ;
 routes.post('/get_segments_icons' , SegmentsController.get_segments_icons as any) ;

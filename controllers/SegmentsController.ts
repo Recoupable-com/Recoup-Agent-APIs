@@ -17,7 +17,7 @@ import getReport from "../lib/getReport";
 import createReport from "../lib/supabase/createReport";
 import updateReport from "../lib/supabase/updateReport";
 
-export const get_full_report = async (req: Request, res: Response) => {
+export const create_report = async (req: Request, res: Response) => {
   try {
     const { agentId, address, segmentName, email, artistId } = req.body;
 

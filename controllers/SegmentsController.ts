@@ -14,10 +14,17 @@ import { Address } from "viem";
 import getSegmentsTotalSize from "../lib/agent/getSegmentsTotalSize";
 import getAggregatedAgentSocials from "../lib/agent/getAggregatedAgentSocials";
 import getReport from "../lib/getReport";
+import createReport from "../lib/supabase/createReport";
+import updateReport from "../lib/supabase/updateReport";
 
-export const create_report = async (req: Request, res: Response) => {
+export const get_full_report = async (req: Request, res: Response) => {
   try {
-    const { agentId, address, segmentName, email } = req.body;
+    const { agentId, address, segmentName, email, artistId } = req.body;
+
+    const { reportId } = await createReport(artistId);
+    res.status(200).json({ reportId });
+
+    if (!reportId) return;
 
     const { segments, commentIds } = await getAgents(
       agentId as string,
@@ -53,6 +60,8 @@ export const create_report = async (req: Request, res: Response) => {
     };
     const { reportContent, nextSteps } = await getReport(context);
 
+    updateReport(reportId, reportContent, nextSteps);
+
     sendReportEmail(
       reportContent,
       avatar,
@@ -60,11 +69,7 @@ export const create_report = async (req: Request, res: Response) => {
       email as string,
       `${segmentName} Report`,
     );
-    if (reportContent && nextSteps)
-      return res
-        .status(200)
-        .json({ reportContent, nextSteps, username, avatar });
-    return res.status(500).json({ error: "No content received from OpenAI" });
+    return;
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "API request failed" });

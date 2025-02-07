@@ -10,13 +10,6 @@ interface SegmentWithIcon {
   fanSocialId?: string | null;
 }
 
-/**
- * Saves segments to the artist_fan_segments table
- * @param segments Array of segments or segment names to save
- * @param artistId The artist ID to associate segments with
- * @param accountId Optional account ID to associate segments with
- * @returns Array of saved segment IDs
- */
 const saveArtistFanSegments = async (
   segments: SegmentWithIcon[],
   artistSocialId: string

@@ -210,11 +210,11 @@ export const get_agent = async (req: Request, res: Response) => {
 
 export const get_segments = async (req: Request, res: Response) => {
   try {
-    const { comments, artist_id } = req.body;
+    const { comments, artist_social_id } = req.body;
 
-    if (!artist_id) {
+    if (!artist_social_id) {
       return res.status(400).json({
-        error: "artist_id is required to generate and save segments",
+        error: "artist_social_id is required to generate and save segments",
       });
     }
 
@@ -225,7 +225,7 @@ export const get_segments = async (req: Request, res: Response) => {
     // Save segments to database
     const { savedSegments, error: saveError } = await saveArtistFanSegments(
       segments_with_icons,
-      artist_id
+      artist_social_id
     );
 
     if (saveError) {

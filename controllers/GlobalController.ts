@@ -14,6 +14,7 @@ import getSegmentsWithIcons from "../lib/getSegmentsWithIcons";
 import getPostComments from "../lib/agent/getPostComments";
 import isAgentRunning from "../lib/isAgentRunning";
 import connectFansSegmentsToArtist from "../lib/supabase/connectFansSegmentsToArtist";
+import saveArtistFanSegments from "../lib/supabase/saveArtistFanSegments";
 
 export const get_fans_segments = async (req: Request, res: Response) => {
   try {
@@ -25,7 +26,7 @@ export const get_fans_segments = async (req: Request, res: Response) => {
     for (let i = 0; i < chunkCount; i++) {
       const chunkCommentIds = commentIds.slice(
         chunkSize * i,
-        chunkSize * (i + 1),
+        chunkSize * (i + 1)
       );
       const { data: post_comments } = await supabase
         .from("post_comments")
@@ -40,7 +41,7 @@ export const get_fans_segments = async (req: Request, res: Response) => {
     while (1) {
       const fansSegments = await getFanSegments(
         segmentNames,
-        comments.flat().slice(0, 500),
+        comments.flat().slice(0, 500)
       );
       if (fansSegments.length) {
         return res.status(200).json({ data: fansSegments });
@@ -55,7 +56,7 @@ export const get_fans_segments = async (req: Request, res: Response) => {
 
 export const connect_fans_segments_to_artist = async (
   req: Request,
-  res: Response,
+  res: Response
 ) => {
   const { fansSegments, artistId } = req.body;
   try {
@@ -193,7 +194,7 @@ export const get_agent = async (req: Request, res: Response) => {
             *
           )
         )
-      `,
+      `
       )
       .eq("id", agentId)
       .single();
@@ -209,10 +210,38 @@ export const get_agent = async (req: Request, res: Response) => {
 
 export const get_segments = async (req: Request, res: Response) => {
   try {
-    const { comments } = req.body;
+    const { comments, artist_id } = req.body;
+
+    if (!artist_id) {
+      return res.status(400).json({
+        error: "artist_id is required to generate and save segments",
+      });
+    }
+
+    // Generate segments
     const segments = await getSegments(comments);
     const segments_with_icons = await getSegmentsWithIcons(segments);
-    return res.status(200).json({ segments_with_icons });
+
+    // Save segments to database
+    const { savedSegments, error: saveError } = await saveArtistFanSegments(
+      segments_with_icons,
+      artist_id
+    );
+
+    if (saveError) {
+      console.error("Error saving segments:", saveError);
+      // Still return generated segments even if save fails
+      return res.status(200).json({
+        segments_with_icons,
+        savedSegments: [],
+        error: "Failed to save segments",
+      });
+    }
+
+    return res.status(200).json({
+      segments_with_icons,
+      savedSegments,
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });

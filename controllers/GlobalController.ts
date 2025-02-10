@@ -247,3 +247,77 @@ export const get_segments = async (req: Request, res: Response) => {
     return res.status(500).json({ error });
   }
 };
+
+export const connect_social_to_artist = async (req: Request, res: Response) => {
+  try {
+    const { artistId, socialId } = req.body;
+    
+    if (!artistId || !socialId) {
+      return res.status(400).json({ 
+        message: "Missing required parameters: artistId and socialId" 
+      });
+    }
+
+    // Get the social record
+    const { data: social } = await supabase
+      .from("socials")
+      .select("*")
+      .eq("id", socialId)
+      .single();
+
+    if (!social) {
+      return res.status(404).json({ 
+        message: "Social record not found" 
+      });
+    }
+
+    // Get the artist account
+    const { data: artist_account } = await supabase
+      .from("accounts")
+      .select("*, account_info(*)")
+      .eq("id", artistId)
+      .single();
+
+    if (!artist_account) {
+      return res.status(404).json({ 
+        message: "Artist account not found" 
+      });
+    }
+
+    // Update artist's image if needed
+    if (social.avatar) {
+      const { data: account_info } = await supabase
+        .from("account_info")
+        .upsert({
+          account_id: artistId,
+          image: social.avatar,
+        })
+        .select()
+        .single();
+    }
+
+    // Connect social to artist
+    const { error: connectionError } = await supabase
+      .from("account_socials")
+      .upsert({
+        account_id: artistId,
+        social_id: socialId,
+      });
+
+    if (connectionError) {
+      return res.status(500).json({ 
+        message: "Failed to connect social to artist",
+        error: connectionError 
+      });
+    }
+
+    return res.status(200).json({ 
+      message: "Successfully connected social to artist",
+      social,
+      artist: artist_account 
+    });
+  } catch (error) {
+    console.error("Error in connect_social_to_artist:", error);
+    return res.status(500).json({ error });
+  }
+};

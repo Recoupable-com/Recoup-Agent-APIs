@@ -113,11 +113,58 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - When using seaborn styles in matplotlib, use 'seaborn-v0_8' instead of 'seaborn' as the style name due to recent seaborn version changes
 - Use 'gpt-4o' as the model name for OpenAI's GPT-4 with vision capabilities
 - When using TurboFactory from @ardrive/turbo-sdk, the fileStreamFactory must return a Web API compatible ReadableStream from node:stream/web, not Node.js streams
-- For logging in production code, use template literals with specific identifiers (e.g. handle, artistId) to make debugging easier
-- When handling image uploads, implement proper fallback mechanisms and clear error messages
 
 # Scratchpad
 
-## Current Task: None
+## Current Task: Refactor Social Profile Analysis Flow
 
-The scratchpad is clean and ready for the next task.
+### Core Insight
+- artistId is NOT required for agent functionality
+- artistId is only used for connecting results to an artist account
+- We can split this into two phases:
+  1. Social Profile Analysis (agent, profile, avatar, posts)
+  2. Artist Connection (optional: link social to artist)
+
+### Proposed Flow
+
+[X] 1. Phase 1: Social Analysis
+   - Create agent
+   - Fetch profile and posts
+   - Upload avatar to Arweave/IPFS
+   - Create social record
+   - Store posts and comments
+   - Return social.id to client
+
+[X] 2. Phase 2: Artist Connection (Optional)
+   - Accept artistId as parameter
+   - Verify artist exists
+   - Connect social to artist
+   - Update artist profile with avatar
+
+### Benefits
+1. Simpler error handling - each phase has clear responsibilities
+2. More flexible - can analyze profiles without artist context
+3. Better separation of concerns
+4. Can retry artist connection separately if it fails
+
+### Next Steps
+[X] 1. Refactor runInstagramAgent to work without artistId
+[X] 2. Create new endpoint for connecting social to artist
+[X] 3. Update error handling for each phase
+[X] 4. Update tests to reflect new flow
+
+### Pending Updates
+[ ] 1. Refactor runTikTokAgent to follow new architecture
+   - Currently using temporary solution with optional artistId
+   - Need to implement proper two-phase approach
+   - Add proper error handling and return types
+
+[ ] 2. Refactor runTwitterAgent to follow new architecture
+   - Currently using temporary solution with optional artistId
+   - Need to implement proper two-phase approach
+   - Add proper error handling and return types
+
+[ ] 3. Refactor runSpotifyAgent to follow new architecture
+   - Currently using temporary solution with optional artistId
+   - Need to implement proper two-phase approach
+   - Add proper error handling and return types

@@ -22,6 +22,7 @@ const createSocial = async (
         .update({
           ...existing_social,
           username: socialdata.username,
+          avatar: socialdata.avatar || existing_social.avatar,
         })
         .eq("id", existing_social.id)
         .select("*")

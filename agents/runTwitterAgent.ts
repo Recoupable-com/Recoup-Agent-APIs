@@ -18,7 +18,7 @@ const scraper = new Scraper();
 const runTwitterAgent = async (
   agent_id: string,
   handle: string,
-  artist_id: string,
+  artist_id: string = "",
 ) => {
   try {
     const { social } = await createSocial({

@@ -15,7 +15,7 @@ import connectCommentsToSocial from "../lib/supabase/connectCommentsToSocial";
 const runTikTokAgent = async (
   agent_id: string,
   handle: string,
-  artist_id: string,
+  artist_id: string = "",
 ) => {
   try {
     const { social } = await createSocial({

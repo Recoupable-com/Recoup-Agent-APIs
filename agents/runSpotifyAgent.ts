@@ -20,7 +20,7 @@ import connectTracksToSocial from "../lib/supabase/connectTracksToSocial";
 const runSpotifyAgent = async (
   agent_id: string,
   handle: string,
-  artist_id: string,
+  artist_id: string = "",
 ) => {
   try {
     const accessToken = await getAccessToken();

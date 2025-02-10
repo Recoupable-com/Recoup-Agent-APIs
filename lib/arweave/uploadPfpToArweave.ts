@@ -1,4 +1,4 @@
-import { ReadableStream } from "node:stream/web";
+import { Readable } from "node:stream";
 import getBlob from "../ipfs/getBlob";
 import turboClient from "./client";
 
@@ -6,23 +6,26 @@ const uploadPfpToArweave = async (image: string): Promise<string | null> => {
   try {
     // Get image blob and type
     const { blob, type } = await getBlob(image);
-    const avatarBlob = new Blob([blob], { type });
-    const fileSize = avatarBlob.size;
+    const buffer = Buffer.from(await blob.arrayBuffer());
+    const fileSize = buffer.length;
 
-    // Create a Web API ReadableStream factory directly from the blob
+    // Create a Node.js Readable stream factory
     const fileStreamFactory = () => {
-      const stream = new Response(avatarBlob).body;
-      if (!stream) throw new Error("Failed to create stream from blob");
-      return stream as ReadableStream;
+      const stream = new Readable({
+        read() {
+          this.push(buffer);
+          this.push(null);
+        }
+      });
+      return stream;
     };
 
-    // Get upload costs
+    // Get upload costs and upload the file
     const [{ winc: fileSizeCost }] = await turboClient.getUploadCosts({
       bytes: [fileSize],
     });
 
-    // Upload the file with content type metadata
-    const { id, dataCaches } = await turboClient.uploadFile({
+    const { id } = await turboClient.uploadFile({
       fileStreamFactory,
       fileSizeFactory: () => fileSize,
       dataItemOpts: {
@@ -41,7 +44,6 @@ const uploadPfpToArweave = async (image: string): Promise<string | null> => {
 
     if (!id) return null;
 
-    // Return the Arweave URL
     return `https://arweave.net/${id}`;
   } catch (error) {
     console.error("Error uploading to Arweave:", error);

@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ardrive/turbo-sdk": "^1.2.0",
     "@browserbasehq/stagehand": "^1.10.1",
     "@playwright/test": "^1.49.1",
     "@stackso/js-core": "^0.5.10",
@@ -21,6 +22,7 @@
     "@types/cheerio": "^0.22.35",
     "agent-twitter-client": "^0.0.16",
     "apify-client": "^2.10.0",
+    "arweave": "^1.14.4",
     "axios": "^1.7.9",
     "body-parser": "^1.20.3",
     "cheerio": "^1.0.0",
@@ -37,6 +39,8 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.19.5",
+    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "typescript": "^5.7.3"
   }

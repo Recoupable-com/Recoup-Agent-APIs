@@ -143,12 +143,12 @@ Goal: Fix missing images by migrating from IPFS to Arweave for permanent storage
   - Add content-type metadata for proper file serving
   - Use dataCaches for faster availability
 
-[ ] 2. Setup Arweave Integration
+[X] 2. Setup Arweave Integration
 
-- Create lib/arweave/client.ts for Arweave connection
-- Add Arweave configuration to .env:
+- ✅ Create lib/arweave/client.ts for Arweave connection
+- ✅ Add Arweave configuration to .env:
   - ARWEAVE_KEY (base64 encoded JSON key)
-- Create uploadToArweave.ts utility using TurboFactory
+- ✅ Add dependencies (@ardrive/turbo-sdk, arweave)
 
 [ ] 3. Create New Upload Function
 
@@ -186,12 +186,12 @@ Goal: Fix missing images by migrating from IPFS to Arweave for permanent storage
 
 ### Next Steps
 
-1. Create the Arweave client setup:
-   - Create lib/arweave directory
-   - Implement client.ts with TurboFactory configuration
-   - Add ARWEAVE_KEY to .env.example
-   - Update package.json with new dependencies
+1. Create uploadPfpToArweave.ts:
+   - Implement file upload using TurboFactory
+   - Add proper content-type metadata
+   - Handle image optimization
+   - Return Arweave URL
 
-Progress: Ready to implement Arweave client setup
+Progress: Completed Arweave client setup, moving on to upload implementation
 
 NEW

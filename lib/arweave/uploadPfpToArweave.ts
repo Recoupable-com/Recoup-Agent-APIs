@@ -1,4 +1,4 @@
-import { Readable } from "node:stream";
+import { ReadableStream } from "node:stream/web";
 import getBlob from "../ipfs/getBlob";
 import turboClient from "./client";
 
@@ -9,8 +9,12 @@ const uploadPfpToArweave = async (image: string): Promise<string | null> => {
     const avatarBlob = new Blob([blob], { type });
     const fileSize = avatarBlob.size;
 
-    // Create a readable stream from the blob
-    const fileStreamFactory = () => Readable.from(Buffer.from(await avatarBlob.arrayBuffer()));
+    // Create a Web API ReadableStream factory directly from the blob
+    const fileStreamFactory = () => {
+      const stream = new Response(avatarBlob).body;
+      if (!stream) throw new Error("Failed to create stream from blob");
+      return stream as ReadableStream;
+    };
 
     // Get upload costs
     const [{ winc: fileSizeCost }] = await turboClient.getUploadCosts({

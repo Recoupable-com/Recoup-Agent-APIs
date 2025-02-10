@@ -112,6 +112,7 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - Add debug information to stderr while keeping the main output clean in stdout for better pipeline integration
 - When using seaborn styles in matplotlib, use 'seaborn-v0_8' instead of 'seaborn' as the style name due to recent seaborn version changes
 - Use 'gpt-4o' as the model name for OpenAI's GPT-4 with vision capabilities
+- When using TurboFactory from @ardrive/turbo-sdk, the fileStreamFactory must return a Web API compatible ReadableStream from node:stream/web, not Node.js streams
 
 # Scratchpad
 
@@ -122,7 +123,6 @@ Goal: Fix missing images by migrating from IPFS to Arweave for permanent storage
 ### Analysis
 
 1. Current Implementation:
-
    - Uses IPFS for image uploads via `uploadPfpToIpfs.ts`
    - Images may become unavailable over time
    - Upload flow in `uploadPfpToIpfs.ts`
@@ -135,7 +135,6 @@ Goal: Fix missing images by migrating from IPFS to Arweave for permanent storage
 ### Implementation Plan
 
 [X] 1. Analyze Reference Implementation
-
 - Reviewed zero-to-arweave repo structure and patterns
 - Key learnings:
   - Use TurboFactory for authenticated uploads
@@ -144,54 +143,35 @@ Goal: Fix missing images by migrating from IPFS to Arweave for permanent storage
   - Use dataCaches for faster availability
 
 [X] 2. Setup Arweave Integration
-
 - ✅ Create lib/arweave/client.ts for Arweave connection
 - ✅ Add Arweave configuration to .env:
   - ARWEAVE_KEY (base64 encoded JSON key)
 - ✅ Add dependencies (@ardrive/turbo-sdk, arweave)
 
-[ ] 3. Create New Upload Function
-
-- Create lib/arweave/uploadPfpToArweave.ts
-- Use TurboFactory for efficient uploads
-- Handle image optimization before upload
-- Return Arweave URLs in format: https://arweave.net/{TX_ID}
+[X] 3. Create New Upload Function
+- ✅ Create lib/arweave/uploadPfpToArweave.ts
+- ✅ Fix stream compatibility issue with TurboFactory by using node:stream/web
+- ✅ Handle image optimization before upload
+- ✅ Return Arweave URLs in format: https://arweave.net/{TX_ID}
 
 [ ] 4. Update Image Upload Flow
-
 - Modify setArtistImage to use Arweave for new uploads
 - Keep IPFS URL handling for existing images
 - Add protocol detection (ipfs:// vs arweave://)
 - Add fallback to IPFS if Arweave upload fails
 
 [ ] 5. Testing & Verification
-
 - Test new image uploads to Arweave
 - Verify existing IPFS images still work
 - Check URL handling for both protocols
 - Verify image permanence on Arweave network
 
-### Files to Modify
-
-- lib/arweave/client.ts (new)
-- lib/arweave/uploadPfpToArweave.ts (new)
-- lib/supabase/setArtistImage.ts
-- .env and .env.example
-- types/database.types.ts (if URL schema changes needed)
-
-### Dependencies to Add
-
-- @ardrive/turbo-sdk
-- arweave
-
 ### Next Steps
 
-1. Create uploadPfpToArweave.ts:
-   - Implement file upload using TurboFactory
-   - Add proper content-type metadata
-   - Handle image optimization
-   - Return Arweave URL
+1. Update setArtistImage to use the new Arweave upload function
+2. Implement protocol detection and fallback mechanism
+3. Add tests for the new functionality
 
-Progress: Completed Arweave client setup, moving on to upload implementation
+Progress: Successfully implemented Arweave upload function with proper stream handling. Moving on to updating the image upload flow.
 
 NEW

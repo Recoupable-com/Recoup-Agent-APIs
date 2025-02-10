@@ -113,49 +113,11 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - When using seaborn styles in matplotlib, use 'seaborn-v0_8' instead of 'seaborn' as the style name due to recent seaborn version changes
 - Use 'gpt-4o' as the model name for OpenAI's GPT-4 with vision capabilities
 - When using TurboFactory from @ardrive/turbo-sdk, the fileStreamFactory must return a Web API compatible ReadableStream from node:stream/web, not Node.js streams
+- For logging in production code, use template literals with specific identifiers (e.g. handle, artistId) to make debugging easier
+- When handling image uploads, implement proper fallback mechanisms and clear error messages
 
 # Scratchpad
 
-## Current Task: P1 Arweave Migration - Fix Missing Social Avatar
+## Current Task: None
 
-### Issue Analysis
-1. Current Implementation:
-   - Successfully uploading images to Arweave ✅
-   - Saving image URL to account_info table ✅
-   - Saving avatar URL to socials table ✅
-
-2. Problem:
-   - FIXED: Avatar field is now being populated in socials table
-   - Tested with @narendramodi profile successfully
-   - Avatar URL format: https://arweave.net/{hash}
-
-3. Root Cause & Fix:
-   - Issue: Social record was created before avatar upload
-   - Fix: Moved avatar upload before social creation
-   - Now passing avatar URL to createSocial
-
-### Implementation Plan
-
-[X] 1. Review Current Flow
-   - ✅ Checked createSocial implementation
-   - ✅ Checked updateSocial implementation
-   - ✅ Found issue in agent flow order
-
-[X] 2. Fix Instagram Agent Flow
-   - ✅ Move avatar upload before social creation
-   - ✅ Pass avatar URL to createSocial
-   - ✅ Update runInstagramAgent.ts flow
-
-[X] 3. Testing
-   - ✅ Test with Instagram agent (narendramodi)
-   - ✅ Verify avatar URL is saved in socials table
-   - ✅ Verify URL format is correct (Arweave)
-
-### Next Steps
-
-1. ✅ Fix Instagram agent flow to handle avatar properly
-2. Monitor image availability and performance in production
-3. Track any failed uploads and verify fallback to IPFS works as expected
-4. Consider future migration of existing IPFS images to Arweave if needed
-
-NEW
+The scratchpad is clean and ready for the next task.

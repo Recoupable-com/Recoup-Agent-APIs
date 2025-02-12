@@ -22,7 +22,6 @@ export const run_agent = async (req: Request, res: Response) => {
 
     let hasValidHandle = false;
 
-    // TikTok
     if (handles["tiktok"] && handles["tiktok"].trim()) {
       runTikTokAgent(
         agent.id,
@@ -32,7 +31,6 @@ export const run_agent = async (req: Request, res: Response) => {
       hasValidHandle = true;
     }
 
-    // Twitter
     if (handles["twitter"] && handles["twitter"].trim()) {
       runTwitterAgent(
         agent.id,
@@ -42,7 +40,6 @@ export const run_agent = async (req: Request, res: Response) => {
       hasValidHandle = true;
     }
 
-    // Instagram
     if (handles["instagram"] && handles["instagram"].trim()) {
       runInstagramAgent(
         agent.id,
@@ -52,7 +49,6 @@ export const run_agent = async (req: Request, res: Response) => {
       hasValidHandle = true;
     }
 
-    // Spotify
     if (handles["spotify"] && handles["spotify"].trim()) {
       runSpotifyAgent(
         agent.id,

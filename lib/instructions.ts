@@ -112,4 +112,21 @@ export const instructions = {
           Propose at least three concrete content collaboration ideas that leverage the segment's interests and brand partnerships.
         9. Closing
           Summarize the key findings and recommendations. Include a call to action.`,
+  generate_segments: `Analyze the provided comments to identify distinct fan segments. Generate insightful and sophisticated segment names that capture the underlying motivations, sentiments, and engagement patterns. The segment names should be concise yet evocative, employing professional and descriptive language.
+    Response format must be a JSON array of strings containing ONLY the segment names.
+    Example: ["Superfans", "Content Creators", "Music Enthusiasts"]`,
+  group_segments: `Analyze each comment and assign it to the most appropriate segment from the provided list. 
+    Response format must be a JSON array of objects with this structure:
+    {
+      "segment_name": string,
+      "fan_social_ids": string[]
+    }
+
+    Example:
+    [
+      {
+        "segment_name": "Superfans",
+        "fan_social_ids": ["id1", "id2"]
+      }
+    ]`,
 };

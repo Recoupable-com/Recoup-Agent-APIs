@@ -7,7 +7,8 @@
   "scripts": {
     "start": "npx tsc && nodemon --experimental-specifier-resolution=node --no-warnings ./dist/app.js",
     "test": "echo \"No tests specified\" && exit 0",
-    "format": "prettier --write app.ts lib controllers agents"
+    "format": "prettier --write app.ts lib controllers agents",
+    "update-types": "npx supabase gen types typescript --project-id godremdqwajrwazhbrue --schema public > types/database.types.ts"
   },
   "keywords": [],
   "author": "",

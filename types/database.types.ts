@@ -408,6 +408,45 @@ export type Database = {
           },
         ]
       }
+      artist_fan_segment: {
+        Row: {
+          artist_social_id: string | null
+          fan_social_id: string | null
+          id: string
+          segment_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          artist_social_id?: string | null
+          fan_social_id?: string | null
+          id?: string
+          segment_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          artist_social_id?: string | null
+          fan_social_id?: string | null
+          id?: string
+          segment_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_fan_segment_artist_social_id_fkey"
+            columns: ["artist_social_id"]
+            isOneToOne: false
+            referencedRelation: "socials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_fan_segment_fan_social_id_fkey"
+            columns: ["fan_social_id"]
+            isOneToOne: false
+            referencedRelation: "socials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_customers: {
         Row: {
           account_id: string
@@ -460,68 +499,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      chat_messages: {
-        Row: {
-          account_id: string
-          chat_id: number
-          content: string
-          created_at: string | null
-          id: string
-          role: Database["public"]["Enums"]["chat_role"]
-        }
-        Insert: {
-          account_id: string
-          chat_id?: number
-          content: string
-          created_at?: string | null
-          id?: string
-          role: Database["public"]["Enums"]["chat_role"]
-        }
-        Update: {
-          account_id?: string
-          chat_id?: number
-          content?: string
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["chat_role"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      chats: {
-        Row: {
-          account_id: string
-          created_at: string | null
-          id: number
-          name: string
-          reference_id: string
-          settings: Json
-        }
-        Insert: {
-          account_id: string
-          created_at?: string | null
-          id?: number
-          name: string
-          reference_id: string
-          settings?: Json
-        }
-        Update: {
-          account_id?: string
-          created_at?: string | null
-          id?: number
-          name?: string
-          reference_id?: string
-          settings?: Json
-        }
-        Relationships: []
       }
       config: {
         Row: {
@@ -614,45 +591,6 @@ export type Database = {
           url?: string | null
         }
         Relationships: []
-      }
-      fan_segment: {
-        Row: {
-          account_id: string | null
-          artist_id: string | null
-          created_at: string
-          id: string
-          segment_name: string | null
-        }
-        Insert: {
-          account_id?: string | null
-          artist_id?: string | null
-          created_at?: string
-          id?: string
-          segment_name?: string | null
-        }
-        Update: {
-          account_id?: string | null
-          artist_id?: string | null
-          created_at?: string
-          id?: string
-          segment_name?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fan_segment_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fan_segment_artist_id_fkey"
-            columns: ["artist_id"]
-            isOneToOne: false
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       fans: {
         Row: {
@@ -1035,7 +973,6 @@ export type Database = {
           next_steps: string | null
           report: string | null
           stack_unique_id: string | null
-          summary: string | null
           timestamp: string
           type: Database["public"]["Enums"]["social_type"] | null
         }
@@ -1044,7 +981,6 @@ export type Database = {
           next_steps?: string | null
           report?: string | null
           stack_unique_id?: string | null
-          summary?: string | null
           timestamp?: string
           type?: Database["public"]["Enums"]["social_type"] | null
         }
@@ -1053,7 +989,6 @@ export type Database = {
           next_steps?: string | null
           report?: string | null
           stack_unique_id?: string | null
-          summary?: string | null
           timestamp?: string
           type?: Database["public"]["Enums"]["social_type"] | null
         }
@@ -1252,6 +1187,45 @@ export type Database = {
           id?: string | null
         }
         Relationships: []
+      }
+      memories: {
+        Row: {
+          artist_id: string | null
+          content: Json
+          id: string
+          room_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          artist_id?: string | null
+          content: Json
+          id?: string
+          room_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          artist_id?: string | null
+          content?: Json
+          id?: string
+          room_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memories_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memories_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -1553,6 +1527,60 @@ export type Database = {
         }
         Relationships: []
       }
+      room_reports: {
+        Row: {
+          id: string
+          report_id: string
+          room_id: string | null
+        }
+        Insert: {
+          id?: string
+          report_id?: string
+          room_id?: string | null
+        }
+        Update: {
+          id?: string
+          report_id?: string
+          room_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_reports_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "segment_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_reports_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          account_id: string | null
+          id: string
+          topic: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          id?: string
+          topic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          id?: string
+          topic?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       save_track: {
         Row: {
           game: string | null
@@ -1570,6 +1598,38 @@ export type Database = {
           timestamp?: string | null
         }
         Relationships: []
+      }
+      segment_reports: {
+        Row: {
+          artist_id: string | null
+          id: string
+          next_steps: string | null
+          report: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          artist_id?: string | null
+          id?: string
+          next_steps?: string | null
+          report?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          artist_id?: string | null
+          id?: string
+          next_steps?: string | null
+          report?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "segment_reports_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       social_posts: {
         Row: {
@@ -1603,6 +1663,78 @@ export type Database = {
             columns: ["social_id"]
             isOneToOne: false
             referencedRelation: "socials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_spotify_albums: {
+        Row: {
+          album_id: string | null
+          id: string
+          social_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          album_id?: string | null
+          id?: string
+          social_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          album_id?: string | null
+          id?: string
+          social_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_spotify_albums_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "spotify_albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_spotify_albums_social_id_fkey"
+            columns: ["social_id"]
+            isOneToOne: false
+            referencedRelation: "socials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_spotify_tracks: {
+        Row: {
+          id: string
+          social_id: string
+          track_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          social_id?: string
+          track_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          social_id?: string
+          track_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_spotify_tracks_social_id_fkey"
+            columns: ["social_id"]
+            isOneToOne: false
+            referencedRelation: "socials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_spotify_tracks_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "spotify_tracks"
             referencedColumns: ["id"]
           },
         ]
@@ -1808,6 +1940,30 @@ export type Database = {
         }
         Relationships: []
       }
+      spotify_albums: {
+        Row: {
+          id: string
+          name: string | null
+          release_date: string | null
+          updated_at: string
+          uri: string
+        }
+        Insert: {
+          id?: string
+          name?: string | null
+          release_date?: string | null
+          updated_at?: string
+          uri: string
+        }
+        Update: {
+          id?: string
+          name?: string | null
+          release_date?: string | null
+          updated_at?: string
+          uri?: string
+        }
+        Relationships: []
+      }
       spotify_analytics_albums: {
         Row: {
           analysis_id: string | null
@@ -1963,6 +2119,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      spotify_tracks: {
+        Row: {
+          id: string
+          name: string | null
+          popularity: number | null
+          updated_at: string
+          uri: string
+        }
+        Insert: {
+          id?: string
+          name?: string | null
+          popularity?: number | null
+          updated_at?: string
+          uri: string
+        }
+        Update: {
+          id?: string
+          name?: string | null
+          popularity?: number | null
+          updated_at?: string
+          uri?: string
+        }
+        Relationships: []
       }
       subscription_items: {
         Row: {

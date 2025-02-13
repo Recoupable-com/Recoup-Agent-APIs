@@ -118,6 +118,83 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-## Current Task: None
+## Current Task: P1: Agent API - Create generate_segments Function
 
-The scratchpad is clean and ready for the next task.
+### Task Description
+
+Create a new function to generate fan segments from comments and store them properly in the artist_fan_segment table.
+
+### Requirements
+
+1. Function Parameters:
+
+   - comments[]: Array of objects containing:
+     - comment_text
+     - fan_social_id
+     - artist_social_id
+
+2. Return Value:
+
+   - Array of newly created artist_fan_segment record IDs
+
+3. Core Logic Flow:
+   - Use OpenAI API to generate segment names from comments
+   - Use OpenAI API to group fan_social_ids by segment
+   - Upsert records in artist_fan_segment table
+   - Handle errors appropriately
+
+### Implementation Plan
+
+[X] Research and analyze current codebase structure
+
+Research Findings:
+
+1. Database Schema:
+
+   - artist_fan_segment table exists with required fields
+   - Has proper foreign key relationships to socials table
+   - Supports upsert operations
+
+2. OpenAI Integration:
+
+   - getChatCompletions.ts provides OpenAI API access
+   - Using gpt-4o-mini model
+   - Has error handling and response parsing
+
+3. Existing Functions We Can Use (without modification):
+
+   - connectFansSegmentsToArtist() - For database operations
+   - getUserNameSegment() - Helper for parsing segment data
+
+4. Functions to NOT Use (will be deprecated):
+
+   - getSegments() - Will be replaced by new architecture
+   - getFanSegments() - Will be replaced by new architecture
+
+5. Database Access:
+   - Using Supabase client
+   - Has existing patterns for upsert operations
+   - Transaction support available
+
+### Next Steps:
+
+[ ] Design and implement generate_segments function
+
+- Create new file for generate_segments function
+- Set up function structure and parameters
+- Implement OpenAI API calls
+- Implement database operations
+- Add error handling
+
+[ ] Testing and validation
+
+- Create test cases
+- Verify segment generation
+- Validate database operations
+- Test error scenarios
+
+[ ] Documentation and cleanup
+
+- Add function documentation
+- Update relevant documentation
+- Clean up any debug code

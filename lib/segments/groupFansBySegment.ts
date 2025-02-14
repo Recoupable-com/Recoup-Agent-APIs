@@ -48,8 +48,7 @@ export const groupFansBySegment = async (
             const response = await getChatCompletions([
               {
                 role: "system",
-                content: `${instructions.group_segments}
-${instructions.group_segments_format}`,
+                content: instructions.group_segments,
               },
               {
                 role: "user",

@@ -118,7 +118,76 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-## Current Task: Move Group Segments Format Instruction - RESOLVED ✅
+## Current Task: Consolidate Group Segments Instructions - RESOLVED ✅
+
+### Task Description
+
+Consolidate redundant instructions `group_segments` and `group_segments_format` in `instructions.ts` into a single comprehensive instruction.
+
+### Analysis
+
+Original structure:
+
+1. `group_segments`: Task description + format + example
+2. `group_segments_format`: Format requirements + note about response format
+
+Issues:
+
+- Redundant format specifications
+- Split instructions that should be together
+- Unnecessary complexity in instruction management
+
+### Progress
+
+[X] Analyze differences between instructions:
+
+- [x] Identify unique components
+- [x] Determine essential elements
+- [x] Plan consolidated format
+
+[X] Update `instructions.ts`:
+
+- [x] Merge instructions into `group_segments`
+- [x] Remove `group_segments_format`
+- [x] Maintain all important information
+
+[X] Update `groupFansBySegment.ts`:
+
+- [x] Remove reference to `group_segments_format`
+- [x] Use consolidated instruction
+- [x] Maintain functionality
+
+### Changes Made
+
+1. Consolidated instructions:
+
+   - Combined task description, format requirements, and example
+   - Added explicit note about response format
+   - Maintained clear structure and readability
+
+2. Updated code:
+   - Removed redundant instruction
+   - Simplified instruction usage
+   - Maintained existing functionality
+
+### Results
+
+✅ Reduced instruction redundancy
+✅ Improved instruction clarity
+✅ Simplified code
+✅ Maintained all functionality
+
+### Lessons Learned
+
+1. Keep instructions consolidated when they serve the same purpose
+2. Include all necessary information in a single, clear instruction
+3. Avoid splitting related requirements across multiple instructions
+
+### Next Steps
+
+The consolidation is complete and the code is working as expected. No further changes needed at this time.
+
+## Previous Task: Move Group Segments Format Instruction - RESOLVED ✅
 
 ### Task Description
 

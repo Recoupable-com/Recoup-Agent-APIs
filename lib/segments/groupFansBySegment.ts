@@ -49,13 +49,7 @@ export const groupFansBySegment = async (
               {
                 role: "system",
                 content: `${instructions.group_segments}
-IMPORTANT: Your response must be a valid JSON array of objects with EXACTLY this structure:
-{
-  "segment_name": string (must be one of the provided segment names),
-  "fan_social_ids": string[] (array of fan_social_id strings)
-}
-
-Do not include any explanations or markdown formatting. Return ONLY the JSON array.`,
+${instructions.group_segments_format}`,
               },
               {
                 role: "user",

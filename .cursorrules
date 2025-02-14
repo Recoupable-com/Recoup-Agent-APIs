@@ -118,7 +118,57 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-## Current Task: Optimize Social Posts Queries - RESOLVED ✅
+## Current Task: Move Group Segments Format Instruction - RESOLVED ✅
+
+### Task Description
+
+Move the format instruction text from `groupFansBySegment.ts` to `instructions.ts` to maintain consistency and centralize all instruction text.
+
+### Progress
+
+[X] Add new instruction to `instructions.ts`:
+
+- [x] Add `group_segments_format` instruction
+- [x] Maintain exact format requirements
+- [x] Keep clear documentation
+
+[X] Update `groupFansBySegment.ts`:
+
+- [x] Remove inline instruction text
+- [x] Use new instruction from `instructions.ts`
+- [x] Maintain functionality
+
+### Changes Made
+
+1. Added to `instructions.ts`:
+
+   - New `group_segments_format` instruction
+   - Clear format requirements
+   - Consistent with existing instructions
+
+2. Updated `groupFansBySegment.ts`:
+   - Removed inline instruction text
+   - Using imported instruction
+   - Combined with existing `group_segments` instruction
+
+### Results
+
+✅ Successfully moved instruction text to central location
+✅ Maintained exact format requirements
+✅ Improved code organization
+✅ Better maintainability
+
+### Lessons Learned
+
+1. Keep all instruction text in a central location
+2. Maintain clear format requirements in instructions
+3. Combine related instructions when appropriate
+
+### Next Steps
+
+The instruction move is complete and the code is working as expected. No further changes needed at this time.
+
+## Previous Task: Optimize Social Posts Queries - RESOLVED ✅
 
 ### Task Description
 

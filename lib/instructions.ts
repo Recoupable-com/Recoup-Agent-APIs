@@ -116,10 +116,10 @@ export const instructions = {
     Response format must be a JSON array of strings containing ONLY the segment names.
     Example: ["Superfans", "Content Creators", "Music Enthusiasts"]`,
   group_segments: `Analyze each comment and assign it to the most appropriate segment from the provided list. 
-    Response format must be a JSON array of objects with this structure:
+    Response format must be a valid JSON array of objects with EXACTLY this structure:
     {
-      "segment_name": string,
-      "fan_social_ids": string[]
+      "segment_name": string (must be one of the provided segment names),
+      "fan_social_ids": string[] (array of fan_social_id strings)
     }
 
     Example:
@@ -129,4 +129,11 @@ export const instructions = {
         "fan_social_ids": ["id1", "id2"]
       }
     ]`,
+  group_segments_format: `IMPORTANT: Your response must be a valid JSON array of objects with EXACTLY this structure:
+    {
+      "segment_name": string (must be one of the provided segment names),
+      "fan_social_ids": string[] (array of fan_social_id strings)
+    }
+
+    Do not include any explanations or markdown formatting. Return ONLY the JSON array.`,
 };

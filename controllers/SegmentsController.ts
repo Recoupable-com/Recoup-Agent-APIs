@@ -355,14 +355,38 @@ export const generate_segments = async (req: Request, res: Response) => {
     console.log("Formatted comments:", formattedComments.length);
 
     // Step 5: Generate segments
+    console.log("Starting segment generation with formatted comments:", {
+      totalComments: formattedComments.length,
+      sampleComment: formattedComments[0],
+      uniqueArtistSocialIds: [
+        ...new Set(formattedComments.map((c) => c.artist_social_id)),
+      ].length,
+      uniqueFanSocialIds: [
+        ...new Set(formattedComments.map((c) => c.fan_social_id)),
+      ].length,
+    });
+
     const segmentIds = await generateSegments(formattedComments);
-    console.log("Generated segment IDs:", segmentIds.length);
+    console.log("Generated segment IDs:", {
+      total: segmentIds.length,
+      uniqueIds: [...new Set(segmentIds)].length,
+      sample: segmentIds.slice(0, 3),
+    });
 
     return res.status(200).json({
       success: true,
       data: {
         segmentIds,
         totalComments: formattedComments.length,
+        stats: {
+          uniqueArtistSocialIds: [
+            ...new Set(formattedComments.map((c) => c.artist_social_id)),
+          ].length,
+          uniqueFanSocialIds: [
+            ...new Set(formattedComments.map((c) => c.fan_social_id)),
+          ].length,
+          uniqueSegmentIds: [...new Set(segmentIds)].length,
+        },
       },
     });
   } catch (error) {

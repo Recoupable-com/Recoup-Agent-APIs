@@ -118,7 +118,61 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-## Current Task: Create getSocialAccounts Utility - RESOLVED ✅
+## Current Task: Refactor connectFansSegmentsToArtist for Single Responsibility
+
+### Task Description
+
+Break down `connectFansSegmentsToArtist.ts` into smaller, focused utility functions following the single responsibility principle.
+
+### Analysis
+
+Current responsibilities:
+
+1. Account/social info management
+2. Fan social ID validation
+3. Batch processing
+4. Segment relationship management
+
+Potential new utilities:
+
+1. `validateFanSocialIds.ts` - Validate fan social IDs exist
+2. `createArtistFanSegments.ts` - Handle batch segment creation
+3. `deleteArtistFanSegments.ts` - Handle batch segment deletion
+
+### Progress
+
+[X] Create new utility functions:
+
+- [x] `validateFanSocialIds.ts`
+  - [x] Interface definition
+  - [x] Validation logic
+  - [x] Error handling
+- [x] `createArtistFanSegments.ts`
+  - [x] Interface definition
+  - [x] Batch processing
+  - [x] Error handling
+- [x] `deleteArtistFanSegments.ts`
+  - [x] Interface definition
+  - [x] Batch deletion
+  - [x] Error handling
+
+[X] Update `connectFansSegmentsToArtist.ts`:
+
+- [x] Import new utilities
+- [x] Remove duplicated logic
+- [x] Maintain existing functionality
+- [x] Update error handling
+- [x] Update logging
+
+### Expected Results
+
+- More focused, maintainable code
+- Better error handling per operation
+- Reusable utilities
+- Clearer responsibility boundaries
+- Easier testing and maintenance
+
+## Previous Task: Create getSocialAccounts Utility - RESOLVED ✅
 
 ### Task Description
 

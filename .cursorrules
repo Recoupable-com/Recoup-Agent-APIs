@@ -118,7 +118,76 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-## Current Task: Consolidate Group Segments Instructions - RESOLVED ✅
+## Current Task: Create getSocialAccounts Utility - RESOLVED ✅
+
+### Task Description
+
+Create a new utility function `getSocialAccounts.ts` to handle getting account information from a social ID, and update `connectFansSegmentsToArtist.ts` to use this new function.
+
+### Analysis
+
+Current structure in `connectFansSegmentsToArtist.ts`:
+
+- Direct Supabase query to get account info from social ID
+- Then uses `getAccountSocials` to get all social IDs
+
+Issues:
+
+- Inconsistent with our pattern of dedicated query functions
+- Duplicated query logic that could be reused elsewhere
+- Missing proper interface definition
+
+### Progress
+
+[X] Create `getSocialAccounts.ts`:
+
+- [x] Define `SocialAccount` interface
+- [x] Implement query function
+- [x] Add error handling and logging
+- [x] Follow consistent patterns
+
+[X] Update `connectFansSegmentsToArtist.ts`:
+
+- [x] Import new utility function
+- [x] Replace direct query with `getSocialAccounts`
+- [x] Fix variable naming conflicts
+- [x] Maintain existing functionality
+
+### Changes Made
+
+1. Created new utility function:
+
+   - Clear interface definition
+   - Consistent error handling
+   - Detailed logging
+   - Single responsibility
+
+2. Updated existing code:
+   - Removed direct query
+   - Fixed variable naming
+   - Maintained functionality
+   - Improved code organization
+
+### Results
+
+✅ More modular code structure
+✅ Better reusability
+✅ Consistent with other utility functions
+✅ Improved error handling
+✅ Clear logging
+
+### Lessons Learned
+
+1. Keep creating dedicated query functions for reusable database operations
+2. Maintain consistent patterns across utility functions
+3. Use clear interfaces for type safety
+4. Include detailed logging for debugging
+
+### Next Steps
+
+The utility function is complete and working as expected. No further changes needed at this time.
+
+## Previous Task: Consolidate Group Segments Instructions - RESOLVED ✅
 
 ### Task Description
 

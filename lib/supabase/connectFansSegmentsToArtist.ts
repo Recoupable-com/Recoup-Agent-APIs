@@ -1,20 +1,15 @@
-import getSocialPlatformByLink from "../getSocialPlatformByLink";
-import getUserNameSegment from "../getUserNameSegment";
-import getTikTokFanProfile from "../tiktok/getFanProfile";
-import getTwitterFanProfile from "../twitter/getProfile";
 import supabase from "./serverClient";
-import { Scraper } from "agent-twitter-client";
-
-const scraper = new Scraper();
+import getAccountSocials from "./getAccountSocials";
+import getSocialAccounts from "./getSocialAccounts";
 
 interface FanSegment {
-  username: string; // This is actually the fan_social_id
+  username: string; // fan_social_id
   segmentName: string;
 }
 
 const connectFansSegmentsToArtist = async (
   fansSegments: FanSegment[],
-  artistSocialId: string // This is actually a social_id, not an account_id
+  artistSocialId: string // social_id
 ) => {
   try {
     console.log(`[DEBUG] Starting to connect fans to artist:`, {
@@ -23,43 +18,14 @@ const connectFansSegmentsToArtist = async (
       sampleFans: fansSegments.slice(0, 3),
     });
 
-    // Get all social IDs associated with the same account as this artist social ID
-    const { data: account_socials, error: accountError } = await supabase
-      .from("account_socials")
-      .select("social_id, account_id")
-      .eq("social_id", artistSocialId);
-
-    if (accountError) {
-      console.error("[ERROR] Error fetching account socials:", accountError);
-      throw accountError;
-    }
-
-    if (!account_socials?.length) {
-      console.error(
-        "[ERROR] No account found for artist social ID:",
-        artistSocialId
-      );
-      return;
-    }
-
-    const accountId = account_socials[0].account_id;
+    // Get account info for the artist's social ID
+    const socialAccounts = await getSocialAccounts(artistSocialId);
+    const accountId = socialAccounts[0].account_id;
     console.log(`[DEBUG] Found account ID: ${accountId}`);
 
-    // Get all social IDs for this account
-    const { data: all_socials, error: socialsError } = await supabase
-      .from("account_socials")
-      .select("social_id")
-      .eq("account_id", accountId);
-
-    if (socialsError) {
-      console.error(
-        "[ERROR] Error fetching all socials for account:",
-        socialsError
-      );
-      throw socialsError;
-    }
-
-    const artist_social_ids = all_socials.map((as) => as.social_id);
+    // Get all social IDs for this account using getAccountSocials
+    const accountSocials = await getAccountSocials(accountId);
+    const artist_social_ids = accountSocials.map((as) => as.social_id);
     console.log(`[DEBUG] Artist social IDs:`, {
       count: artist_social_ids.length,
       ids: artist_social_ids,

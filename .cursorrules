@@ -118,6 +118,113 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-## Current Task
+## Current Task: P1: Agent API - New Route /api/generate_segments
 
-Ready for new task. Previous task completed and cleared.
+### Task Description
+
+Create a new API route to automate segment generation for artists based on their social data.
+
+### Requirements
+
+1. Endpoint:
+
+   - Route: /api/generate_segments
+   - Method: POST
+   - Parameters: accountId (artist identifier)
+   - Response: Success status or error message
+
+2. Data Flow:
+
+   - account_socials (table) → social_posts (table) → post_comments (table) → generate_segments (function)
+
+3. Core Logic Steps:
+   [X] Fetch account_socials records for accountId
+   [X] For each account_social: - Retrieve associated social posts - Fetch post_comments for each post
+   [X] Aggregate comments into required format
+   [X] Call generate_segments function
+   [X] Return results/status
+
+### Research Plan
+
+[X] Database Schema Analysis
+
+Database Tables Structure:
+
+1. account_socials:
+
+   - Columns: id, account_id, social_id
+   - Relations: accounts (account_id), socials (social_id)
+
+2. social_posts:
+
+   - Columns: id, post_id, social_id, updated_at
+   - Relations: posts (post_id), socials (social_id)
+
+3. post_comments:
+
+   - Columns: id, comment, commented_at, post_id, social_id
+   - Relations: posts (post_id), socials (social_id)
+
+4. artist_fan_segment:
+   - Columns: id, artist_social_id, fan_social_id, segment_name, updated_at
+   - Relations: socials (artist_social_id, fan_social_id)
+
+[X] API Infrastructure Review
+
+1. Route Pattern:
+
+   - Express.js router in routes.ts
+   - Controllers organized by domain (GlobalController, SegmentsController)
+   - Standard error handling with try/catch and status codes
+   - Response format: { success: true/false, data/error }
+
+2. Existing Components:
+   - generateSegments function already implemented
+   - Supabase client for database operations
+   - Error handling patterns established
+
+[X] Integration Points
+
+1. generate_segments Function:
+
+   - Already implemented in lib/generateSegments.ts
+   - Takes array of comments with fan_social_id and artist_social_id
+   - Returns array of segment IDs
+
+2. Authentication:
+   - No special auth requirements found in similar endpoints
+   - Standard error handling should be sufficient
+
+### Implementation Progress
+
+[X] Database Query Design
+
+- Implemented efficient queries with proper joins
+- Added error handling for each database operation
+- Using IN clauses for batch operations
+
+[X] Route Implementation
+
+- Created route handler in SegmentsController
+- Implemented data flow logic with proper error handling
+- Added route to routes.ts
+- Added logging for debugging
+
+[ ] Fix Type Issues
+
+- Need to fix PostComment interface and type casting
+- Ensure proper typing for Supabase query responses
+
+[ ] Testing Strategy
+
+- Unit tests for data retrieval
+- Integration tests for full flow
+- Error case testing
+- Performance testing if needed
+
+### Notes
+
+- Need to consider performance implications of fetching all social data
+- May need pagination or batching for large datasets
+- Should add proper logging for monitoring and debugging
+- Consider rate limiting for the API endpoint

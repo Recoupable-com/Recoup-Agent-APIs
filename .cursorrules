@@ -118,62 +118,132 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-## Current Task: Debug Segment Generation - RESOLVED ✅
+## Current Task: Optimize Social Posts Queries - RESOLVED ✅
 
-### Issue Description
+### Task Description
 
-- Successfully generating segments (7,974 comments processed)
-- 88 unique segment IDs generated
-- 398 unique fan social IDs across 3 artist social IDs
-- FIXED: New records are now being created in artist_fan_segment table
+Optimize redundant queries between `getSocialPosts` and `getSocialPostsDetails` by consolidating them into a single, efficient query.
 
-### Investigation Progress
+### Analysis
 
-[X] Verified API endpoint is working
-[X] Confirmed segment generation logic works
-[X] Identified issue in segment creation flow
-[X] Found mismatch in data format between functions
-[X] Added validation for fan social IDs
-[X] Added proper handling of updated_at field
-[X] Improved error logging and statistics
-[X] Rolled back stored procedure changes to use direct database operations
-[X] Tested endpoint with new changes
-[X] Verified segments are being created correctly
+Current flow:
 
-### Summary of Fixes
+1. `getSocialPosts`: Queries `social_posts` for `post_id` only
+2. `getSocialPostsDetails`: Queries same table again for `post_id` and `social_id`
 
-1. Data Validation:
+Issues:
 
-   - Added validation of fan social IDs against socials table
-   - Filter out invalid fan IDs before processing
-   - Added detailed statistics about valid/invalid IDs
+- Redundant database queries
+- Unnecessary data fetching
+- Extra network calls
 
-2. Database Operations:
+### Progress
 
-   - Direct database operations using Supabase client
-   - Proper handling of updated_at field
-   - Better error handling for database operations
-   - Batch processing with delete + insert operations
+[X] Update `getSocialPosts`:
 
-3. Logging Improvements:
-   - Added detailed batch processing logs
-   - Track success/error counts
-   - Calculate success rates
-   - Log invalid fan IDs for investigation
+- [x] Modify query to select both `post_id` and `social_id`
+- [x] Add chunked processing for large queries
+- [x] Update return type and interface
+- [x] Update logging messages
+
+[X] Update `segmentService.ts`:
+
+- [x] Remove `getSocialPostsDetails` import
+- [x] Use enhanced `getSocialPosts` result directly
+- [x] Update post-to-artist mapping logic
+
+[X] Clean up:
+
+- [x] Remove `getSocialPostsDetails.ts` file
+- [x] Update relevant code structure
+
+### Changes Made
+
+1. Enhanced `getSocialPosts`:
+
+   - Added `SocialPost` interface
+   - Implemented chunked processing
+   - Included both `post_id` and `social_id` in query
+   - Improved error handling and logging
+
+2. Updated `segmentService.ts`:
+
+   - Removed redundant query
+   - Simplified data flow
+   - Maintained existing functionality
+
+3. Cleanup:
+   - Removed redundant file
+   - Improved code organization
 
 ### Results
 
-✅ Successfully processed 7,974 comments
-✅ Generated 85 unique segment IDs
-✅ Found 398 unique fan social IDs across 3 artist social IDs
-✅ New records created in artist_fan_segment table
-✅ All required fields properly populated
-✅ Database operations maintaining data consistency
+✅ Reduced database queries from 2 to 1
+✅ Maintained all functionality
+✅ Improved performance through chunked processing
+✅ Cleaner code structure
+✅ Better error handling
 
 ### Lessons Learned
 
-1. Always validate foreign key relationships before attempting inserts
-2. Use detailed logging to track batch operations
-3. Handle database operations directly when possible, avoiding unnecessary complexity
-4. Include proper timestamps for database records
-5. Use batching for large operations to avoid timeouts
+1. Always look for opportunities to consolidate database queries
+2. Use chunked processing for large datasets
+3. Keep interfaces consistent across related operations
+4. Maintain detailed logging for debugging
+
+### Next Steps
+
+The optimization is complete and the code is working as expected. No further changes needed at this time.
+
+### Previous Task: Refactor Supabase Queries - RESOLVED ✅
+
+### Task Description
+
+Move Supabase queries from `segmentService.ts` into separate files in the `lib/supabase` directory, following the single responsibility principle.
+
+### Progress
+
+[X] Create new Supabase query files:
+
+- [x] `getAccountSocials.ts` for fetching account socials
+- [x] `getSocialPosts.ts` for fetching social posts
+- [x] `getPostComments.ts` for fetching post comments
+- [x] `getSocialPostsDetails.ts` for fetching detailed social posts data
+      [X] Update `segmentService.ts` to use the new query files
+      [X] Maintain all existing functionality and logging
+      [X] Test the refactored code
+
+### Changes Made
+
+1. Created new Supabase query files:
+
+   - Each file handles a single database operation
+   - Consistent error handling and logging
+   - Clear interfaces for data types
+   - Chunked processing for large queries
+
+2. Updated `segmentService.ts`:
+   - Removed direct Supabase queries
+   - Added imports for new query files
+   - Simplified code structure
+   - Maintained existing functionality
+
+### Results
+
+✅ Successfully separated Supabase queries into standalone files
+✅ Each file follows single responsibility principle
+✅ Improved code organization and maintainability
+✅ Consistent error handling and logging across files
+✅ Better separation of concerns
+
+### Lessons Learned
+
+1. Keep database queries in dedicated files
+2. Use consistent logging patterns across files
+3. Handle chunked processing for large queries
+4. Use TypeScript interfaces for data types
+5. Maintain clear error messages
+
+### Next Steps
+
+The refactoring is complete and the code is working as expected. No further changes needed at this time.

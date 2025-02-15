@@ -1,5 +1,4 @@
 import { STEP_OF_AGENT } from "../step";
-import supabase from "../supabase/serverClient";
 import { Database } from "../../types/database.types";
 import {
   AgentService as IAgentService,
@@ -10,10 +9,13 @@ import {
 import { ScrapedProfile, ScrapedPost, ScrapedComment } from "../scraping/types";
 import setArtistImage from "../supabase/setArtistImage";
 import connectSocialToArtist from "../supabase/connectSocialToArtist";
-import createAgentStatus from "../supabase/createAgentStatus";
 import updateAgentStatus from "../supabase/updateAgentStatus";
 import connectPostsToSocial from "../supabase/connectPostsToSocial";
 import setNewPosts from "../supabase/setNewPosts";
+import createSocial from "../supabase/createSocial";
+import updateSocial from "../supabase/updateSocial";
+import savePostComments from "../supabase/savePostComments";
+import getAgentStatus from "../supabase/getAgentStatus";
 
 type DbSocial = Database["public"]["Tables"]["socials"]["Row"];
 type DbPost = Database["public"]["Tables"]["posts"]["Row"];
@@ -24,77 +26,23 @@ type DbAgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 export class AgentService implements IAgentService {
   async createSocial(profile: ScrapedProfile): Promise<CreateSocialResult> {
     try {
-      // Check for existing social record
-      const { data: existing, error: existingError } = await supabase
-        .from("socials")
-        .select("*")
-        .eq("profile_url", profile.profile_url)
-        .single();
+      const socialData = {
+        username: profile.username,
+        profile_url: profile.profile_url,
+        avatar: profile.avatar || null,
+        followerCount: profile.followerCount || null,
+        bio: profile.description || null,
+      };
 
-      if (existingError && existingError.code !== "PGRST116") {
-        // PGRST116 means no rows returned, which is fine
-        console.error("Failed to check existing social:", existingError);
-        return {
-          social: null,
-          error: new Error("Failed to check existing social record"),
-        };
-      }
-
-      if (existing) {
-        // Update existing record
-        const { data: updated, error: updateError } = await supabase
-          .from("socials")
-          .update({
-            username: profile.username,
-            avatar: profile.avatar || null,
-            followerCount: profile.followerCount || null,
-            bio: profile.description || null,
-          })
-          .eq("id", existing.id)
-          .select()
-          .single();
-
-        if (updateError) {
-          console.error("Failed to update social:", updateError);
-          return {
-            social: null,
-            error: new Error("Failed to update social record"),
-          };
-        }
-
-        return { social: updated, error: null };
-      }
-
-      // Create new record
-      const { data: social, error: socialError } = await supabase
-        .from("socials")
-        .insert({
-          username: profile.username,
-          profile_url: profile.profile_url,
-          avatar: profile.avatar || null,
-          followerCount: profile.followerCount || null,
-          bio: profile.description || null,
-        })
-        .select()
-        .single();
-
-      if (socialError) {
-        console.error("Failed to create social:", socialError);
-        return {
-          social: null,
-          error: new Error("Failed to create social record"),
-        };
-      }
-
-      return { social, error: null };
+      return await createSocial(socialData);
     } catch (error) {
-      console.error("Error creating social:", error);
+      console.error("Error in AgentService.createSocial:", error);
       return {
         social: null,
         error:
           error instanceof Error
             ? error
-            : new Error("Unknown error creating social"),
+            : new Error("Unknown error in createSocial"),
       };
     }
   }
@@ -104,26 +52,23 @@ export class AgentService implements IAgentService {
     profile: ScrapedProfile
   ): Promise<AgentServiceResult<DbSocial>> {
     try {
-      const { data: social, error: updateError } = await supabase
-        .from("socials")
-        .update({
-          avatar: profile.avatar || null,
-          followerCount: profile.followerCount || null,
-          bio: profile.description || null,
-        })
-        .eq("id", socialId)
-        .select()
-        .single();
+      const { error: updateError } = await updateSocial(socialId, {
+        avatar: profile.avatar || null,
+        followerCount: profile.followerCount || null,
+        bio: profile.description || null,
+      });
 
       if (updateError) {
         console.error("Failed to update social:", updateError);
         return {
           data: null,
-          error: new Error("Failed to update social record"),
+          error: updateError,
         };
       }
 
-      return { data: social, error: null };
+      // Since updateSocial doesn't return the updated record,
+      // we'll consider success as null data with no error
+      return { data: null, error: null };
     } catch (error) {
       console.error("Error updating social:", error);
       return {
@@ -136,37 +81,6 @@ export class AgentService implements IAgentService {
     }
   }
 
-  async storePosts(
-    posts: ScrapedPost[]
-  ): Promise<AgentServiceResult<DbPost[]>> {
-    try {
-      const { data: stored_posts, error: postsError } = await supabase
-        .from("posts")
-        .insert(
-          posts.map((post) => ({
-            post_url: post.post_url,
-          }))
-        )
-        .select();
-
-      if (postsError) {
-        console.error("Failed to store posts:", postsError);
-        return { data: null, error: new Error("Failed to store posts") };
-      }
-
-      return { data: stored_posts, error: null };
-    } catch (error) {
-      console.error("Error storing posts:", error);
-      return {
-        data: null,
-        error:
-          error instanceof Error
-            ? error
-            : new Error("Unknown error storing posts"),
-      };
-    }
-  }
-
   async storeComments(
     comments: ScrapedComment[],
     postId: string,
@@ -174,24 +88,18 @@ export class AgentService implements IAgentService {
   ): Promise<AgentServiceResult<DbPostComment[]>> {
     try {
       console.log("Storing comments for social", socialId);
-      const { data: stored_comments, error: commentsError } = await supabase
-        .from("post_comments")
-        .insert(
-          comments.map((comment) => ({
-            comment: comment.comment,
-            commented_at: comment.commented_at,
-            post_id: postId,
-            social_id: socialId,
-          }))
-        )
-        .select();
+      await savePostComments(
+        comments.map((comment) => ({
+          text: comment.comment,
+          timestamp: comment.commented_at,
+          ownerUsername: comment.username,
+          postUrl: comment.post_url,
+        }))
+      );
 
-      if (commentsError) {
-        console.error("Failed to store comments:", commentsError);
-        return { data: null, error: new Error("Failed to store comments") };
-      }
-
-      return { data: stored_comments, error: null };
+      // Since savePostComments doesn't return the stored comments,
+      // we'll consider success as an empty array for now
+      return { data: [], error: null };
     } catch (error) {
       console.error("Error storing comments:", error);
       return {
@@ -304,43 +212,17 @@ export class AgentService implements IAgentService {
     }>
   > {
     try {
-      // Get agent
-      const { data: agent, error: agentError } = await supabase
-        .from("agents")
-        .select("*")
-        .eq("id", agentId)
-        .single();
+      const result = await getAgentStatus(agentId);
 
-      if (agentError || !agent) {
-        console.error("Failed to get agent:", agentError);
+      if (result.error || !result.data) {
+        console.error("Failed to get agent status:", result.error);
         return {
           data: null,
-          error: new Error("Agent not found"),
+          error: result.error || new Error("Failed to get agent status"),
         };
       }
 
-      // Get all statuses for this agent
-      const { data: statuses, error: statusError } = await supabase
-        .from("agent_status")
-        .select("*")
-        .eq("agent_id", agentId)
-        .order("updated_at", { ascending: false });
-
-      if (statusError) {
-        console.error("Failed to get agent statuses:", statusError);
-        return {
-          data: null,
-          error: new Error("Failed to get agent statuses"),
-        };
-      }
-
-      return {
-        data: {
-          agent,
-          statuses: statuses || [],
-        },
-        error: null,
-      };
+      return { data: result.data, error: null };
     } catch (error) {
       console.error("Error in getAgentStatus:", error);
       return {

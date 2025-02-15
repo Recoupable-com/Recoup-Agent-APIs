@@ -44,7 +44,6 @@ export interface AgentService {
   ): Promise<AgentServiceResult<DbSocial>>;
 
   // Data storage operations
-  storePosts(posts: ScrapedPost[]): Promise<AgentServiceResult<DbPost[]>>;
   storeComments(
     comments: ScrapedComment[],
     postId: string,

@@ -137,72 +137,96 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Move createAgentStatus Before scrapeProfile
+### Current Task: Move createSocial Before createAgentStatus
 
 Task Description:
-Currently, `createAgentStatus` is called after `scrapeProfile` in the Instagram agent flow. We need to move it before the profile scraping to better track the agent's status throughout the entire process.
+Currently, `createAgentStatus` is called after `createSocial` in the Instagram agent flow. We need to move `createSocial` before `createAgentStatus` to better track the agent's status throughout the entire process.
 
 Current Flow:
 
 ```typescript
-1. scrapeProfile()
-2. createSocial()
-3. createAgentStatus(PROFILE)
-4. rest of the flow...
+// Current implementation in processPlatform:
+const { agent_status } = await createAgentStatus(
+  agentId,
+  "", // Empty social_id initially
+  STEP_OF_AGENT.INITIAL
+);
+if (!agent_status?.id) return;
+
+// Scrape profile
+const profile = await scraper.scrapeProfile(handle.replaceAll("@", ""));
+
+// Create social record
+const { social, error: socialError } =
+  await this.agentService.createSocial(profile);
+if (socialError || !social) {
+  console.error(
+    `❌ Failed to create social record for ${platform}:`,
+    socialError
+  );
+  return;
+}
 ```
 
-Required Flow:
+Required Flow (from ROADMAP.md):
 
 ```typescript
-1. createAgentStatus(INITIAL)
-2. scrapeProfile()
-3. createSocial()
-4. updateAgentStatus(PROFILE)
-5. rest of the flow...
+const { social } = await createSocial({
+  username: handle,
+  profile_url: `https://instagram.com/${handle}`,
+});
+if (!social?.id) return;
+
+const { agent_status } = await createAgentStatus(
+  agent_id,
+  social.id,
+  STEP_OF_AGENT.PROFILE
+);
 ```
 
 Analysis:
 
 1. [x] Review Current Implementation:
 
-   - `createAgentStatus` is called after profile scraping
-   - Initial state of agent is not tracked
-   - Profile scraping errors aren't reflected in agent status
+   - Found that we're creating agent status first with empty social_id
+   - Then scraping profile and creating social record
+   - This is opposite of what's required in ROADMAP.md
 
 2. [x] Implementation Plan:
 
-   - [x] Move `createAgentStatus` before `scrapeProfile`
-   - [x] Use `INITIAL` as the first status
-   - [x] Change current `createAgentStatus(PROFILE)` to `updateAgentStatus(PROFILE)`
-   - [ ] Add error state handling for profile scraping
+   - [x] Create social record first with handle info
+   - [x] Create agent status with social.id and PROFILE status
+   - [x] Remove the initial empty social_id status
+   - [x] Keep error handling for social creation
 
 3. [x] Changes Required in `processPlatform`:
 
    ```typescript
-   // Implementation complete with:
-   1. createAgentStatus moved before scrapeProfile
-   2. Using empty string for initial social_id
-   3. Changed to updateAgentStatus for PROFILE state
-   4. Maintained existing error handling structure
+   // Completed updates:
+   1. Moved createSocial to be first operation
+   2. Passing social.id to createAgentStatus
+   3. Using PROFILE as initial status
+   4. Maintained error handling structure
    ```
 
 4. [ ] Testing Plan:
-   - [ ] Verify agent status is created before scraping
-   - [ ] Verify profile scraping errors are properly tracked
+   - [ ] Verify social record is created first
+   - [ ] Verify agent status has correct social_id
+   - [ ] Verify status starts at PROFILE
    - [ ] Ensure rest of the flow remains unchanged
 
 Files to Modify:
 
 - [x] `controllers/PilotController.ts`
-  - [x] Move `createAgentStatus` call
-  - [ ] Add error handling
-  - [x] Update status transitions
+  - [x] Reorder operations in processPlatform
+  - [x] Update error handling for new flow
+  - [x] Ensure proper status transitions
 
 Next Steps:
 
-1. [x] Update `processPlatform` method
-2. [ ] Test with sweetman.eth profile
-3. [ ] Verify error handling with invalid profile
+1. [x] Review current `processPlatform` method
+2. [x] Implement changes following ROADMAP.md example
+3. [ ] Test with sweetman.eth profile
 
 Next Action:
-Would you like me to add the error handling for profile scraping failures?
+Would you like me to test the changes with the sweetman.eth profile?

@@ -87,20 +87,12 @@ export class PilotController {
         // Get platform-specific scraper
         const scraper = ScraperFactory.getScraper(platform);
 
-        // Create initial status
-        const { agent_status } = await createAgentStatus(
-          agentId,
-          "",
-          STEP_OF_AGENT.INITIAL
-        );
-        if (!agent_status?.id) return;
-
-        // Scrape profile
-        const profile = await scraper.scrapeProfile(handle.replaceAll("@", ""));
-
-        // Create social record
+        // Create social record first
         const { social, error: socialError } =
-          await this.agentService.createSocial(profile);
+          await this.agentService.createSocial({
+            username: handle.replaceAll("@", ""),
+            profile_url: `https://instagram.com/${handle.replaceAll("@", "")}`,
+          });
         if (socialError || !social) {
           console.error(
             `❌ Failed to create social record for ${platform}:`,
@@ -109,8 +101,19 @@ export class PilotController {
           return;
         }
 
-        // Update status to profile
-        await updateAgentStatus(agent_status.id, STEP_OF_AGENT.PROFILE);
+        // Create agent status with social.id
+        const { agent_status } = await createAgentStatus(
+          agentId,
+          social.id,
+          STEP_OF_AGENT.PROFILE
+        );
+        if (!agent_status?.id) return;
+
+        // Scrape profile
+        const profile = await scraper.scrapeProfile(handle.replaceAll("@", ""));
+
+        // Update social record with profile data
+        await this.agentService.updateSocial(social.id, profile);
 
         // Handle artist setup if needed
         if (artistId) {

@@ -3,7 +3,7 @@ import supabase from "./serverClient";
 
 const connectPostsToSocial = async (
   social: Social,
-  postUrls: string[],
+  postUrls: string[]
 ): Promise<Post[]> => {
   try {
     let posts: Post[] = [];
@@ -27,6 +27,7 @@ const connectPostsToSocial = async (
         const social_posts = existing_posts.map((post) => ({
           social_id: social.id,
           post_id: post.id,
+          updated_at: new Date().toISOString(),
         }));
         await supabase.from("social_posts").insert(social_posts);
         posts = posts.concat(existing_posts);

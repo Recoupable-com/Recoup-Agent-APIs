@@ -1,9 +1,10 @@
 import express from "express";
 import * as SegmentsController from "./controllers/SegmentsController";
 import * as GlobalController from "./controllers/GlobalController";
-import * as PilotController from "./controllers/PilotController";
+import { PilotController } from "./controllers/PilotController";
 
 const routes = express.Router();
+const pilotController = new PilotController();
 
 routes.post("/create_report", SegmentsController.create_report as any);
 routes.post("/get_pitch_report", SegmentsController.get_pitch_report as any);
@@ -19,7 +20,7 @@ routes.get("/get_dataset_status", GlobalController.get_dataset_status as any);
 
 routes.get("/get_social_handles", GlobalController.get_social_handles as any);
 
-routes.post("/agentkit/run", PilotController.run_agent as any);
+routes.post("/agentkit/run", pilotController.run_agent as any);
 routes.get("/agentkit", GlobalController.get_agent as any);
 
 routes.get("/get_profile", GlobalController.get_profile as any);

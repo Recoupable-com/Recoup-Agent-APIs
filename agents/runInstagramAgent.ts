@@ -62,7 +62,7 @@ const runInstagramAgent = async (
     const scrapingPosts = await getScrapingPosts(postUrls);
 
     if (scrapingPosts.length) {
-      const comments = await getPostComments(agent_status.id, scrapingPosts);
+      const comments = await getPostComments(scrapingPosts);
       await connectCommentsToSocial(comments);
     }
 

@@ -115,10 +115,82 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - When using TurboFactory from @ardrive/turbo-sdk, the fileStreamFactory must return a Web API compatible ReadableStream from node:stream/web, not Node.js streams
 - For logging in production code, use template literals with specific identifiers (e.g. handle, artistId) to make debugging easier
 - When handling image uploads, implement proper fallback mechanisms and clear error messages
+- When using LLM for batch processing, use smaller batch sizes (100 instead of 500) to avoid token limits and truncation issues
+- Add validation for LLM response structure before parsing JSON to catch malformed responses early
 
 # Scratchpad
 
-## Current Task: Refactor connectFansSegmentsToArtist for Single Responsibility
+## Current Task: Debug generate_segments Endpoint Failure - RESOLVED ✅
+
+### Task Description
+
+Debug why the generate_segments endpoint is failing for artistId "648df9ec-63bf-4a7f-a473-dfc46824956d" and verify functionality with a known working artistId.
+
+### Analysis of Latest Logs
+
+1. Data Collection Phase:
+
+   - Successfully found 1 account social
+   - Successfully found 13 social posts
+   - Successfully found 599 comments
+   - Generated 30 unique segment names
+
+2. Processing Phase:
+
+   - Split 599 comments into 6 batches for processing
+   - Sample comments show special characters and emojis:
+     ```
+     - Empty comment: ""
+     - Comment with emoji: "Hard! 🥂"
+     - Comment with multiple emojis: "Bring bacc the R&B groups bro deadass 💯🔥🔥🔥🔥"
+     ```
+
+3. Root Causes Identified:
+   - LLM responses were getting truncated due to token limits
+   - Special characters and emojis in comments affected parsing
+   - Batch size was too large (500 comments per batch)
+   - Response validation was insufficient
+
+### Action Plan
+
+[X] Reduce batch size and improve validation:
+
+- [x] Changed batch size from 500 to 100 comments
+- [x] Added detailed logging for comment content
+- [x] Added response structure validation
+- [x] Reduced concurrency from 5 to 3
+
+[X] Implement better error handling:
+
+- [x] Added JSON parsing error recovery
+- [x] Added response structure validation
+- [x] Improved error logging with context
+
+[X] Enhance monitoring:
+
+- [x] Added validation of LLM response format
+- [x] Added tracking of successful vs failed segments per batch
+- [x] Added logging of complete response structure for debugging
+
+### Results
+
+✅ Successfully resolved the endpoint issues:
+
+- Endpoint now generates segments correctly
+- Processing all 599 comments successfully
+- Generating 29 unique segment IDs
+- Handling special characters and emojis properly
+- Improved error handling and logging
+
+### Lessons Learned
+
+1. Smaller batch sizes (100 vs 500) help prevent LLM token limits
+2. Reduced concurrency (3 vs 5) provides more stable processing
+3. Detailed logging of JSON parsing errors helps identify issues
+4. Response structure validation prevents invalid data processing
+5. Proper error handling with context improves debugging
+
+## Previous Task: Refactor connectFansSegmentsToArtist for Single Responsibility - RESOLVED ✅
 
 ### Task Description
 

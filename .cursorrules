@@ -130,89 +130,114 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - Use appropriate HTTP methods (GET for retrieval, POST for actions/mutations)
 - Include request validation middleware for API endpoints
 - Add rate limiting for scraping endpoints to prevent abuse
+- Only use await with async functions - check if a function is actually async before awaiting it
+- When handling agent status updates, make progress parameters optional and handle null agent_status_id gracefully to prevent TypeError exceptions
+- Keep agent status tracking separate from data processing functions to maintain better separation of concerns
+- Use proper error handling and logging in asynchronous operations to catch and report issues early
 
 # Scratchpad
 
-## Current Task: P2 - Decouple Scraping from Artist<>Social Linking
+### Current Task: Refactor setNewPosts and Fix Missing updated_at
 
-### Task Description
+Problems:
 
-Currently, the agent scraping process in the Agent API combines two functionalities:
+1. [x] Duplicate createAgentStatus:
 
-1. Scraping social data (posts and comments)
-2. Generating and linking comments to artist<>social relationships
+   - Called in PilotController.processPlatform
+   - Called in AgentService.storeSocialData
+   - Solution: Keep in PilotController, pass agent_status_id to storeSocialData
 
-The goal is to decouple these processes so that:
+2. [x] Missing updated_at in connectPostsToSocial:
 
-- Scraping funnels ONLY handle scraping data from social platforms via `/api/agentkit/run` endpoints
-- Output should focus on posts and post_comments
-- Comment generation and artist<>social linking will be handled separately via `/api/generate/*` endpoints
+   - When creating social_posts records, updated_at is not set
+   - Added updated_at: new Date().toISOString() to the insert data
 
-### Analysis
+3. [ ] Inconsistent Posts Creation Methods:
+   - AgentService.storePosts and setNewPosts have overlapping functionality
+   - setNewPosts doesn't return the same type as AgentService.storePosts
+   - Goal: Use setNewPosts as the single source for post creation
 
-After reviewing the codebase, here's what I found:
+Analysis:
 
-1. Current Implementation Structure:
+1. [x] Current setNewPosts:
 
-   - Each platform (Instagram, Twitter, TikTok) has its own agent implementation
-   - The scraping process is tightly coupled with social linking in these steps:
-     a. Create/update social profile
-     b. Connect social to artist
-     c. Scrape and save posts
-     d. Connect posts to social
-     e. Scrape comments
-     f. Connect comments to social
+   ```typescript
+   // Returns void, doesn't provide created posts
+   const setNewPosts = async (postUrls: Array<string>) => {
+     // ... implementation
+   };
+   ```
 
-2. Key Files to Modify:
+2. [ ] Required Return Type (from AgentService.storePosts):
 
-   - `agents/runInstagramAgent.ts`
-   - `agents/runTikTokAgent.ts`
-   - `agents/runTwitterAgent.ts`
-   - `lib/supabase/connectCommentsToSocial.ts`
-   - `lib/supabase/connectPostsToSocial.ts`
+   ```typescript
+   Promise<AgentServiceResult<DbPost[]>>;
+   // where AgentServiceResult<T> = { data: T | null; error: Error | null; }
+   ```
 
-3. Database Tables Involved:
-   - socials
-   - social_posts
-   - posts
-   - post_comments
-   - agents
-   - agent_status
+3. [ ] Current Usage:
+   - AgentService.storeSocialData calls both methods
+   - Redundant database operations
+   - Inconsistent error handling
 
-### Plan
+Changes Needed:
 
-[ ] Phase 1: Refactor Agent Structure
+1. [ ] Update setNewPosts:
 
-- Create separate modules for scraping and linking
-- Move social linking logic out of agent runners
-- Create new API routes under /api/agentkit/run and /api/generate
+   ```typescript
+   const setNewPosts = async (
+     postUrls: Array<string>
+   ): Promise<AgentServiceResult<DbPost[]>> => {
+     try {
+       // ... existing chunking logic ...
+       let allPosts: DbPost[] = [];
 
-[ ] Phase 2: Update Scraping Process
+       // Collect all posts
+       for (let i = 0; i < chunkCount; i++) {
+         const { data: posts } = await supabase
+           .from("posts")
+           .insert(missing_posts)
+           .select();
+         if (posts) allPosts = allPosts.concat(posts);
+       }
 
-- Modify agents to only handle data collection
-- Store raw scraped data without creating relationships
-- Implement new /api/agentkit/run/\* endpoints
+       return { data: allPosts, error: null };
+     } catch (error) {
+       return {
+         data: null,
+         error:
+           error instanceof Error
+             ? error
+             : new Error("Unknown error in setNewPosts"),
+       };
+     }
+   };
+   ```
 
-[ ] Phase 3: Create New Generate API
+2. [ ] Update AgentService:
+   - Remove storePosts method
+   - Update storeSocialData to only use setNewPosts
 
-- Implement new /api/generate/\* endpoints for generating and linking comments
-- Move relationship creation logic to new endpoint
-- Add validation and rate limiting
+Next Steps:
 
-[ ] Phase 4: Update Status Tracking
+1. [ ] Update setNewPosts:
 
-- Modify agent status steps to reflect new decoupled process
-- Add new status types for generation process
-- Update status tracking in both APIs
+   - [ ] Add proper return type
+   - [ ] Collect and return created posts
+   - [ ] Add consistent error handling
 
-### Progress
+2. [ ] Update AgentService:
 
-Starting with Phase 1 - Refactoring the agent structure.
+   - [ ] Remove storePosts method
+   - [ ] Update storeSocialData to use only setNewPosts
+   - [ ] Update error handling
 
-Latest Updates:
+3. [ ] Test Changes:
+   - [ ] Test with sweetman.eth
+   - [ ] Verify posts are created correctly
+   - [ ] Verify error handling works
 
-- Updated API routes to use /api/agentkit/run instead
-- Created initial structure for /api/agentkit/run endpoints
-- Identified core components to be decoupled
-- Planned API route structure with proper prefixes
-- Added validation requirements for new endpoints
+Previous Tasks:
+
+- [x] Fix duplicate createAgentStatus
+- [x] Fix missing updated_at in connectPostsToSocial

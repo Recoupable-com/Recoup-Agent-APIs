@@ -124,9 +124,91 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - Test system changes with varying dataset sizes to ensure scalability
 - Log sample data and statistics when processing batches to aid debugging
 - Implement progressive validation (structure, content, parsing) to fail fast and provide clear error context
+- Always prefix API endpoints with /api for consistency and clarity
+- Keep API routes organized by resource type (e.g. /api/agentkit/run, /api/generate)
+- Separate data fetching from data processing in API endpoints for better maintainability
+- Use appropriate HTTP methods (GET for retrieval, POST for actions/mutations)
+- Include request validation middleware for API endpoints
+- Add rate limiting for scraping endpoints to prevent abuse
+- Only use await with async functions - check if a function is actually async before awaiting it
+- When handling agent status updates, make progress parameters optional and handle null agent_status_id gracefully to prevent TypeError exceptions
+- Keep agent status tracking separate from data processing functions to maintain better separation of concerns
+- Use proper error handling and logging in asynchronous operations to catch and report issues early
 
 # Scratchpad
 
-## Current Task: None
+### Current Task: Limit processPlatform to Instagram Only
 
-Ready for new task. Previous tasks have been archived.
+Problems:
+
+1. [x] Duplicate createAgentStatus:
+
+   - Called in PilotController.processPlatform
+   - Called in AgentService.storeSocialData
+   - Solution: Keep in PilotController, pass agent_status_id to storeSocialData
+
+2. [x] Missing updated_at in connectPostsToSocial:
+
+   - When creating social_posts records, updated_at is not set
+   - Added updated_at: new Date().toISOString() to the insert data
+
+3. [x] Inconsistent Posts Creation Methods:
+
+   - AgentService.storePosts and setNewPosts have overlapping functionality
+   - Updated setNewPosts to return AgentServiceResult<DbPost[]>
+   - Removed storePosts method from AgentService
+
+4. [ ] Mixed Platform Processing:
+   - Current processPlatform handles all platforms
+   - Need to limit to Instagram only
+   - Other platforms should use their existing scrapers
+
+Analysis:
+
+1. [x] Current Platform Processing:
+
+   ```typescript
+   // Process each platform
+   const tasks: Promise<void>[] = [];
+   if (handles.instagram?.trim()) {
+     tasks.push(processPlatform("INSTAGRAM", handles.instagram));
+   }
+   if (handles.twitter?.trim()) {
+     tasks.push(processPlatform("TWITTER", handles.twitter));
+   }
+   // ... other platforms
+   ```
+
+2. [ ] Required Changes:
+
+   ```typescript
+   // Only process Instagram with new flow
+   const tasks: Promise<void>[] = [];
+   if (handles.instagram?.trim()) {
+     tasks.push(processPlatform("INSTAGRAM", handles.instagram));
+   }
+
+   // Use existing scrapers for other platforms
+   if (handles.twitter?.trim()) {
+     tasks.push(processTwitter(agentId, handles.twitter, artistId));
+   }
+   // ... other platforms with their existing methods
+   ```
+
+Next Steps:
+
+1. [ ] Update PilotController:
+
+   - [ ] Keep processPlatform for Instagram only
+   - [ ] Add separate methods for other platforms
+   - [ ] Update run_agent to use appropriate method per platform
+
+2. [ ] Test Changes:
+   - [ ] Test Instagram with sweetman.eth
+   - [ ] Verify other platforms still work with existing flows
+
+Previous Tasks:
+
+- [x] Fix duplicate createAgentStatus
+- [x] Fix missing updated_at in connectPostsToSocial
+- [x] Refactor setNewPosts to replace AgentService.storePosts

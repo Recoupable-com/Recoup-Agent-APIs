@@ -14,6 +14,9 @@ import getSegmentsWithIcons from "../lib/getSegmentsWithIcons";
 import getPostComments from "../lib/agent/getPostComments";
 import isAgentRunning from "../lib/isAgentRunning";
 import connectFansSegmentsToArtist from "../lib/supabase/connectFansSegmentsToArtist";
+import { AgentService } from "../lib/services/AgentService";
+
+const agentService = new AgentService();
 
 export const get_fans_segments = async (req: Request, res: Response) => {
   try {
@@ -25,7 +28,7 @@ export const get_fans_segments = async (req: Request, res: Response) => {
     for (let i = 0; i < chunkCount; i++) {
       const chunkCommentIds = commentIds.slice(
         chunkSize * i,
-        chunkSize * (i + 1),
+        chunkSize * (i + 1)
       );
       const { data: post_comments } = await supabase
         .from("post_comments")
@@ -40,7 +43,7 @@ export const get_fans_segments = async (req: Request, res: Response) => {
     while (1) {
       const fansSegments = await getFanSegments(
         segmentNames,
-        comments.flat().slice(0, 500),
+        comments.flat().slice(0, 500)
       );
       if (fansSegments.length) {
         return res.status(200).json({ data: fansSegments });
@@ -55,7 +58,7 @@ export const get_fans_segments = async (req: Request, res: Response) => {
 
 export const connect_fans_segments_to_artist = async (
   req: Request,
-  res: Response,
+  res: Response
 ) => {
   const { fansSegments, artistId } = req.body;
   try {
@@ -181,29 +184,54 @@ export const get_social_handles = async (req: Request, res: Response) => {
 
 export const get_agent = async (req: Request, res: Response) => {
   const { agentId } = req.query;
+  if (!agentId || typeof agentId !== "string") {
+    return res.status(400).json({ error: "Invalid agent ID" });
+  }
+
   try {
-    const { data: agent } = await supabase
-      .from("agents")
-      .select(
-        `
-        *,
-        agent_status (
-          *,
-          social:socials (
-            *
-          )
-        )
-      `,
-      )
-      .eq("id", agentId)
-      .single();
-    if (isAgentRunning(agent.agent_status))
-      return res.status(200).json({ agent });
-    const comments = await getPostComments(agent.agent_status);
-    return res.status(200).json({ agent, comments });
+    const { data, error } = await agentService.getAgentStatus(agentId);
+    if (error || !data) {
+      console.error("Error getting agent status:", error);
+      return res
+        .status(500)
+        .json({ error: error?.message || "Failed to get agent status" });
+    }
+
+    const { agent, statuses } = data;
+    const formattedAgent = {
+      ...agent,
+      agent_status: statuses.map((status) => ({
+        ...status,
+        social: null, // Will be populated below
+      })),
+    };
+
+    // Get social data for each status
+    for (const status of formattedAgent.agent_status) {
+      if (status.social_id) {
+        const { data: social } = await supabase
+          .from("socials")
+          .select("*")
+          .eq("id", status.social_id)
+          .single();
+        status.social = social;
+      }
+    }
+
+    // Check if agent is still running
+    if (isAgentRunning(formattedAgent.agent_status)) {
+      return res.status(200).json({ agent: formattedAgent });
+    }
+
+    // Get comments if agent is finished
+    const comments = await getPostComments(formattedAgent.agent_status);
+    return res.status(200).json({ agent: formattedAgent, comments });
   } catch (error) {
-    console.error("Error in get_autopilot:", error);
-    return res.status(500).json({ error });
+    console.error("Error in get_agent:", error);
+    return res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "Unknown error in get_agent",
+    });
   }
 };
 

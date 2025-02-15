@@ -1,17 +1,12 @@
 import { Post } from "../../types/agent";
 import getActorStatus from "../apify/getActorStatus";
 import getDataset from "../apify/getDataset";
-import { STEP_OF_AGENT } from "../step";
-import updateAgentStatus from "../supabase/updateAgentStatus";
 import getFormattedComments from "./getFormattedComments";
 import getPostCommentsDatasetId from "./getPostCommentsDatasetId";
 
-const getPostComments = async (
-  agent_status_id: string | any,
-  scraping_posts: Post[],
-) => {
+const getPostComments = async (scraping_posts: Post[]) => {
   const postUrls = scraping_posts.map(
-    (scraping_post) => scraping_post.post_url,
+    (scraping_post) => scraping_post.post_url
   );
   try {
     const datasetId = await getPostCommentsDatasetId(postUrls);
@@ -21,11 +16,6 @@ const getPostComments = async (
     while (1) {
       attempts++;
       progress = (attempts / maxAttempts) * 100;
-      await updateAgentStatus(
-        agent_status_id,
-        STEP_OF_AGENT.POST_COMMENTS,
-        progress,
-      );
       await new Promise((resolve) => setTimeout(resolve, 3000));
       const data = await getDataset(datasetId);
       const formattedData = getFormattedComments(data, scraping_posts);

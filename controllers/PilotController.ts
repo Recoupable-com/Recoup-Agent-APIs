@@ -7,6 +7,9 @@ import { STEP_OF_AGENT } from "../lib/step";
 import { createAgent } from "../lib/supabase/createAgent";
 import updateAgentStatus from "../lib/supabase/updateAgentStatus";
 import createAgentStatus from "../lib/supabase/createAgentStatus";
+import runSpotifyAgent from "../agents/runSpotifyAgent";
+import runTikTokAgent from "../agents/runTikTokAgent";
+import runTwitterAgent from "../agents/runTwitterAgent";
 
 // Input validation schema
 const HandlesSchema = z.object({
@@ -134,13 +137,13 @@ export class PilotController {
       tasks.push(processPlatform("INSTAGRAM", handles.instagram));
     }
     if (handles.twitter?.trim()) {
-      tasks.push(processPlatform("TWITTER", handles.twitter));
+      tasks.push(runTwitterAgent(agentId, handles.twitter, artistId || ""));
     }
     if (handles.tiktok?.trim()) {
-      tasks.push(processPlatform("TIKTOK", handles.tiktok));
+      tasks.push(runTikTokAgent(agentId, handles.tiktok, artistId || ""));
     }
     if (handles.spotify?.trim()) {
-      tasks.push(processPlatform("SPOTIFY", handles.spotify));
+      tasks.push(runSpotifyAgent(agentId, handles.spotify, artistId || ""));
     }
 
     // Wait for all platforms to be processed

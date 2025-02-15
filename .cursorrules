@@ -137,7 +137,7 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Refactor setNewPosts and Fix Missing updated_at
+### Current Task: Limit processPlatform to Instagram Only
 
 Problems:
 
@@ -152,92 +152,63 @@ Problems:
    - When creating social_posts records, updated_at is not set
    - Added updated_at: new Date().toISOString() to the insert data
 
-3. [ ] Inconsistent Posts Creation Methods:
+3. [x] Inconsistent Posts Creation Methods:
+
    - AgentService.storePosts and setNewPosts have overlapping functionality
-   - setNewPosts doesn't return the same type as AgentService.storePosts
-   - Goal: Use setNewPosts as the single source for post creation
+   - Updated setNewPosts to return AgentServiceResult<DbPost[]>
+   - Removed storePosts method from AgentService
+
+4. [ ] Mixed Platform Processing:
+   - Current processPlatform handles all platforms
+   - Need to limit to Instagram only
+   - Other platforms should use their existing scrapers
 
 Analysis:
 
-1. [x] Current setNewPosts:
+1. [x] Current Platform Processing:
 
    ```typescript
-   // Returns void, doesn't provide created posts
-   const setNewPosts = async (postUrls: Array<string>) => {
-     // ... implementation
-   };
+   // Process each platform
+   const tasks: Promise<void>[] = [];
+   if (handles.instagram?.trim()) {
+     tasks.push(processPlatform("INSTAGRAM", handles.instagram));
+   }
+   if (handles.twitter?.trim()) {
+     tasks.push(processPlatform("TWITTER", handles.twitter));
+   }
+   // ... other platforms
    ```
 
-2. [ ] Required Return Type (from AgentService.storePosts):
+2. [ ] Required Changes:
 
    ```typescript
-   Promise<AgentServiceResult<DbPost[]>>;
-   // where AgentServiceResult<T> = { data: T | null; error: Error | null; }
+   // Only process Instagram with new flow
+   const tasks: Promise<void>[] = [];
+   if (handles.instagram?.trim()) {
+     tasks.push(processPlatform("INSTAGRAM", handles.instagram));
+   }
+
+   // Use existing scrapers for other platforms
+   if (handles.twitter?.trim()) {
+     tasks.push(processTwitter(agentId, handles.twitter, artistId));
+   }
+   // ... other platforms with their existing methods
    ```
-
-3. [ ] Current Usage:
-   - AgentService.storeSocialData calls both methods
-   - Redundant database operations
-   - Inconsistent error handling
-
-Changes Needed:
-
-1. [ ] Update setNewPosts:
-
-   ```typescript
-   const setNewPosts = async (
-     postUrls: Array<string>
-   ): Promise<AgentServiceResult<DbPost[]>> => {
-     try {
-       // ... existing chunking logic ...
-       let allPosts: DbPost[] = [];
-
-       // Collect all posts
-       for (let i = 0; i < chunkCount; i++) {
-         const { data: posts } = await supabase
-           .from("posts")
-           .insert(missing_posts)
-           .select();
-         if (posts) allPosts = allPosts.concat(posts);
-       }
-
-       return { data: allPosts, error: null };
-     } catch (error) {
-       return {
-         data: null,
-         error:
-           error instanceof Error
-             ? error
-             : new Error("Unknown error in setNewPosts"),
-       };
-     }
-   };
-   ```
-
-2. [ ] Update AgentService:
-   - Remove storePosts method
-   - Update storeSocialData to only use setNewPosts
 
 Next Steps:
 
-1. [ ] Update setNewPosts:
+1. [ ] Update PilotController:
 
-   - [ ] Add proper return type
-   - [ ] Collect and return created posts
-   - [ ] Add consistent error handling
+   - [ ] Keep processPlatform for Instagram only
+   - [ ] Add separate methods for other platforms
+   - [ ] Update run_agent to use appropriate method per platform
 
-2. [ ] Update AgentService:
-
-   - [ ] Remove storePosts method
-   - [ ] Update storeSocialData to use only setNewPosts
-   - [ ] Update error handling
-
-3. [ ] Test Changes:
-   - [ ] Test with sweetman.eth
-   - [ ] Verify posts are created correctly
-   - [ ] Verify error handling works
+2. [ ] Test Changes:
+   - [ ] Test Instagram with sweetman.eth
+   - [ ] Verify other platforms still work with existing flows
 
 Previous Tasks:
 
 - [x] Fix duplicate createAgentStatus
 - [x] Fix missing updated_at in connectPostsToSocial
+- [x] Refactor setNewPosts to replace AgentService.storePosts

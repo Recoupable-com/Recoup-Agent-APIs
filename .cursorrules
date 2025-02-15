@@ -137,78 +137,96 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Limit processPlatform to Instagram Only
+### Current Task: Move createSocial Before createAgentStatus
 
-Problems:
+Task Description:
+Currently, `createAgentStatus` is called after `createSocial` in the Instagram agent flow. We need to move `createSocial` before `createAgentStatus` to better track the agent's status throughout the entire process.
 
-1. [x] Duplicate createAgentStatus:
+Current Flow:
 
-   - Called in PilotController.processPlatform
-   - Called in AgentService.storeSocialData
-   - Solution: Keep in PilotController, pass agent_status_id to storeSocialData
+```typescript
+// Current implementation in processPlatform:
+const { agent_status } = await createAgentStatus(
+  agentId,
+  "", // Empty social_id initially
+  STEP_OF_AGENT.INITIAL
+);
+if (!agent_status?.id) return;
 
-2. [x] Missing updated_at in connectPostsToSocial:
+// Scrape profile
+const profile = await scraper.scrapeProfile(handle.replaceAll("@", ""));
 
-   - When creating social_posts records, updated_at is not set
-   - Added updated_at: new Date().toISOString() to the insert data
+// Create social record
+const { social, error: socialError } =
+  await this.agentService.createSocial(profile);
+if (socialError || !social) {
+  console.error(
+    `❌ Failed to create social record for ${platform}:`,
+    socialError
+  );
+  return;
+}
+```
 
-3. [x] Inconsistent Posts Creation Methods:
+Required Flow (from ROADMAP.md):
 
-   - AgentService.storePosts and setNewPosts have overlapping functionality
-   - Updated setNewPosts to return AgentServiceResult<DbPost[]>
-   - Removed storePosts method from AgentService
+```typescript
+const { social } = await createSocial({
+  username: handle,
+  profile_url: `https://instagram.com/${handle}`,
+});
+if (!social?.id) return;
 
-4. [ ] Mixed Platform Processing:
-   - Current processPlatform handles all platforms
-   - Need to limit to Instagram only
-   - Other platforms should use their existing scrapers
+const { agent_status } = await createAgentStatus(
+  agent_id,
+  social.id,
+  STEP_OF_AGENT.PROFILE
+);
+```
 
 Analysis:
 
-1. [x] Current Platform Processing:
+1. [x] Review Current Implementation:
+
+   - Found that we're creating agent status first with empty social_id
+   - Then scraping profile and creating social record
+   - This is opposite of what's required in ROADMAP.md
+
+2. [x] Implementation Plan:
+
+   - [x] Create social record first with handle info
+   - [x] Create agent status with social.id and PROFILE status
+   - [x] Remove the initial empty social_id status
+   - [x] Keep error handling for social creation
+
+3. [x] Changes Required in `processPlatform`:
 
    ```typescript
-   // Process each platform
-   const tasks: Promise<void>[] = [];
-   if (handles.instagram?.trim()) {
-     tasks.push(processPlatform("INSTAGRAM", handles.instagram));
-   }
-   if (handles.twitter?.trim()) {
-     tasks.push(processPlatform("TWITTER", handles.twitter));
-   }
-   // ... other platforms
+   // Completed updates:
+   1. Moved createSocial to be first operation
+   2. Passing social.id to createAgentStatus
+   3. Using PROFILE as initial status
+   4. Maintained error handling structure
    ```
 
-2. [ ] Required Changes:
+4. [ ] Testing Plan:
+   - [ ] Verify social record is created first
+   - [ ] Verify agent status has correct social_id
+   - [ ] Verify status starts at PROFILE
+   - [ ] Ensure rest of the flow remains unchanged
 
-   ```typescript
-   // Only process Instagram with new flow
-   const tasks: Promise<void>[] = [];
-   if (handles.instagram?.trim()) {
-     tasks.push(processPlatform("INSTAGRAM", handles.instagram));
-   }
+Files to Modify:
 
-   // Use existing scrapers for other platforms
-   if (handles.twitter?.trim()) {
-     tasks.push(processTwitter(agentId, handles.twitter, artistId));
-   }
-   // ... other platforms with their existing methods
-   ```
+- [x] `controllers/PilotController.ts`
+  - [x] Reorder operations in processPlatform
+  - [x] Update error handling for new flow
+  - [x] Ensure proper status transitions
 
 Next Steps:
 
-1. [ ] Update PilotController:
+1. [x] Review current `processPlatform` method
+2. [x] Implement changes following ROADMAP.md example
+3. [ ] Test with sweetman.eth profile
 
-   - [ ] Keep processPlatform for Instagram only
-   - [ ] Add separate methods for other platforms
-   - [ ] Update run_agent to use appropriate method per platform
-
-2. [ ] Test Changes:
-   - [ ] Test Instagram with sweetman.eth
-   - [ ] Verify other platforms still work with existing flows
-
-Previous Tasks:
-
-- [x] Fix duplicate createAgentStatus
-- [x] Fix missing updated_at in connectPostsToSocial
-- [x] Refactor setNewPosts to replace AgentService.storePosts
+Next Action:
+Would you like me to test the changes with the sweetman.eth profile?

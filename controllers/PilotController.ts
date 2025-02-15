@@ -87,12 +87,12 @@ export class PilotController {
         // Get platform-specific scraper
         const scraper = ScraperFactory.getScraper(platform);
 
-        // Scrape profile first to get social data
-        const profile = await scraper.scrapeProfile(handle.replaceAll("@", ""));
-
-        // Create social record
+        // Create social record first
         const { social, error: socialError } =
-          await this.agentService.createSocial(profile);
+          await this.agentService.createSocial({
+            username: handle.replaceAll("@", ""),
+            profile_url: `https://instagram.com/${handle.replaceAll("@", "")}`,
+          });
         if (socialError || !social) {
           console.error(
             `❌ Failed to create social record for ${platform}:`,
@@ -101,7 +101,7 @@ export class PilotController {
           return;
         }
 
-        // Create initial status
+        // Create agent status with social.id
         const { agent_status } = await createAgentStatus(
           agentId,
           social.id,
@@ -109,21 +109,41 @@ export class PilotController {
         );
         if (!agent_status?.id) return;
 
-        // Scrape remaining data
-        const scrapedData = await scraper.scrapeAll(handle.replaceAll("@", ""));
+        // Scrape profile
+        const profile = await scraper.scrapeProfile(handle.replaceAll("@", ""));
+
+        // Update social record with profile data
+        await this.agentService.updateSocial(social.id, profile);
+
+        // Handle artist setup if needed
+        if (artistId) {
+          await updateAgentStatus(
+            agent_status.id,
+            STEP_OF_AGENT.SETTING_UP_ARTIST
+          );
+        }
+
+        // Fetch posts
+        await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);
+        const posts = await scraper.scrapePosts(handle.replaceAll("@", ""));
+
+        // Fetch comments
+        await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POST_COMMENTS);
+        const comments = await scraper.scrapeComments(
+          posts.map((p) => p.post_url)
+        );
+
+        // Store all data
         console.log("Scrape completed. Storing data...");
-        // Store data using agent service
         await this.agentService.storeSocialData({
           agentStatusId: agent_status.id,
-          profile: scrapedData.profile,
-          posts: scrapedData.posts,
-          comments: scrapedData.comments,
+          profile,
+          posts,
+          comments,
           artistId,
         });
 
         console.log("Stored data. Updating final status...");
-
-        // Update final status
         await updateAgentStatus(agent_status.id, STEP_OF_AGENT.FINISHED);
       } catch (error) {
         console.error(`❌ Error processing ${platform}:`, error);

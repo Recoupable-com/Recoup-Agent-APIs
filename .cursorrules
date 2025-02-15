@@ -115,9 +115,18 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - When using TurboFactory from @ardrive/turbo-sdk, the fileStreamFactory must return a Web API compatible ReadableStream from node:stream/web, not Node.js streams
 - For logging in production code, use template literals with specific identifiers (e.g. handle, artistId) to make debugging easier
 - When handling image uploads, implement proper fallback mechanisms and clear error messages
+- When using LLM for batch processing, use smaller batch sizes (100 instead of 500) to avoid token limits and truncation issues
+- Add validation for LLM response structure before parsing JSON to catch malformed responses early
+- When processing large datasets with LLMs, reduce concurrency (3 vs 5) to maintain stability
+- Include detailed context in error logs for JSON parsing failures (position, nearby content)
+- Validate response structure before cleaning/parsing to catch malformed responses early
+- Use chunked processing for database queries to handle large datasets efficiently
+- Test system changes with varying dataset sizes to ensure scalability
+- Log sample data and statistics when processing batches to aid debugging
+- Implement progressive validation (structure, content, parsing) to fail fast and provide clear error context
 
 # Scratchpad
 
-## Current Task
+## Current Task: None
 
-Ready for new task. Previous task completed and cleared.
+Ready for new task. Previous tasks have been archived.

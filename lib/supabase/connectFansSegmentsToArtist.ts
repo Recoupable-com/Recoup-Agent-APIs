@@ -1,89 +1,76 @@
-import getSocialPlatformByLink from "../getSocialPlatformByLink";
-import getUserNameSegment from "../getUserNameSegment";
-import getTikTokFanProfile from "../tiktok/getFanProfile";
-import getTwitterFanProfile from "../twitter/getProfile";
-import supabase from "./serverClient";
-import { Scraper } from "agent-twitter-client";
+import getAccountSocials from "./getAccountSocials";
+import getSocialAccounts from "./getSocialAccounts";
+import validateFanSocialIds from "./validateFanSocialIds";
+import deleteArtistFanSegments from "./deleteArtistFanSegments";
+import createArtistFanSegments from "./createArtistFanSegments";
 
-const scraper = new Scraper();
+interface FanSegment {
+  username: string; // fan_social_id
+  segmentName: string;
+}
 
 const connectFansSegmentsToArtist = async (
-  fansSegments: any,
-  artistId: string,
+  fansSegments: FanSegment[],
+  artistSocialId: string // social_id
 ) => {
   try {
-    const { data: account_socials } = await supabase
-      .from("account_socials")
-      .select("*, social:socials(*)")
-      .eq("account_id", artistId);
-
-    if (!account_socials) return;
-    const artist_socials: any = {};
-    account_socials.map((account_social) => {
-      artist_socials[
-        `${getSocialPlatformByLink(account_social.social.profile_url).toLowerCase()}`
-      ] = account_social.social.id;
-    });
-    const connectPromise = fansSegments.map(async (fanSegment: any) => {
-      try {
-        const { username, segmentName } = getUserNameSegment(fanSegment);
-        if (!segmentName || !username) return;
-        const { data: social } = await supabase
-          .from("socials")
-          .select("*")
-          .eq("username", username)
-          .single();
-
-        if (!social) return;
-        const socialPlatform = getSocialPlatformByLink(social.profile_url);
-        let fanProfile: any = {
-          profile: social,
-        };
-        if (socialPlatform === "TWITTER")
-          fanProfile = await getTwitterFanProfile(scraper, username);
-        if (socialPlatform === "TIKTOK")
-          fanProfile = await getTikTokFanProfile(username);
-        const profile = fanProfile?.profile || social;
-        await supabase
-          .from("socials")
-          .update({
-            ...social,
-            ...profile,
-          })
-          .eq("id", social.id)
-          .select("*")
-          .single();
-
-        if (artist_socials[`${socialPlatform.toLowerCase()}`]) {
-          await supabase
-            .from("artist_fan_segment")
-            .delete()
-            .eq(
-              "artist_social_id",
-              artist_socials[`${socialPlatform.toLowerCase()}`],
-            )
-            .eq("fan_social_id", social.id);
-          await supabase
-            .from("artist_fan_segment")
-            .insert({
-              segment_name: segmentName,
-              artist_social_id:
-                artist_socials[`${socialPlatform.toLowerCase()}`],
-              fan_social_id: social.id,
-            })
-            .select("*")
-            .single();
-        }
-      } catch (error) {
-        console.error(error);
-      }
+    console.log(`[DEBUG] Starting to connect fans to artist:`, {
+      artistSocialId,
+      totalFans: fansSegments.length,
+      sampleFans: fansSegments.slice(0, 3),
     });
 
-    await Promise.all(connectPromise);
-    return;
+    // Get account info for the artist's social ID
+    const socialAccounts = await getSocialAccounts(artistSocialId);
+    const accountId = socialAccounts[0].account_id;
+    console.log(`[DEBUG] Found account ID: ${accountId}`);
+
+    // Get all social IDs for this account
+    const accountSocials = await getAccountSocials(accountId);
+    const artist_social_ids = accountSocials.map((as) => as.social_id);
+    console.log(`[DEBUG] Artist social IDs:`, {
+      count: artist_social_ids.length,
+      ids: artist_social_ids,
+    });
+
+    // Validate fan social IDs
+    const { validFanIds, invalidFanIds } = await validateFanSocialIds(
+      fansSegments.map((f) => f.username)
+    );
+
+    // Filter out segments with invalid fan IDs
+    const validFanSegments = fansSegments.filter((f) =>
+      validFanIds.has(f.username)
+    );
+    console.log(`[DEBUG] Valid fan segments:`, {
+      total: fansSegments.length,
+      valid: validFanSegments.length,
+      invalid: fansSegments.length - validFanSegments.length,
+    });
+
+    // Delete existing segments
+    await deleteArtistFanSegments({
+      artistSocialIds: artist_social_ids,
+      fanSocialIds: Array.from(validFanIds),
+    });
+
+    // Create new segments
+    const { successCount, errorCount } = await createArtistFanSegments({
+      fanSegments: validFanSegments,
+      artistSocialIds: artist_social_ids,
+    });
+
+    console.log(`[DEBUG] Finished processing all fans:`, {
+      totalAttempted: validFanSegments.length,
+      successCount,
+      errorCount,
+      successRate: `${((successCount / (validFanSegments.length * artist_social_ids.length)) * 100).toFixed(2)}%`,
+    });
+
+    return successCount;
   } catch (error) {
-    console.error(error);
-    return;
+    console.error("[ERROR] Fatal error in connectFansSegmentsToArtist:", error);
+    throw error;
   }
 };
 

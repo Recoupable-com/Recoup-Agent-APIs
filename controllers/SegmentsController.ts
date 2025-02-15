@@ -16,6 +16,7 @@ import getAggregatedAgentSocials from "../lib/agent/getAggregatedAgentSocials";
 import getReport from "../lib/getReport";
 import createReport from "../lib/supabase/createReport";
 import updateReport from "../lib/supabase/updateReport";
+import { generateSegmentsForAccount } from "../lib/services/segmentService";
 
 export const create_report = async (req: Request, res: Response) => {
   try {
@@ -28,19 +29,19 @@ export const create_report = async (req: Request, res: Response) => {
 
     const { segments, commentIds } = await getAgents(
       agentId as string,
-      address as Address,
+      address as Address
     );
     const segment = segments.find(
-      (segmentEle: any) => segmentEle.name === segmentName,
+      (segmentEle: any) => segmentEle.name === segmentName
     );
     const totalSegmentSize = getSegmentsTotalSize(segments);
     const { followerCount, username, avatar } = await getAggregatedAgentSocials(
-      agentId as string,
+      agentId as string
     );
 
     const segmentSize = (followerCount / totalSegmentSize) * segment.size;
     const segmentPercentage = Number(
-      (segment.size / totalSegmentSize) * 100,
+      (segment.size / totalSegmentSize) * 100
     ).toFixed(2);
     const segmentNames =
       segments?.map((segmentEle: any) => segmentEle?.name || "") || [];
@@ -67,7 +68,7 @@ export const create_report = async (req: Request, res: Response) => {
       avatar,
       username,
       email as string,
-      `${segmentName} Report`,
+      `${segmentName} Report`
     );
     return;
   } catch (error) {
@@ -94,7 +95,7 @@ export const get_pitch_report = async (req: Request, res: Response) => {
         NOTE: ${FULL_REPORT_NOTE}`,
         },
       ],
-      2222,
+      2222
     );
 
     sendReportEmail(
@@ -102,7 +103,7 @@ export const get_pitch_report = async (req: Request, res: Response) => {
       data?.artistImage,
       data?.artistName,
       data?.email || "",
-      `${data?.segment_name} Report`,
+      `${data?.segment_name} Report`
     );
     if (content) return res.status(200).json({ content });
     return res.status(500).json({ error: "No content received from OpenAI" });
@@ -157,12 +158,38 @@ export const get_segments_icons = async (req: Request, res: Response) => {
             content
               ?.replace(/\n/g, "")
               ?.replace(/json/g, "")
-              ?.replace(/```/g, ""),
+              ?.replace(/```/g, "")
           )?.data || [],
       });
     return res.status(500).json({ error: "No content received from OpenAI" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "API request failed" });
+  }
+};
+
+export const generate_segments = async (req: Request, res: Response) => {
+  const { accountId } = req.body;
+
+  if (!accountId) {
+    return res.status(400).json({
+      success: false,
+      error: "accountId is required",
+    });
+  }
+
+  try {
+    const result = await generateSegmentsForAccount(accountId);
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error in generate_segments:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      details: error instanceof Error ? error.message : String(error),
+    });
   }
 };

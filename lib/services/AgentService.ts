@@ -6,7 +6,7 @@ import {
   CreateSocialResult,
   StoreSocialDataParams,
 } from "../types/agent.types";
-import { ScrapedProfile, ScrapedPost, ScrapedComment } from "../scraping/types";
+import { ScrapedProfile, ScrapedComment } from "../scraping/types";
 import setArtistImage from "../supabase/setArtistImage";
 import connectSocialToArtist from "../supabase/connectSocialToArtist";
 import updateAgentStatus from "../supabase/updateAgentStatus";
@@ -83,7 +83,6 @@ export class AgentService implements IAgentService {
 
   async storeComments(
     comments: ScrapedComment[],
-    postId: string,
     socialId: string
   ): Promise<AgentServiceResult<DbPostComment[]>> {
     try {
@@ -172,7 +171,7 @@ export class AgentService implements IAgentService {
         );
         if (postComments.length) {
           const { data: comments_result, error: commentsError } =
-            await this.storeComments(postComments, post.id, social.id);
+            await this.storeComments(postComments, social.id);
           if (commentsError || !comments_result) {
             console.error(
               `Failed to store comments for post ${post.post_url}:`,

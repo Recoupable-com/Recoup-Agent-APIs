@@ -3,8 +3,6 @@ import { ScrapedProfile, ScrapedPost, ScrapedComment } from "../types";
 import { Database } from "../../../types/database.types";
 import getProfile from "../../instagram/getProfile";
 import getPostComments from "../../instagram/getPostComments";
-import getPostCommentsDatasetId from "../../instagram/getPostCommentsDatasetId";
-import getFormattedComments from "../../instagram/getFormattedComments";
 
 type InstagramComment = {
   post_url: string;
@@ -16,6 +14,7 @@ type InstagramComment = {
 
 export class InstagramScraper extends BaseScraper {
   async scrapeProfile(handle: string): Promise<ScrapedProfile> {
+    console.log("InstagramScraper.scrapeProfile: Scraping profile", { handle });
     try {
       const { profile } = await getProfile(handle);
 
@@ -36,6 +35,7 @@ export class InstagramScraper extends BaseScraper {
   }
 
   async scrapePosts(handle: string): Promise<ScrapedPost[]> {
+    console.log("InstagramScraper.scrapePosts: Scraping posts", { handle });
     try {
       const { postUrls } = await getProfile(handle);
 
@@ -54,28 +54,36 @@ export class InstagramScraper extends BaseScraper {
   }
 
   async scrapeComments(postUrls: string[]): Promise<ScrapedComment[]> {
+    console.log("InstagramScraper.scrapeComments: Scraping comments", {
+      postUrls,
+    });
     try {
-      // First get dataset ID for scraping comments
-      const datasetId = await getPostCommentsDatasetId(postUrls);
+      // Validate input
+      if (!Array.isArray(postUrls) || !postUrls.length) {
+        console.warn("InstagramScraper.scrapeComments: No post URLs provided");
+        return [];
+      }
 
-      // Convert posts to format expected by getPostComments
-      const scraping_posts = postUrls.map((post_url) => ({
-        id: "", // Will be filled by the database
-        post_url,
+      // Create post objects for formatting
+      const posts = postUrls.map((url) => ({
+        post_url: url,
+        id: url, // Use URL as temporary ID for matching
         updated_at: new Date().toISOString(),
       }));
 
-      // Get comments using existing functionality
-      const comments = await getPostComments("", scraping_posts);
+      // Get comments using the proper flow
+      console.debug("InstagramScraper.scrapeComments: Fetching comments", {
+        postCount: posts.length,
+      });
 
-      // Format comments to match our ScrapedComment interface
-      return comments.map((comment: InstagramComment) => ({
-        post_url: comment.post_url,
-        comment: comment.comment || "",
-        username: comment.username,
-        profile_url: comment.profile_url,
-        commented_at: comment.commented_at,
-      }));
+      const comments = await getPostComments(posts);
+
+      if (!comments?.length) {
+        console.debug("InstagramScraper.scrapeComments: No comments found");
+        return [];
+      }
+
+      return comments;
     } catch (error) {
       return this.handleError(error, "InstagramScraper.scrapeComments");
     }

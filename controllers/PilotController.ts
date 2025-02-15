@@ -87,7 +87,15 @@ export class PilotController {
         // Get platform-specific scraper
         const scraper = ScraperFactory.getScraper(platform);
 
-        // Scrape profile first to get social data
+        // Create initial status
+        const { agent_status } = await createAgentStatus(
+          agentId,
+          "",
+          STEP_OF_AGENT.INITIAL
+        );
+        if (!agent_status?.id) return;
+
+        // Scrape profile
         const profile = await scraper.scrapeProfile(handle.replaceAll("@", ""));
 
         // Create social record
@@ -101,13 +109,8 @@ export class PilotController {
           return;
         }
 
-        // Create initial status
-        const { agent_status } = await createAgentStatus(
-          agentId,
-          social.id,
-          STEP_OF_AGENT.PROFILE
-        );
-        if (!agent_status?.id) return;
+        // Update status to profile
+        await updateAgentStatus(agent_status.id, STEP_OF_AGENT.PROFILE);
 
         // Handle artist setup if needed
         if (artistId) {

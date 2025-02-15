@@ -1,0 +1,39 @@
+graph TD
+    Start[Start] --> ValidateHandle[Validate Instagram Handle]
+    ValidateHandle --> CreateAgent[Create Agent]
+    CreateAgent --> ScrapeProfile[Scrape Profile]
+    
+    ScrapeProfile -->|Success| CreateSocial[Create Social Record]
+    ScrapeProfile -->|Failure| ProfileError[Profile Error State]
+    
+    CreateSocial -->|Success| CreateStatus[Create Agent Status: PROFILE]
+    CreateSocial -->|Failure| SocialError[Social Error State]
+    
+    CreateStatus --> CheckArtist{Has Artist ID?}
+    CheckArtist -->|Yes| ArtistSetup[Update Status: SETTING_UP_ARTIST]
+    CheckArtist -->|No| ScrapePosts[Update Status: POSTURLS]
+    ArtistSetup --> ScrapePosts
+    
+    ScrapePosts --> FetchPosts[Fetch Post URLs]
+    FetchPosts -->|Success| ScrapeComments[Update Status: POST_COMMENTS]
+    FetchPosts -->|No Posts| MissingPosts[Error: MISSING_POSTS]
+    FetchPosts -->|Rate Limit| RateLimit[Error: RATE_LIMIT_EXCEEDED]
+    
+    ScrapeComments --> FetchComments[Fetch Post Comments]
+    FetchComments -->|Success| StoreSocialData[Store Social Data]
+    FetchComments -->|Failure| ContinueWithoutComments[Continue Without Comments]
+    
+    StoreSocialData -->|Success| UpdateStatus[Update Status: FINISHED]
+    StoreSocialData -->|Failure| DataError[Data Storage Error]
+    
+    UpdateStatus --> End[End]
+    
+    classDef success fill:#9f9,stroke:#333,stroke-width:2px;
+    classDef error fill:#f99,stroke:#333,stroke-width:2px;
+    classDef process fill:#fff,stroke:#333,stroke-width:2px;
+    classDef status fill:#99f,stroke:#333,stroke-width:2px;
+    
+    class Start,End process;
+    class ProfileError,SocialError,MissingPosts,RateLimit,DataError error;
+    class CreateStatus,ArtistSetup,ScrapePosts,ScrapeComments,UpdateStatus status;
+    class ValidateHandle,CreateAgent,ScrapeProfile,CreateSocial,FetchPosts,FetchComments,StoreSocialData process;

@@ -15,7 +15,7 @@ import getPostComments from "../lib/instagram/getPostComments";
 const runInstagramAgent = async (
   agent_id: string,
   handle: string,
-  artist_id: string,
+  artist_id?: string
 ) => {
   try {
     const { social } = await createSocial({
@@ -26,7 +26,7 @@ const runInstagramAgent = async (
     const { agent_status } = await createAgentStatus(
       agent_id,
       social.id,
-      STEP_OF_AGENT.PROFILE,
+      STEP_OF_AGENT.PROFILE
     );
     if (!agent_status?.id) return;
 
@@ -37,12 +37,19 @@ const runInstagramAgent = async (
     }
 
     await updateAgentStatus(agent_status.id, STEP_OF_AGENT.SETTING_UP_ARTIST);
-    const newImage = await setArtistImage(artist_id, profile.avatar);
-    await updateSocial(social.id, {
-      ...profile,
-      avatar: newImage,
-    });
-    await connectSocialToArtist(artist_id, social);
+
+    // Only perform artist-related operations if artist_id is provided
+    if (artist_id) {
+      const newImage = await setArtistImage(artist_id, profile.avatar);
+      await updateSocial(social.id, {
+        ...profile,
+        avatar: newImage,
+      });
+      await connectSocialToArtist(artist_id, social);
+    } else {
+      // Just update social profile without artist connection
+      await updateSocial(social.id, profile);
+    }
 
     if (!postUrls?.length) {
       await updateAgentStatus(agent_status.id, STEP_OF_AGENT.MISSING_POSTS);

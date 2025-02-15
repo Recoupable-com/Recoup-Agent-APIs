@@ -9,7 +9,7 @@ const getProfileDatasetId = async (handle: string) => {
   try {
     const response = await runTikTokActor(
       input,
-      "apify~instagram-profile-scraper",
+      "apify~instagram-profile-scraper"
     );
 
     const error = response?.error;

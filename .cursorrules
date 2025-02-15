@@ -124,6 +124,12 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - Test system changes with varying dataset sizes to ensure scalability
 - Log sample data and statistics when processing batches to aid debugging
 - Implement progressive validation (structure, content, parsing) to fail fast and provide clear error context
+- Always prefix API endpoints with /api for consistency and clarity
+- Keep API routes organized by resource type (e.g. /api/agentkit/run, /api/generate)
+- Separate data fetching from data processing in API endpoints for better maintainability
+- Use appropriate HTTP methods (GET for retrieval, POST for actions/mutations)
+- Include request validation middleware for API endpoints
+- Add rate limiting for scraping endpoints to prevent abuse
 
 # Scratchpad
 
@@ -138,9 +144,9 @@ Currently, the agent scraping process in the Agent API combines two functionalit
 
 The goal is to decouple these processes so that:
 
-- Scraping funnels ONLY handle scraping data from social platforms
+- Scraping funnels ONLY handle scraping data from social platforms via `/api/agentkit/run` endpoints
 - Output should focus on posts and post_comments
-- Comment generation and artist<>social linking will be handled separately via a generate API endpoint
+- Comment generation and artist<>social linking will be handled separately via `/api/generate/*` endpoints
 
 ### Analysis
 
@@ -175,14 +181,38 @@ After reviewing the codebase, here's what I found:
 
 ### Plan
 
-[ ] Phase 1: Refactor Agent Structure - Create separate modules for scraping and linking - Move social linking logic out of agent runners
+[ ] Phase 1: Refactor Agent Structure
 
-[ ] Phase 2: Update Scraping Process - Modify agents to only handle data collection - Store raw scraped data without creating relationships
+- Create separate modules for scraping and linking
+- Move social linking logic out of agent runners
+- Create new API routes under /api/agentkit/run and /api/generate
 
-[ ] Phase 3: Create New Generate API - Implement new endpoint for generating and linking comments - Move relationship creation logic to new endpoint
+[ ] Phase 2: Update Scraping Process
 
-[ ] Phase 4: Update Status Tracking - Modify agent status steps to reflect new decoupled process - Add new status types for generation process
+- Modify agents to only handle data collection
+- Store raw scraped data without creating relationships
+- Implement new /api/agentkit/run/\* endpoints
+
+[ ] Phase 3: Create New Generate API
+
+- Implement new /api/generate/\* endpoints for generating and linking comments
+- Move relationship creation logic to new endpoint
+- Add validation and rate limiting
+
+[ ] Phase 4: Update Status Tracking
+
+- Modify agent status steps to reflect new decoupled process
+- Add new status types for generation process
+- Update status tracking in both APIs
 
 ### Progress
 
 Starting with Phase 1 - Refactoring the agent structure.
+
+Latest Updates:
+
+- Updated API routes to use /api/agentkit/run instead
+- Created initial structure for /api/agentkit/run endpoints
+- Identified core components to be decoupled
+- Planned API route structure with proper prefixes
+- Added validation requirements for new endpoints

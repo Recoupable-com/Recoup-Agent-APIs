@@ -137,78 +137,117 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Limit processPlatform to Instagram Only
+### Current Task: Expand Instagram Agent Steps
 
-Problems:
+Task Description:
+The Instagram agent currently transitions through basic steps (PROFILE, SETTING_UP_ARTIST, FINISHED). We need to expand this to include more granular steps for better tracking and error handling.
 
-1. [x] Duplicate createAgentStatus:
+Current Flow:
 
-   - Called in PilotController.processPlatform
-   - Called in AgentService.storeSocialData
-   - Solution: Keep in PilotController, pass agent_status_id to storeSocialData
+1. PROFILE - Initial profile fetch
+2. SETTING_UP_ARTIST - Artist setup (if artistId provided)
+3. FINISHED - Process completion
 
-2. [x] Missing updated_at in connectPostsToSocial:
+Required New Flow:
 
-   - When creating social_posts records, updated_at is not set
-   - Added updated_at: new Date().toISOString() to the insert data
-
-3. [x] Inconsistent Posts Creation Methods:
-
-   - AgentService.storePosts and setNewPosts have overlapping functionality
-   - Updated setNewPosts to return AgentServiceResult<DbPost[]>
-   - Removed storePosts method from AgentService
-
-4. [ ] Mixed Platform Processing:
-   - Current processPlatform handles all platforms
-   - Need to limit to Instagram only
-   - Other platforms should use their existing scrapers
+1. PROFILE - Initial profile fetch
+2. SETTING_UP_ARTIST - Artist setup (if artistId provided)
+3. POSTURLS - Fetch and process post URLs
+4. POST_COMMENTS - Retrieve and process post comments
+5. FINISHED - Process completion
 
 Analysis:
 
-1. [x] Current Platform Processing:
+1. [x] Code Review:
 
-   ```typescript
-   // Process each platform
-   const tasks: Promise<void>[] = [];
-   if (handles.instagram?.trim()) {
-     tasks.push(processPlatform("INSTAGRAM", handles.instagram));
-   }
-   if (handles.twitter?.trim()) {
-     tasks.push(processPlatform("TWITTER", handles.twitter));
-   }
-   // ... other platforms
-   ```
+   - [x] Review current step definitions in `lib/step.ts`
+     - Found that `POSTURLS` and `POST_COMMENTS` steps already exist in enum
+     - Additional error states available: `MISSING_POSTS`, `RATE_LIMIT_EXCEEDED`, `UNKNOWN_PROFILE`
+   - [x] Review step usage in `PilotController.ts`
+     - Currently only uses `PROFILE` and `FINISHED` steps
+     - Uses `scrapeAll` which combines all scraping operations without step tracking
+     - No error state handling for specific failure cases
+   - [x] Review step usage in `AgentService.ts`
+     - Already implements `SETTING_UP_ARTIST` and `POSTURLS` steps
+     - Has error handling for `MISSING_POSTS`
+     - Missing `POST_COMMENTS` step update
+     - Comments are stored but without status update
+   - [x] Review Instagram scraping flow in `InstagramScraper.ts`
+     - Already has individual methods for each operation:
+       - `scrapeProfile()` - Profile fetching
+       - `scrapePosts()` - Post URL collection
+       - `scrapeComments()` - Comment retrieval
+     - Each method has basic error handling
+     - Methods are ready to be used individually
 
-2. [ ] Required Changes:
+2. [ ] Implementation Plan (Final):
 
-   ```typescript
-   // Only process Instagram with new flow
-   const tasks: Promise<void>[] = [];
-   if (handles.instagram?.trim()) {
-     tasks.push(processPlatform("INSTAGRAM", handles.instagram));
-   }
+   - [✓] Add new step types to `STEP_OF_AGENT` enum (Already exist!)
+   - [ ] Update `PilotController.processPlatform` to:
 
-   // Use existing scrapers for other platforms
-   if (handles.twitter?.trim()) {
-     tasks.push(processTwitter(agentId, handles.twitter, artistId));
-   }
-   // ... other platforms with their existing methods
-   ```
+     ```typescript
+     // Replace:
+     const scrapedData = await scraper.scrapeAll(handle);
+
+     // With:
+     // 1. Profile
+     const profile = await scraper.scrapeProfile(handle);
+     await updateAgentStatus(agent_status.id, STEP_OF_AGENT.PROFILE);
+
+     // 2. Artist setup (if needed)
+     if (artistId) {
+       await updateAgentStatus(agent_status.id, STEP_OF_AGENT.SETTING_UP_ARTIST);
+       // ... artist setup ...
+     }
+
+     // 3. Posts
+     await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);
+     const posts = await scraper.scrapePosts(handle);
+
+     // 4. Comments
+     await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POST_COMMENTS);
+     const comments = await scraper.scrapeComments(posts.map(p => p.post_url));
+
+     // 5. Store data
+     await this.agentService.storeSocialData({...});
+     ```
+
+   - [ ] Update `AgentService.storeSocialData` to:
+     - Keep existing step transitions
+     - Add `POST_COMMENTS` status update before comment processing
+     - Add error state handling for comment failures
+   - [✓] Update `InstagramScraper.ts` - Already has individual methods!
+
+3. [ ] Testing Plan:
+   - [ ] Test with sweetman.eth Instagram profile
+   - [ ] Verify step transitions are logged correctly
+   - [ ] Verify error states are handled properly
+   - [ ] Verify final data is complete
+
+Files to Modify:
+
+- [✓] `lib/step.ts` - Steps already exist, no changes needed
+- [ ] `controllers/PilotController.ts` - Implement new flow
+- [ ] `lib/services/AgentService.ts` - Add comment step handling
+- [✓] `lib/scraping/platforms/InstagramScraper.ts` - Already has required methods
 
 Next Steps:
 
-1. [ ] Update PilotController:
+1. [x] Review all components
+2. [ ] Start implementation with `PilotController.processPlatform` method
+3. [ ] Update `AgentService.ts` for comment handling
+4. [ ] Test with sweetman.eth profile
 
-   - [ ] Keep processPlatform for Instagram only
-   - [ ] Add separate methods for other platforms
-   - [ ] Update run_agent to use appropriate method per platform
+Key Findings:
 
-2. [ ] Test Changes:
-   - [ ] Test Instagram with sweetman.eth
-   - [ ] Verify other platforms still work with existing flows
+1. Most of the infrastructure already exists:
+   - Required steps in enum
+   - Individual scraping methods
+   - Basic error handling
+2. Main changes needed:
+   - Replace `scrapeAll` with step-by-step flow in controller
+   - Add proper status updates for each step
+   - Implement comment-specific error handling
 
-Previous Tasks:
-
-- [x] Fix duplicate createAgentStatus
-- [x] Fix missing updated_at in connectPostsToSocial
-- [x] Refactor setNewPosts to replace AgentService.storePosts
+Next Action:
+Let's start with updating the `PilotController.processPlatform` method to implement the new step-by-step flow. Would you like me to proceed with that change?

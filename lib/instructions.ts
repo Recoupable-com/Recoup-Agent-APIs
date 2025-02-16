@@ -120,14 +120,26 @@ export const instructions = {
     IMPORTANT: Your response must be a valid JSON array of objects with EXACTLY this structure:
     {
       "segment_name": string (must be one of the provided segment names),
-      "fan_social_ids": string[] (array of fan_social_id strings)
+      "fan_social_ids": string[] (array of fan_social_ids, MUST use the exact fan_social_id from the input comments, DO NOT use comment text)
     }
 
-    Example:
+    CRITICAL REQUIREMENTS:
+    1. ONLY use the exact fan_social_id values from the input comments
+    2. DO NOT use comment text as fan_social_ids
+    3. Each fan_social_id must be a valid UUID string
+    4. DO NOT modify or transform the fan_social_ids in any way
+
+    Example input:
+    {
+      "comment": "Great song!",
+      "fan_social_id": "123e4567-e89b-12d3-a456-426614174000"
+    }
+
+    Example response:
     [
       {
         "segment_name": "Superfans",
-        "fan_social_ids": ["id1", "id2"]
+        "fan_social_ids": ["123e4567-e89b-12d3-a456-426614174000"]
       }
     ]
 

@@ -1,6 +1,12 @@
 import supabase from "./serverClient.js";
 
-export const getAccountSocials = async (accountId: string) => {
+interface AccountSocial {
+  social_id: string;
+}
+
+export const getAccountSocials = async (
+  accountId: string
+): Promise<AccountSocial[]> => {
   console.log("[DEBUG] Fetching account socials for accountId:", accountId);
 
   const { data: accountSocials, error: accountSocialsError } = await supabase

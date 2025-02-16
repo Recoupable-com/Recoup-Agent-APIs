@@ -138,126 +138,84 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Implement /api/account/socials Endpoint
+### Current Task: Move getAccountSocialsHandler to Controller
 
 Task Description:
-Create a new GET endpoint to return all artist_social_ids from the account_socials table for a given account_id.
+Move the getAccountSocialsHandler from routes.ts to a dedicated controller following the project's established patterns.
 
 Current Situation:
 
 1. Requirements Analysis:
-   [x] Endpoint Specification:
+   [x] Current Implementation:
 
-   - Path: /api/account/socials
-   - Method: GET
-   - Query Parameter: accountId
-   - Response Format: AccountSocialsResponse
-
-   [x] Response Interface:
-
-   ```typescript
-   interface SocialAccount {
-     id: string;
-     username: string;
-     avatar: string;
-     profile_url: string;
-     region: string;
-     bio: string;
-     followerCount: number;
-     followingCount: number;
-     updated_at: string;
-   }
-
-   interface AccountSocialsResponse {
-     status: string;
-     socials: SocialAccount[];
-   }
-   ```
+   - Handler is directly in routes.ts
+   - Uses getAccountSocials from lib/supabase
+   - Has proper error handling and validation
+   - Returns AccountSocialsResponse type
 
 2. Files to Examine:
    [ ] Primary:
 
-   - routes.ts (add new endpoint)
-   - lib/supabase/ (check existing query functions)
-   - controllers/ (add new controller if needed)
+   - controllers/GlobalController.ts (target for new method)
+   - routes.ts (current location)
 
    [ ] Secondary:
 
-   - types/database.types.ts (check schema)
-   - types/agent.ts (check existing types)
+   - other controllers (for pattern reference)
+   - lib/supabase/getAccountSocials.ts (dependency)
 
 3. Implementation Plan:
-   [ ] Phase 1 - Database Query:
+   [ ] Phase 1 - Create Controller Method:
 
-   1. Check existing supabase query functions
-   2. Create new query function if needed
-   3. Optimize query to minimize database calls
+   1. Add get_account_socials method to GlobalController
+   2. Move handler logic to controller
+   3. Maintain error handling and validation
+   4. Keep consistent with other controller methods
 
-   [ ] Phase 2 - Endpoint Implementation:
+   [ ] Phase 2 - Update Routes:
 
-   1. Add route handler
-   2. Add input validation
-   3. Add error handling
-   4. Format response according to spec
+   1. Import new controller method
+   2. Replace inline handler with controller reference
+   3. Clean up imports
+   4. Maintain endpoint path and method
 
    [ ] Phase 3 - Testing:
 
-   1. Test with valid account_id
+   1. Test with valid accountId
    2. Test error cases
-   3. Verify response format
+   3. Verify response format matches current behavior
 
 4. Considerations:
-   [x] Performance:
+   [x] Code Style:
 
-   - Single database query
-   - No unnecessary joins
-   - Efficient data retrieval
-
-   [x] Error Handling:
-
-   - Invalid account_id
-   - No socials found
-   - Database errors
+   - Follow existing controller patterns
+   - Maintain consistent naming (get_account_socials)
+   - Keep error handling approach
 
    [x] Implementation Strategy:
 
-   - Reuse existing code where possible
-   - Keep changes minimal
-   - Follow established patterns
+   - Minimal changes to existing logic
+   - Reuse existing error handling patterns
+   - Follow project's controller conventions
 
 Progress:
 [x] Analyzed requirements
 [x] Created implementation plan
-[x] Review existing code
-[x] Implement database query
-
-- Extended getAccountSocials to return full social details
-- Added proper error handling
-- Added status field to response
-  [x] Add endpoint handler
-- Added /api/account/socials GET endpoint
-- Added input validation
-- Added error handling
-  [~] Fix linter errors
-- Attempted 3 approaches to fix typing
-- Left TODO comment for future fix
-- Endpoint works correctly despite warning
-  [ ] Test implementation
+[x] Move handler to GlobalController
+[x] Update routes.ts
+[ ] Test implementation
 
 Next Actions:
 
-1. Test endpoint with:
-   - Valid account_id
-   - Invalid account_id
+1. Test the endpoint with:
+   - Valid accountId (40801f05-945e-44d4-adeb-6545912e446c)
+   - Invalid accountId
    - Account with no socials
-   - Account with multiple socials
-2. Document the API in README.md
-3. Create issue to track linter error fix
+2. Verify response format and error handling
 
 Future Improvements:
 
-1. Fix TypeScript typing in routes.ts
-2. Add caching
+1. Add request validation middleware
+2. Add response caching
 3. Add rate limiting
-4. Add pagination
-5. Add filtering options
+4. Add pagination for large responses

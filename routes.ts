@@ -2,7 +2,6 @@ import express, { Request, Response, RequestHandler } from "express";
 import * as SegmentsController from "./controllers/SegmentsController";
 import * as GlobalController from "./controllers/GlobalController";
 import { PilotController } from "./controllers/PilotController";
-import { getAccountSocials } from "./lib/supabase/getAccountSocials";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -33,43 +32,6 @@ routes.post(
 routes.get("/get_tiktok_profile", GlobalController.get_tiktok_profile as any);
 routes.get("/get_twitter_profile", GlobalController.get_twitter_profile as any);
 routes.post("/get_segments", GlobalController.get_segments as any);
-
-// TODO: Fix TypeScript typing for express request handlers
-// Current implementation works but has linter errors due to return type mismatch
-// Potential solutions:
-// 1. Create custom type that extends RequestHandler
-// 2. Use express-async-handler
-// 3. Update tsconfig.json to be less strict with express types
-
-// Account socials endpoint
-const getAccountSocialsHandler: RequestHandler = async (
-  req,
-  res
-): Promise<void> => {
-  try {
-    const { accountId } = req.query;
-
-    if (!accountId || typeof accountId !== "string") {
-      res.status(400).json({
-        status: "error",
-        message: "accountId is required and must be a string",
-      });
-      return;
-    }
-
-    const result = await getAccountSocials(accountId);
-    res.json(result);
-    return;
-  } catch (error) {
-    console.error("[ERROR] Error in /account/socials:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
-    return;
-  }
-};
-
-routes.get("/account/socials", getAccountSocialsHandler);
+routes.get("/account/socials", GlobalController.get_account_socials as any);
 
 export default routes;

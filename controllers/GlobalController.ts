@@ -15,6 +15,7 @@ import getPostComments from "../lib/agent/getPostComments";
 import isAgentRunning from "../lib/isAgentRunning";
 import connectFansSegmentsToArtist from "../lib/supabase/connectFansSegmentsToArtist";
 import { AgentService } from "../lib/services/AgentService";
+import { getAccountSocials } from "../lib/supabase/getAccountSocials";
 
 const agentService = new AgentService();
 
@@ -244,5 +245,27 @@ export const get_segments = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error });
+  }
+};
+
+export const get_account_socials = async (req: Request, res: Response) => {
+  try {
+    const { accountId } = req.query;
+
+    if (!accountId || typeof accountId !== "string") {
+      return res.status(400).json({
+        status: "error",
+        message: "accountId is required and must be a string",
+      });
+    }
+
+    const result = await getAccountSocials(accountId);
+    res.json(result);
+  } catch (error) {
+    console.error("[ERROR] Error in get_account_socials:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
   }
 };

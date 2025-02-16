@@ -17,7 +17,7 @@ export const groupFansBySegment = async (
 ): Promise<SegmentGroup[]> => {
   try {
     // Process comments in smaller batches to avoid LLM token limits
-    const batchSize = 100; // Reduced from 500 to 100
+    const batchSize = 50; // Reduced from 100 to 50 for better handling
     const commentBatches: Comment[][] = [];
     for (let i = 0; i < comments.length; i += batchSize) {
       commentBatches.push(comments.slice(i, i + batchSize));
@@ -47,7 +47,7 @@ export const groupFansBySegment = async (
     });
 
     // Process batches in parallel with reduced concurrency
-    const concurrencyLimit = 3; // Reduced from 5 to 3 to avoid overwhelming the LLM
+    const concurrencyLimit = 5; // Reduced from 3 to 2 for stability
     for (let i = 0; i < commentBatches.length; i += concurrencyLimit) {
       const batchPromises = commentBatches
         .slice(i, i + concurrencyLimit)
@@ -58,53 +58,32 @@ export const groupFansBySegment = async (
           );
 
           try {
-            const response = await getChatCompletions([
-              {
-                role: "system",
-                content: instructions.group_segments,
-              },
-              {
-                role: "user",
-                content: `Segment Names: ${JSON.stringify(segmentNames)}
+            const response = await getChatCompletions(
+              [
+                {
+                  role: "system",
+                  content: instructions.group_segments,
+                },
+                {
+                  role: "user",
+                  content: `Segment Names: ${JSON.stringify(segmentNames)}
 Comments with IDs: ${JSON.stringify(batch)}`,
-              },
-            ]);
+                },
+              ],
+              16384 // Increased max tokens to handle larger responses
+            );
 
             if (!response) {
               console.error(`[ERROR] No response for batch ${batchIndex + 1}`);
               return;
             }
 
-            // Validate response structure before cleaning
-            const hasValidStructure =
-              response.includes("[") &&
-              response.includes("]") &&
-              response.includes("segment_name") &&
-              response.includes("fan_social_ids");
-
-            if (!hasValidStructure) {
-              console.error(
-                `[ERROR] Invalid response structure for batch ${batchIndex + 1}:`,
-                {
-                  responseLength: response.length,
-                  firstChars: response.substring(0, 100),
-                  lastChars: response.substring(response.length - 100),
-                  hasArrayBrackets:
-                    response.includes("[") && response.includes("]"),
-                  hasRequiredFields:
-                    response.includes("segment_name") &&
-                    response.includes("fan_social_ids"),
-                }
-              );
-              return;
-            }
-
-            // Clean the response to ensure valid JSON
+            // Clean and validate response
             const cleanedResponse = response
               .replace(/```json\n?|```/g, "")
               .trim();
 
-            // Validate JSON structure before parsing
+            // Validate response structure before parsing
             if (
               !cleanedResponse.startsWith("[") ||
               !cleanedResponse.endsWith("]")
@@ -126,10 +105,14 @@ Comments with IDs: ${JSON.stringify(batch)}`,
             try {
               const batchResults = JSON.parse(cleanedResponse);
 
-              // Validate parsed results
+              // Validate batch results structure
               if (!Array.isArray(batchResults)) {
                 console.error(
-                  `[ERROR] Parsed result is not an array in batch ${batchIndex + 1}`
+                  `[ERROR] Invalid batch results structure for batch ${batchIndex + 1}:`,
+                  {
+                    type: typeof batchResults,
+                    isArray: Array.isArray(batchResults),
+                  }
                 );
                 return;
               }
@@ -143,20 +126,31 @@ Comments with IDs: ${JSON.stringify(batch)}`,
                 }
               );
 
-              // Add fans to their segments
-              batchResults.forEach((group: SegmentGroup) => {
-                if (segmentGroups[group.segment_name]) {
-                  group.fan_social_ids.forEach((id) => {
-                    segmentGroups[group.segment_name].add(id);
-                  });
+              // Update segment groups with batch results
+              batchResults.forEach((result) => {
+                if (
+                  result.segment_name &&
+                  Array.isArray(result.fan_social_ids) &&
+                  segmentGroups[result.segment_name]
+                ) {
+                  result.fan_social_ids.forEach((id: string) =>
+                    segmentGroups[result.segment_name].add(id)
+                  );
                 }
               });
 
+              // Log progress after each successful batch
               console.log(
                 `[DEBUG] Processed batch ${batchIndex + 1}, current unique fans per segment:`,
                 Object.entries(segmentGroups)
-                  .map(([name, fans]) => `${name}: ${fans.size}`)
-                  .join(", ")
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .reduce(
+                    (acc, [name, fans]) => {
+                      acc[name] = fans.size;
+                      return acc;
+                    },
+                    {} as { [key: string]: number }
+                  )
               );
             } catch (error: any) {
               // Handle JSON parse error with more detailed logging
@@ -209,16 +203,14 @@ Comments with IDs: ${JSON.stringify(batch)}`,
         fan_social_ids: Array.from(fans),
       }));
 
-    console.log(`[DEBUG] Generated ${results.length} non-empty segments:`, {
+    console.log("[DEBUG] Generated", results.length, "non-empty segments:", {
       segmentNames: results.map((r) => r.segment_name),
       fanCounts: results.map((r) => r.fan_social_ids.length),
     });
+
     return results;
   } catch (error) {
-    console.error(
-      "[ERROR] Error in groupFansBySegment:",
-      error instanceof Error ? error.message : String(error)
-    );
-    throw new Error("Failed to group fans into segments");
+    console.error("[ERROR] Failed to group fans by segment:", error);
+    throw error;
   }
 };

@@ -10,7 +10,7 @@ export const getPostComments = async (postIds: string[]) => {
   console.log("[DEBUG] Fetching post_comments for", postIds.length, "posts");
 
   // Split postIds into smaller chunks to avoid URL length limits
-  const chunkSize = 20;
+  const chunkSize = 100;
   const postIdChunks = [];
   for (let i = 0; i < postIds.length; i += chunkSize) {
     postIdChunks.push(postIds.slice(i, i + chunkSize));

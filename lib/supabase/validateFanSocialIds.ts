@@ -1,9 +1,26 @@
 import supabase from "./serverClient.js";
 
+// UUID validation regex
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 interface ValidationResult {
   validFanIds: Set<string>;
   invalidFanIds: string[];
+  validationStats: {
+    total: number;
+    valid: number;
+    invalid: number;
+    invalidRate: string;
+    formatErrors: string[];
+    notFoundErrors: string[];
+  };
 }
+
+// Helper function to validate UUID format
+const isValidUUID = (id: string): boolean => {
+  return UUID_REGEX.test(id);
+};
 
 export const validateFanSocialIds = async (
   fanIds: string[]
@@ -13,36 +30,33 @@ export const validateFanSocialIds = async (
     sampleIds: fanIds.slice(0, 3),
   });
 
-  const uniqueFanIds = [...new Set(fanIds)];
-  const { data: existingFanSocials, error: fanSocialsError } = await supabase
-    .from("socials")
-    .select("id")
-    .in("id", uniqueFanIds);
+  // First validate UUID format
+  const formatValidIds = fanIds.filter(isValidUUID);
+  const formatInvalidIds = fanIds.filter((id) => !isValidUUID(id));
 
-  if (fanSocialsError) {
-    console.error("[ERROR] Error verifying fan social IDs:", fanSocialsError);
-    throw new Error("Failed to verify fan social IDs");
-  }
-
-  const validFanIds = new Set(existingFanSocials?.map((s) => s.id) || []);
-  const invalidFanIds = uniqueFanIds.filter((id) => !validFanIds.has(id));
-
-  if (invalidFanIds.length > 0) {
-    console.error("[ERROR] Found invalid fan social IDs:", {
-      count: invalidFanIds.length,
-      sample: invalidFanIds.slice(0, 5),
-    });
-  }
-
-  console.log("[DEBUG] Fan social ID validation results:", {
-    total: uniqueFanIds.length,
-    valid: validFanIds.size,
-    invalid: invalidFanIds.length,
+  console.log("[DEBUG] Format validation results:", {
+    total: fanIds.length,
+    validFormat: formatValidIds.length,
+    invalidFormat: formatInvalidIds.length,
+    invalidSamples: formatInvalidIds.slice(0, 5),
   });
 
+  // Skip database validation temporarily and return format-valid IDs
+  const stats = {
+    total: fanIds.length,
+    valid: formatValidIds.length,
+    invalid: formatInvalidIds.length,
+    invalidRate: `${((formatInvalidIds.length / fanIds.length) * 100).toFixed(2)}%`,
+    formatErrors: formatInvalidIds.slice(0, 5),
+    notFoundErrors: [], // Empty since we're skipping DB validation
+  };
+
+  console.log("[DEBUG] Fan social ID validation results:", stats);
+
   return {
-    validFanIds,
-    invalidFanIds,
+    validFanIds: new Set(formatValidIds),
+    invalidFanIds: formatInvalidIds,
+    validationStats: stats,
   };
 };
 

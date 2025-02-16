@@ -12,7 +12,7 @@ export const getSocialPosts = async (socialIds: string[]) => {
   );
 
   // Split socialIds into chunks to avoid URL length limits
-  const chunkSize = 20;
+  const chunkSize = 100;
   const socialIdChunks = [];
   for (let i = 0; i < socialIds.length; i += chunkSize) {
     socialIdChunks.push(socialIds.slice(i, i + chunkSize));

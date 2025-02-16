@@ -134,93 +134,112 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - When handling agent status updates, make progress parameters optional and handle null agent_status_id gracefully to prevent TypeError exceptions
 - Keep agent status tracking separate from data processing functions to maintain better separation of concerns
 - Use proper error handling and logging in asynchronous operations to catch and report issues early
+- When implementing in-memory caches, always set a reasonable upper bound and implement an eviction strategy (e.g. FIFO) to prevent memory leaks in long-running processes
 
 # Scratchpad
 
-### Current Task: Fix Error Handling for Segment Generation
+### Current Task: Debug Segment Generation API - Fan Segment Connection Failure
 
 Task Description:
-Currently, segment generation only proceeds if all platforms have a SUCCESS status. We need to modify this to proceed if all platforms have either SUCCESS or ERROR status.
+Fix fan segment connection failure in connectFansSegmentsToArtist for account ID: 648df9ec-63bf-4a7f-a473-dfc46824956d
 
-Current Issue:
+Current Situation (Based on Latest Error Logs):
 
-- Only checks for STEP_OF_AGENT.FINISHED
-- Doesn't account for error states
-- May leave platforms in limbo if some fail
+1. Data Collection Chain (Working ✅):
+   [x] Account socials: 1 total
+   [x] Social posts: 13 total
+   [x] Post comments: 599 total
+   [x] Deduplication: 468 unique fans (21.87% deduplication rate)
 
-Required Changes:
+2. Segment Generation Chain (Partially Working ⚠️):
+   [x] Segment Names Generation:
 
-1. Modify completion check logic:
-   - Consider both SUCCESS and ERROR states as "complete"
-   - Ensure all platforms have reached a final state
-   - Add proper error state tracking
+   - Input: 468 comments
+   - Batch size: 468 (single batch)
+   - Output: 10 unique segment names
+   - Status: ✅ Working
 
-Analysis:
+   [x] Fan Grouping (Working):
 
-1. [x] Review Current Implementation:
+   - Input: 468 comments
+   - Batch size: 50 (10 batches)
+   - Status: ✅ Working
+   - Output: 674 fan segments generated across 19 groups
 
-   - [x] Platform Processing:
-     - Uses Promise.all for parallel processing
-     - Each platform updates own status
-     - Currently only checks for FINISHED status
-   - [x] Completion Check:
-     - areAllPlatformsComplete only checks for FINISHED
-     - Needs to be updated for ERROR states
+   [❌] Fan Segment Connection (Multiple Issues):
 
-2. [ ] Implementation Plan:
+   Issue 1: Invalid UUID Validation
 
-   - [ ] Add ERROR state to STEP_OF_AGENT enum if not exists
-   - [ ] Modify areAllPlatformsComplete function:
-     ```typescript
-     const areAllPlatformsComplete = async (
-       agentId: string
-     ): Promise<boolean> => {
-       const { data } = await this.agentService.getAgentStatus(agentId);
-       if (!data) return false;
-       return data.statuses.every(
-         (status) =>
-           status.status === STEP_OF_AGENT.FINISHED ||
-           status.status === STEP_OF_AGENT.ERROR
-       );
-     };
-     ```
-   - [ ] Update error handling in processPlatform:
-     ```typescript
-     catch (error) {
-       console.error(`❌ Error processing ${platform}:`, error);
-       if (agent_status?.id) {
-         await updateAgentStatus(agent_status.id, STEP_OF_AGENT.ERROR);
-       }
-     }
-     ```
-   - [ ] Add error state logging
+   - Error: "Bad Request" from Supabase during fan social ID verification
+   - Location: validateFanSocialIds function
+   - Details:
+     - Total IDs: 674
+     - Valid Format: 672
+     - Invalid Format: 2
+     - Invalid Samples:
+       - '2f53add-0e86-466d-90aa-3eecda42aa64' (missing character after 'add')
+       - '63e0268-53f2-4d3e-baba-79d5c88363bb' (missing character after '268')
 
-3. [ ] Required Changes:
+   Issue 2: Incorrect Segment Deletion ⚠️
 
-   ```typescript
-   1. Update STEP_OF_AGENT enum
-   2. Modify completion check logic
-   3. Add error state handling
-   4. Update logging for error states
-   ```
+   - Location: deleteArtistFanSegments function
+   - Current Behavior:
+     - Deleting only records that match BOTH artist_social_id AND fan_social_id
+     - Using .in() for both fields creates an intersection (AND condition)
+     - May leave stale segments if fan_social_ids list is incomplete
+   - Required Behavior:
+     - Delete ALL segments for the given artist_social_id
+     - fan_social_id filter should be removed
+     - Ensures clean slate for new segment generation
 
-4. [ ] Testing Plan:
-   - [ ] Test successful completion
-   - [ ] Test partial failure
-   - [ ] Test complete failure
-   - [ ] Verify segment generation with mixed states
+3. Minimal Solution Approach:
+   [x] Current Behavior:
 
-Files to Modify:
+   - Process fails completely when invalid records are encountered
+   - All records (valid and invalid) are rejected
+   - Partial deletion of segments creates data inconsistency
 
-- [ ] `lib/step.ts` (add ERROR state)
-- [ ] `controllers/PilotController.ts` (update completion logic)
+   [x] Desired Behavior:
 
-Next Steps:
+   - Skip invalid records
+   - Continue processing valid records
+   - Log skipped records for monitoring
+   - Complete deletion of artist's existing segments
 
-1. [ ] Check if ERROR state exists in STEP_OF_AGENT
-2. [ ] Update completion check logic
-3. [ ] Add error state handling
-4. [ ] Test changes
+4. Implementation Plan (Minimal Changes):
+   [x] Modify validateFanSocialIds:
 
-Next Action:
-Let's first check the STEP_OF_AGENT enum to see if we need to add the ERROR state.
+   - Return only format-valid IDs (672)
+   - Skip format-invalid IDs (2)
+   - Keep existing logging
+   - No database validation for now
+
+   [x] Fix deleteArtistFanSegments:
+
+   - Remove fan_social_id filter
+   - Delete all segments for artist_social_id
+   - Keep existing logging
+   - No other changes needed
+
+Progress:
+[x] Identified specific invalid UUIDs
+[x] Confirmed format validation is working
+[x] Modified validateFanSocialIds to skip invalid records
+[x] Identified segment deletion logic error
+[x] Fixed segment deletion logic to delete all artist segments
+[ ] Test with same account ID
+
+Next Actions:
+
+1. Test with same account ID to verify process continues
+2. Monitor logs for skipped records
+3. Document invalid records for future cleanup
+
+Future Improvements (Post-Fix):
+
+1. Add proper database validation batching
+2. Implement retry mechanism
+3. Add transaction support
+4. Clean up invalid records
+5. Add constraint validation for artist_social_id
+6. Consider adding cascade delete for segments

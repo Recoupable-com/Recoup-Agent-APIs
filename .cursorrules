@@ -138,84 +138,84 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Move getAccountSocialsHandler to Controller
+### Current Task: Step 29 - Create Mermaid Chart for create_report API
 
 Task Description:
-Move the getAccountSocialsHandler from routes.ts to a dedicated controller following the project's established patterns.
+Create a mermaid chart to document the flow of the create_report API endpoint and organize all mermaid charts in a new folder.
 
 Current Situation:
 
 1. Requirements Analysis:
-   [x] Current Implementation:
+   [x] Current State:
 
-   - Handler is directly in routes.ts
-   - Uses getAccountSocials from lib/supabase
-   - Has proper error handling and validation
-   - Returns AccountSocialsResponse type
+   - No mermaid chart exists for create_report API
+   - Mermaid charts are scattered across different locations
 
-2. Files to Examine:
-   [ ] Primary:
+   [x] Required Changes:
 
-   - controllers/GlobalController.ts (target for new method)
-   - routes.ts (current location)
+   - Create new mermaid chart for create_report API flow
+   - Create a dedicated folder for all mermaid charts
+   - Move existing mermaid charts to new folder
 
-   [ ] Secondary:
+2. API Flow Components to Document:
+   [ ] Request Flow:
 
-   - other controllers (for pattern reference)
-   - lib/supabase/getAccountSocials.ts (dependency)
+   - Input parameters (agentId, address, segmentName, email, artistId)
+   - Request validation
+   - Initial response with reportId
+
+   [ ] Background Processing:
+
+   - Agent data retrieval
+   - Segment analysis
+   - Comment processing
+   - Report generation
+
+   [ ] Database Interactions:
+
+   - segment_reports table operations
+   - post_comments table queries
+   - socials table lookups
 
 3. Implementation Plan:
-   [ ] Phase 1 - Create Controller Method:
+   [ ] Phase 1 - Setup:
 
-   1. Add get_account_socials method to GlobalController
-   2. Move handler logic to controller
-   3. Maintain error handling and validation
-   4. Keep consistent with other controller methods
+   - Create new 'docs/mermaid' directory
+   - Move existing mermaid charts
+   - Create create_report.mermaid file
 
-   [ ] Phase 2 - Update Routes:
+   [ ] Phase 2 - Chart Creation:
 
-   1. Import new controller method
-   2. Replace inline handler with controller reference
-   3. Clean up imports
-   4. Maintain endpoint path and method
+   - Document request flow
+   - Document background processing
+   - Document database interactions
+   - Add error handling paths
 
-   [ ] Phase 3 - Testing:
+   [ ] Phase 3 - Review & Integration:
 
-   1. Test with valid accountId
-   2. Test error cases
-   3. Verify response format matches current behavior
-
-4. Considerations:
-   [x] Code Style:
-
-   - Follow existing controller patterns
-   - Maintain consistent naming (get_account_socials)
-   - Keep error handling approach
-
-   [x] Implementation Strategy:
-
-   - Minimal changes to existing logic
-   - Reuse existing error handling patterns
-   - Follow project's controller conventions
+   - Verify chart accuracy
+   - Add comments/documentation
+   - Update README if needed
 
 Progress:
 [x] Analyzed requirements
-[x] Created implementation plan
-[x] Move handler to GlobalController
-[x] Update routes.ts
-[ ] Test implementation
+[x] Identified API components to document
+[ ] Created mermaid directory
+[ ] Created initial chart structure
+[ ] Completed chart documentation
 
 Next Actions:
 
-1. Test the endpoint with:
-   - Valid accountId (40801f05-945e-44d4-adeb-6545912e446c)
-   - Invalid accountId
-   - Account with no socials
-2. Verify response format and error handling
+1. Create new 'docs/mermaid' directory
+2. Move existing mermaid charts to new directory
+3. Create create_report.mermaid file
+4. Document API flow in mermaid syntax
+5. Add error handling paths
 
 Future Improvements:
 
-1. Add request validation middleware
-2. Add response caching
-3. Add rate limiting
-4. Add pagination for large responses
+1. Add sequence numbers to steps
+2. Include timing estimates
+3. Document rate limits
+4. Add links to relevant code files
+5. Include example data payloads

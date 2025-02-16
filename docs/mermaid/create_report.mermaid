@@ -28,26 +28,23 @@ sequenceDiagram
     CommentDB-->>API: Return post_comments
 
     API->>Report: Generate report content
-    Note over Report: Process segments and comments
+    Note over Report: Process segments and comments<br/>Calculate segment metrics<br/>Format report data
     Report-->>API: Return {reportContent, nextSteps}
 
     API->>ReportDB: updateReport(reportId, content)
     ReportDB-->>API: Confirm update
 
     API->>Email: sendReportEmail
-    Note over Email: Send to provided email address
+    Note over Email: Send to provided email address<br/>with report content and metrics
     Email-->>API: Confirm sent
 
     Note over Client,Email: Error Handling
-    alt Error occurs at any step
-        API-->>Client: Return error response (500)
-        Note over API: Log error details
-    end
-
-    classDef database fill:#f5f5f5,stroke:#333,stroke-width:2px;
-    classDef service fill:#e1f5fe,stroke:#333,stroke-width:2px;
-    classDef client fill:#fff,stroke:#333,stroke-width:2px;
-    
-    class ReportDB,CommentDB,SocialDB database;
-    class AgentSvc,Report,Email service;
-    class Client client; 
+    alt Database Error
+        ReportDB-->>API: Database error
+        API-->>Client: Return error response (500)<br/>Database operation failed
+    else Agent Not Found
+        AgentSvc-->>API: Agent not found
+        API-->>Client: Return error response (404)<br/>Invalid agent ID
+    else Invalid Parameters
+        API-->>Client: Return error response (400)<br/>Missing or invalid parameters
+    end 

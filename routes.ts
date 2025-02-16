@@ -1,4 +1,4 @@
-import express, { Request, Response, RequestHandler } from "express";
+import express from "express";
 import * as SegmentsController from "./controllers/SegmentsController";
 import * as GlobalController from "./controllers/GlobalController";
 import { PilotController } from "./controllers/PilotController";

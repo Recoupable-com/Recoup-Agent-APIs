@@ -138,6 +138,50 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
+### Current Task: DRY Comment Interface
+
+Task Description:
+Consolidate duplicate Comment interface from segmentService.ts and generateSegments.ts into a shared reference.
+
+Current Situation:
+
+- Comment interface duplicated in two files
+- Need to create a shared type definition
+- Files to update:
+  - lib/services/segmentService.ts
+  - lib/generateSegments.ts
+  - lib/segments/groupFansBySegment.ts
+
+Analysis Plan:
+
+1. Create Shared Type
+   [x] Identify common interface structure
+   [x] Create new types file
+   [x] Export Comment interface
+
+2. Update References
+   [x] Update segmentService.ts import
+   [x] Update generateSegments.ts import
+   [x] Update groupFansBySegment.ts to use Comment
+   [x] Verify type consistency
+   [x] Remove redundant FanComment interface
+   [x] Standardize on comment_text field name
+
+Progress:
+[x] Identified duplicate interface
+[x] Created shared type file
+[x] Updated file references
+[x] Removed redundant FanComment interface
+[x] Fixed inconsistent field naming
+
+Improvements Made:
+
+1. Consolidated Comment interface in segment.types.ts
+2. Removed redundant FanComment interface
+3. Standardized on comment_text field name
+4. Used TypeScript's Pick utility type for better type safety
+5. Maintained backward compatibility with existing code
+
 ### Current Task: Create Segment Name Generation Flow Chart
 
 Task Description:

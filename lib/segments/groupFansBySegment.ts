@@ -1,10 +1,6 @@
 import getChatCompletions from "../getChatCompletions.js";
 import { instructions } from "../instructions.js";
-
-interface Comment {
-  comment: string;
-  fan_social_id: string;
-}
+import { Comment } from "../types/segment.types.js";
 
 export interface SegmentGroup {
   segment_name: string;
@@ -32,11 +28,13 @@ export const groupFansBySegment = async (
       total: comments.length,
       sample: comments.slice(0, 3).map((c) => ({
         ...c,
-        commentLength: c.comment.length,
-        hasSpecialChars: /[^\x20-\x7E]/.test(c.comment),
-        specialChars: c.comment.match(/[^\x20-\x7E]/g) || [],
+        commentLength: c.comment_text.length,
+        hasSpecialChars: /[^\x20-\x7E]/.test(c.comment_text),
+        specialChars: c.comment_text.match(/[^\x20-\x7E]/g) || [],
         truncated:
-          c.comment.length > 50 ? `${c.comment.slice(0, 50)}...` : c.comment,
+          c.comment_text.length > 50
+            ? `${c.comment_text.slice(0, 50)}...`
+            : c.comment_text,
       })),
     });
 

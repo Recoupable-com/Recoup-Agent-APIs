@@ -1,0 +1,53 @@
+sequenceDiagram
+    participant Client
+    participant API as /api/create_report
+    participant ReportDB as Segment Reports DB
+    participant AgentSvc as Agent Service
+    participant CommentDB as Post Comments DB
+    participant SocialDB as Socials DB
+    participant Report as Report Generator
+    participant Email as Email Service
+
+    Client->>API: POST /api/create_report
+    Note over Client,API: {agentId, address, segmentName, email, artistId}
+
+    API->>ReportDB: createReport(artistId)
+    ReportDB-->>API: Return reportId
+    API-->>Client: Return {reportId}
+
+    Note over API: Async Processing Begins
+
+    API->>AgentSvc: getAgents(agentId, address)
+    AgentSvc-->>API: Return {segments, commentIds}
+
+    API->>SocialDB: Get agent socials
+    SocialDB-->>API: Return {followerCount, username, avatar}
+
+    API->>CommentDB: Get comments by IDs
+    Note over CommentDB: Limit to 100 comments
+    CommentDB-->>API: Return post_comments
+
+    API->>Report: Generate report content
+    Note over Report: Process segments and comments
+    Report-->>API: Return {reportContent, nextSteps}
+
+    API->>ReportDB: updateReport(reportId, content)
+    ReportDB-->>API: Confirm update
+
+    API->>Email: sendReportEmail
+    Note over Email: Send to provided email address
+    Email-->>API: Confirm sent
+
+    Note over Client,Email: Error Handling
+    alt Error occurs at any step
+        API-->>Client: Return error response (500)
+        Note over API: Log error details
+    end
+
+    classDef database fill:#f5f5f5,stroke:#333,stroke-width:2px;
+    classDef service fill:#e1f5fe,stroke:#333,stroke-width:2px;
+    classDef client fill:#fff,stroke:#333,stroke-width:2px;
+    
+    class ReportDB,CommentDB,SocialDB database;
+    class AgentSvc,Report,Email service;
+    class Client client; 

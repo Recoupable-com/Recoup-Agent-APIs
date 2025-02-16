@@ -10,6 +10,9 @@ import createAgentStatus from "../lib/supabase/createAgentStatus";
 import runSpotifyAgent from "../agents/runSpotifyAgent";
 import runTikTokAgent from "../agents/runTikTokAgent";
 import runTwitterAgent from "../agents/runTwitterAgent";
+import { generateSegmentsForAccount } from "../lib/services/segmentService";
+
+type DbAgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 
 // Input validation schema
 const HandlesSchema = z.object({
@@ -81,6 +84,69 @@ export class PilotController {
     handles: z.infer<typeof HandlesSchema>,
     artistId?: string
   ) {
+    // Helper function to check if all platforms are complete
+    const areAllPlatformsComplete = async (
+      agentId: string
+    ): Promise<boolean> => {
+      console.log(`Checking completion status for agentId: ${agentId}`);
+      const { data } = await this.agentService.getAgentStatus(agentId);
+      if (!data) {
+        console.log(`No agent status data found for agentId: ${agentId}`);
+        return false;
+      }
+
+      // Consider both FINISHED and ERROR states as complete
+      const isComplete = data.statuses.every((status: DbAgentStatus) => {
+        if (status.status === null) return false;
+
+        const isTerminalState =
+          status.status === STEP_OF_AGENT.FINISHED ||
+          status.status === STEP_OF_AGENT.ERROR ||
+          status.status === STEP_OF_AGENT.MISSING_POSTS ||
+          status.status === STEP_OF_AGENT.RATE_LIMIT_EXCEEDED ||
+          status.status === STEP_OF_AGENT.UNKNOWN_PROFILE;
+
+        if (isTerminalState) {
+          console.log(
+            `Status ${status.id} is in terminal state: ${status.status !== null ? STEP_OF_AGENT[status.status] : "null"}`
+          );
+        }
+
+        return isTerminalState;
+      });
+
+      console.log(
+        `All platforms complete for agentId ${agentId}: ${isComplete}`
+      );
+      if (isComplete) {
+        console.log(
+          "Final status breakdown:",
+          data.statuses.map((s) => ({
+            id: s.id,
+            status: s.status !== null ? STEP_OF_AGENT[s.status] : "null",
+            social_id: s.social_id,
+          }))
+        );
+      }
+      return isComplete;
+    };
+
+    // Helper function to update all agent statuses
+    const updateAllAgentStatuses = async (
+      agentId: string,
+      status: STEP_OF_AGENT
+    ): Promise<void> => {
+      const { data } = await this.agentService.getAgentStatus(agentId);
+      if (!data) {
+        return;
+      }
+      await Promise.all(
+        data.statuses.map((agentStatus: DbAgentStatus) =>
+          updateAgentStatus(agentStatus.id, status)
+        )
+      );
+    };
+
     // Helper function to process a platform
     const processPlatform = async (platform: SocialType, handle: string) => {
       try {
@@ -168,5 +234,20 @@ export class PilotController {
 
     // Wait for all platforms to be processed
     await Promise.all(tasks);
+
+    // Generate segments if all platforms are complete and artistId is provided
+    if ((await areAllPlatformsComplete(agentId)) && artistId) {
+      console.log("All platforms complete. Starting segment generation...");
+      try {
+        await updateAllAgentStatuses(agentId, STEP_OF_AGENT.SEGMENTS);
+        await generateSegmentsForAccount(artistId);
+        await updateAllAgentStatuses(agentId, STEP_OF_AGENT.FINISHED);
+        console.log("Segment generation completed successfully.");
+      } catch (error) {
+        console.error("❌ Error generating segments:", error);
+        // Update statuses back to FINISHED on error
+        await updateAllAgentStatuses(agentId, STEP_OF_AGENT.FINISHED);
+      }
+    }
   }
 }

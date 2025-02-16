@@ -137,96 +137,90 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Move createSocial Before createAgentStatus
+### Current Task: Fix Error Handling for Segment Generation
 
 Task Description:
-Currently, `createAgentStatus` is called after `createSocial` in the Instagram agent flow. We need to move `createSocial` before `createAgentStatus` to better track the agent's status throughout the entire process.
+Currently, segment generation only proceeds if all platforms have a SUCCESS status. We need to modify this to proceed if all platforms have either SUCCESS or ERROR status.
 
-Current Flow:
+Current Issue:
 
-```typescript
-// Current implementation in processPlatform:
-const { agent_status } = await createAgentStatus(
-  agentId,
-  "", // Empty social_id initially
-  STEP_OF_AGENT.INITIAL
-);
-if (!agent_status?.id) return;
+- Only checks for STEP_OF_AGENT.FINISHED
+- Doesn't account for error states
+- May leave platforms in limbo if some fail
 
-// Scrape profile
-const profile = await scraper.scrapeProfile(handle.replaceAll("@", ""));
+Required Changes:
 
-// Create social record
-const { social, error: socialError } =
-  await this.agentService.createSocial(profile);
-if (socialError || !social) {
-  console.error(
-    `❌ Failed to create social record for ${platform}:`,
-    socialError
-  );
-  return;
-}
-```
-
-Required Flow (from ROADMAP.md):
-
-```typescript
-const { social } = await createSocial({
-  username: handle,
-  profile_url: `https://instagram.com/${handle}`,
-});
-if (!social?.id) return;
-
-const { agent_status } = await createAgentStatus(
-  agent_id,
-  social.id,
-  STEP_OF_AGENT.PROFILE
-);
-```
+1. Modify completion check logic:
+   - Consider both SUCCESS and ERROR states as "complete"
+   - Ensure all platforms have reached a final state
+   - Add proper error state tracking
 
 Analysis:
 
 1. [x] Review Current Implementation:
 
-   - Found that we're creating agent status first with empty social_id
-   - Then scraping profile and creating social record
-   - This is opposite of what's required in ROADMAP.md
+   - [x] Platform Processing:
+     - Uses Promise.all for parallel processing
+     - Each platform updates own status
+     - Currently only checks for FINISHED status
+   - [x] Completion Check:
+     - areAllPlatformsComplete only checks for FINISHED
+     - Needs to be updated for ERROR states
 
-2. [x] Implementation Plan:
+2. [ ] Implementation Plan:
 
-   - [x] Create social record first with handle info
-   - [x] Create agent status with social.id and PROFILE status
-   - [x] Remove the initial empty social_id status
-   - [x] Keep error handling for social creation
+   - [ ] Add ERROR state to STEP_OF_AGENT enum if not exists
+   - [ ] Modify areAllPlatformsComplete function:
+     ```typescript
+     const areAllPlatformsComplete = async (
+       agentId: string
+     ): Promise<boolean> => {
+       const { data } = await this.agentService.getAgentStatus(agentId);
+       if (!data) return false;
+       return data.statuses.every(
+         (status) =>
+           status.status === STEP_OF_AGENT.FINISHED ||
+           status.status === STEP_OF_AGENT.ERROR
+       );
+     };
+     ```
+   - [ ] Update error handling in processPlatform:
+     ```typescript
+     catch (error) {
+       console.error(`❌ Error processing ${platform}:`, error);
+       if (agent_status?.id) {
+         await updateAgentStatus(agent_status.id, STEP_OF_AGENT.ERROR);
+       }
+     }
+     ```
+   - [ ] Add error state logging
 
-3. [x] Changes Required in `processPlatform`:
+3. [ ] Required Changes:
 
    ```typescript
-   // Completed updates:
-   1. Moved createSocial to be first operation
-   2. Passing social.id to createAgentStatus
-   3. Using PROFILE as initial status
-   4. Maintained error handling structure
+   1. Update STEP_OF_AGENT enum
+   2. Modify completion check logic
+   3. Add error state handling
+   4. Update logging for error states
    ```
 
 4. [ ] Testing Plan:
-   - [ ] Verify social record is created first
-   - [ ] Verify agent status has correct social_id
-   - [ ] Verify status starts at PROFILE
-   - [ ] Ensure rest of the flow remains unchanged
+   - [ ] Test successful completion
+   - [ ] Test partial failure
+   - [ ] Test complete failure
+   - [ ] Verify segment generation with mixed states
 
 Files to Modify:
 
-- [x] `controllers/PilotController.ts`
-  - [x] Reorder operations in processPlatform
-  - [x] Update error handling for new flow
-  - [x] Ensure proper status transitions
+- [ ] `lib/step.ts` (add ERROR state)
+- [ ] `controllers/PilotController.ts` (update completion logic)
 
 Next Steps:
 
-1. [x] Review current `processPlatform` method
-2. [x] Implement changes following ROADMAP.md example
-3. [ ] Test with sweetman.eth profile
+1. [ ] Check if ERROR state exists in STEP_OF_AGENT
+2. [ ] Update completion check logic
+3. [ ] Add error state handling
+4. [ ] Test changes
 
 Next Action:
-Would you like me to test the changes with the sweetman.eth profile?
+Let's first check the STEP_OF_AGENT enum to see if we need to add the ERROR state.

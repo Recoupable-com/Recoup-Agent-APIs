@@ -153,31 +153,11 @@ export class PilotController {
         // Get platform-specific scraper
         const scraper = ScraperFactory.getScraper(platform);
 
-        // Create social record with platform-specific URL
-        const cleanHandle = handle.replaceAll("@", "");
-        let profileUrl = "";
-        switch (platform) {
-          case "INSTAGRAM":
-            profileUrl = `https://instagram.com/${cleanHandle}`;
-            break;
-          case "TWITTER":
-            profileUrl = `https://x.com/${cleanHandle}`;
-            break;
-          case "TIKTOK":
-            profileUrl = `https://tiktok.com/@${cleanHandle}`;
-            break;
-          case "SPOTIFY":
-            profileUrl = `https://open.spotify.com/artist/${cleanHandle}`;
-            break;
-          default:
-            profileUrl = `https://${platform.toLowerCase()}.com/${cleanHandle}`;
-        }
-
         // Create social record first
         const { social, error: socialError } =
           await this.agentService.createSocial({
-            username: cleanHandle,
-            profile_url: profileUrl,
+            username: handle.replaceAll("@", ""),
+            profile_url: `https://instagram.com/${handle.replaceAll("@", "")}`,
           });
         if (socialError || !social) {
           console.error(
@@ -196,7 +176,7 @@ export class PilotController {
         if (!agent_status?.id) return;
 
         // Scrape profile
-        const profile = await scraper.scrapeProfile(cleanHandle);
+        const profile = await scraper.scrapeProfile(handle.replaceAll("@", ""));
 
         // Update social record with profile data
         await this.agentService.updateSocial(social.id, profile);
@@ -211,7 +191,7 @@ export class PilotController {
 
         // Fetch posts
         await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);
-        const posts = await scraper.scrapePosts(cleanHandle);
+        const posts = await scraper.scrapePosts(handle.replaceAll("@", ""));
 
         // Fetch comments
         await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POST_COMMENTS);
@@ -243,7 +223,7 @@ export class PilotController {
       tasks.push(processPlatform("INSTAGRAM", handles.instagram));
     }
     if (handles.twitter?.trim()) {
-      tasks.push(processPlatform("TWITTER", handles.twitter));
+      tasks.push(runTwitterAgent(agentId, handles.twitter, artistId || ""));
     }
     if (handles.tiktok?.trim()) {
       tasks.push(runTikTokAgent(agentId, handles.tiktok, artistId || ""));

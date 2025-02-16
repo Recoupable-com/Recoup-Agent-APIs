@@ -1,0 +1,55 @@
+sequenceDiagram
+    participant Client
+    participant API as /api/generate_segments
+    participant Service as SegmentService
+    participant DB as Supabase
+    participant LLM as LLM Service
+    participant Storage as Artist Fan Segments
+
+    Client->>API: POST /api/generate_segments {accountId}
+    Note over API: SegmentsController.generate_segments
+
+    API->>Service: generateSegmentsForAccount(accountId)
+    
+    Service->>DB: Get account_socials
+    DB-->>Service: Return social accounts
+
+    loop For each social batch
+        Service->>DB: Get social_posts
+        DB-->>Service: Return posts
+        
+        Service->>DB: Get post_comments
+        DB-->>Service: Return comments
+        
+        Note over Service: Format and deduplicate comments
+    end
+
+    Service->>Service: generateSegments(dedupedComments)
+    
+    loop For each comment batch
+        Service->>LLM: Generate segment names
+        Note over LLM: Using instructions.generate_segments
+        LLM-->>Service: Return segment names
+    end
+
+    Service->>Service: groupFansBySegment
+    
+    loop For each comment batch
+        Service->>LLM: Group fans into segments
+        Note over LLM: Using instructions.group_segments
+        LLM-->>Service: Return fan groupings
+    end
+
+    Service->>Storage: createFanSegments
+    Storage->>DB: Save to artist_fan_segment table
+    DB-->>Storage: Confirm save
+    Storage-->>Service: Return segment IDs
+
+    Service-->>API: Return {segmentIds, stats}
+    API-->>Client: Return success response
+
+    Note over Client,Storage: Error Handling
+    alt Error occurs
+        Service-->>API: Throw error with details
+        API-->>Client: Return error response (400/500)
+    end

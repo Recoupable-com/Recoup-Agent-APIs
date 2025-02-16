@@ -2,12 +2,7 @@ import generateSegments from "../generateSegments.js";
 import getAccountSocials from "../supabase/getAccountSocials.js";
 import getPostComments from "../supabase/getPostComments.js";
 import getSocialPosts from "../supabase/getSocialPosts.js";
-
-interface Comment {
-  comment_text: string;
-  fan_social_id: string;
-  artist_social_id: string;
-}
+import { Comment } from "../types/segment.types.js";
 
 export const generateSegmentsForAccount = async (accountId: string) => {
   console.log("Starting generate_segments for accountId:", accountId);

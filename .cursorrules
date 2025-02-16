@@ -138,100 +138,84 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Improve LLM Instructions for Segment Name Generation
+### Current Task: Move getAccountSocialsHandler to Controller
 
 Task Description:
-Update LLM instructions for generateSegmentNames to reference specific comment text details instead of being generic.
+Move the getAccountSocialsHandler from routes.ts to a dedicated controller following the project's established patterns.
 
 Current Situation:
 
-1. Issue Analysis:
-   [x] Current State:
+1. Requirements Analysis:
+   [x] Current Implementation:
 
-   - Instructions are too generic
-   - Segment names don't reference specific comment text
-   - Missing context from actual comments
-
-   [x] Required State:
-
-   - Instructions should guide LLM to use specific examples
-   - Segment names should reference actual comment content
-   - Keep changes minimal while improving quality
+   - Handler is directly in routes.ts
+   - Uses getAccountSocials from lib/supabase
+   - Has proper error handling and validation
+   - Returns AccountSocialsResponse type
 
 2. Files to Examine:
    [ ] Primary:
 
-   - lib/segments/generateSegmentNames.ts
-   - lib/instructions.ts (contains generate_segments instructions)
+   - controllers/GlobalController.ts (target for new method)
+   - routes.ts (current location)
 
    [ ] Secondary:
 
-   - lib/segments/groupFansBySegment.ts (to understand how segments are used)
-   - lib/generateSegments.ts (to understand the full flow)
+   - other controllers (for pattern reference)
+   - lib/supabase/getAccountSocials.ts (dependency)
 
 3. Implementation Plan:
-   [ ] Phase 1 - Analysis:
+   [ ] Phase 1 - Create Controller Method:
 
-   1. Review current instructions
-   2. Identify points for improvement
-   3. Analyze example comments and segments
+   1. Add get_account_socials method to GlobalController
+   2. Move handler logic to controller
+   3. Maintain error handling and validation
+   4. Keep consistent with other controller methods
 
-   [ ] Phase 2 - Instruction Updates:
+   [ ] Phase 2 - Update Routes:
 
-   1. Add guidance for using specific examples
-   2. Include comment context requirements
-   3. Add validation criteria for segment names
+   1. Import new controller method
+   2. Replace inline handler with controller reference
+   3. Clean up imports
+   4. Maintain endpoint path and method
 
    [ ] Phase 3 - Testing:
 
-   1. Test with existing comments
-   2. Verify segment quality improvement
-   3. Ensure backward compatibility
+   1. Test with valid accountId
+   2. Test error cases
+   3. Verify response format matches current behavior
 
 4. Considerations:
-   [x] Quality Impact:
+   [x] Code Style:
 
-   - More specific segment names
-   - Better fan grouping accuracy
-   - Improved context for artists
-
-   [x] Performance Impact:
-
-   - No additional queries needed
-   - No schema changes required
-   - Minimal code changes
+   - Follow existing controller patterns
+   - Maintain consistent naming (get_account_socials)
+   - Keep error handling approach
 
    [x] Implementation Strategy:
 
-   - Focus on instruction improvements
-   - Keep changes to instructions.ts only
-   - No structural changes needed
+   - Minimal changes to existing logic
+   - Reuse existing error handling patterns
+   - Follow project's controller conventions
 
 Progress:
 [x] Analyzed requirements
 [x] Created implementation plan
-[x] Review current instructions
-[x] Update instructions
-
-- Added specific examples
-- Added content-based guidance
-- Added importance of using actual comment content
-- Added anti-patterns to avoid
-  [ ] Test changes
-  [ ] Document improvements
+[x] Move handler to GlobalController
+[x] Update routes.ts
+[ ] Test implementation
 
 Next Actions:
 
-1. Test with sample comments to verify:
-   - Segments reference specific comment content
-   - Names are derived from actual terminology
-   - Generic segments are avoided
-2. Document the changes in comments
-3. Consider adding unit tests for segment quality
+1. Test the endpoint with:
+   - Valid accountId (40801f05-945e-44d4-adeb-6545912e446c)
+   - Invalid accountId
+   - Account with no socials
+2. Verify response format and error handling
 
 Future Improvements:
 
-1. Add segment name validation
-2. Implement segment quality metrics
-3. Add example-based guidance
-4. Consider automated testing for segment quality
+1. Add request validation middleware
+2. Add response caching
+3. Add rate limiting
+4. Add pagination for large responses

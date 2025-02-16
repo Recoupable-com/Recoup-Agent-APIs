@@ -17,14 +17,15 @@ export const generateSegmentsForAccount = async (accountId: string) => {
   const fanCommentMap = new Map<string, Comment>();
 
   // Step 1: Get all account_socials for the artist
-  const accountSocials = await getAccountSocials(accountId);
+  const accountSocialsResponse = await getAccountSocials(accountId);
+  const accountSocials = accountSocialsResponse.socials;
   console.log("Found account_socials:", accountSocials.length);
 
   // Process social accounts in batches
   const SOCIAL_BATCH_SIZE = 5;
   for (let i = 0; i < accountSocials.length; i += SOCIAL_BATCH_SIZE) {
     const socialBatch = accountSocials.slice(i, i + SOCIAL_BATCH_SIZE);
-    const socialIds = socialBatch.map((as) => as.social_id);
+    const socialIds = socialBatch.map((as) => as.id);
 
     console.log(
       `Processing social batch ${i / SOCIAL_BATCH_SIZE + 1}/${Math.ceil(accountSocials.length / SOCIAL_BATCH_SIZE)}`

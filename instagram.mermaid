@@ -1,15 +1,16 @@
 graph TD
     Start[Start] --> ValidateHandle[Validate Instagram Handle]
     ValidateHandle --> CreateAgent[Create Agent]
-    CreateAgent --> ScrapeProfile[Scrape Profile]
-    
-    ScrapeProfile -->|Success| CreateSocial[Create Social Record]
-    ScrapeProfile -->|Failure| ProfileError[Profile Error State]
+    CreateAgent --> CreateSocial[Create Social Record]
     
     CreateSocial -->|Success| CreateStatus[Create Agent Status: PROFILE]
     CreateSocial -->|Failure| SocialError[Social Error State]
     
-    CreateStatus --> CheckArtist{Has Artist ID?}
+    CreateStatus --> ScrapeProfile[Scrape Profile]
+    ScrapeProfile -->|Success| UpdateSocial[Update Social Record]
+    ScrapeProfile -->|Failure| ProfileError[Profile Error State]
+    
+    UpdateSocial --> CheckArtist{Has Artist ID?}
     CheckArtist -->|Yes| ArtistSetup[Update Status: SETTING_UP_ARTIST]
     CheckArtist -->|No| ScrapePosts[Update Status: POSTURLS]
     ArtistSetup --> ScrapePosts
@@ -36,4 +37,4 @@ graph TD
     class Start,End process;
     class ProfileError,SocialError,MissingPosts,RateLimit,DataError error;
     class CreateStatus,ArtistSetup,ScrapePosts,ScrapeComments,UpdateStatus status;
-    class ValidateHandle,CreateAgent,ScrapeProfile,CreateSocial,FetchPosts,FetchComments,StoreSocialData process;
+    class ValidateHandle,CreateAgent,CreateSocial,ScrapeProfile,UpdateSocial,FetchPosts,FetchComments,StoreSocialData process;

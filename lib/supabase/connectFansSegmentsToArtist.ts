@@ -26,8 +26,8 @@ const connectFansSegmentsToArtist = async (
     console.log(`[DEBUG] Found account ID: ${accountId}`);
 
     // Get all social IDs for this account
-    const accountSocials = await getAccountSocials(accountId);
-    const artist_social_ids = accountSocials.map((as) => as.social_id);
+    const accountSocialsResponse = await getAccountSocials(accountId);
+    const artist_social_ids = accountSocialsResponse.socials.map((as) => as.id);
     console.log(`[DEBUG] Artist social IDs:`, {
       count: artist_social_ids.length,
       ids: artist_social_ids,

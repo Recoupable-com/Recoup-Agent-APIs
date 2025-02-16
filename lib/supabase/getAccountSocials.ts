@@ -23,7 +23,6 @@ export const getAccountSocials = async (
   console.log("[DEBUG] Fetching account socials for accountId:", accountId);
 
   try {
-    // Get social IDs from account_socials table
     const { data: accountSocials, error: accountSocialsError } = await supabase
       .from("account_socials")
       .select("social_id")
@@ -48,7 +47,6 @@ export const getAccountSocials = async (
       };
     }
 
-    // Get full social account details
     const socialIds = accountSocials.map((s) => s.social_id);
     const { data: socials, error: socialsError } = await supabase
       .from("socials")

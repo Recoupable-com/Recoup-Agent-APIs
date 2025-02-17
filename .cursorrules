@@ -145,43 +145,80 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Step 32 - Update Schema Typings
+### Current Task: Step 33 - Segment Generator - New Segments Tables
 
 Task Description:
-Update the schema typings to match the latest database schema changes using Supabase CLI.
+Update the Segment Generator to use the new segments table structure by implementing three new Supabase library functions.
 
-#### Current Status: Planning Phase
+#### Current Status: Integration Phase - Segment Generator Update
 
-1. [ ] First Phase - Environment Setup:
+Library Implementation Status:
 
-   - [ ] Review current schema types
-   - [ ] Verify Supabase CLI installation
-   - [ ] Check project configuration
-   - [ ] Ensure access to Supabase project settings
+1. [x] `createSegments.ts` - Creates base segments
+   - Handles batch processing
+   - Error handling
+   - No debug logging
+2. [x] `updateArtistSegments.ts` - Manages artist-segment associations
+   - Atomic operations with transaction
+   - Deletes existing + creates new
+   - Error handling
+3. [x] `createFanSegments.ts` - Creates fan-segment associations
+   - Batch processing
+   - Error handling
+   - No debug logging
 
-2. [ ] Second Phase - Schema Update:
+Next Phase: Segment Generator Integration
 
-   - [ ] Run schema type generation
-   - [ ] Compare old and new types
-   - [ ] Identify breaking changes
-   - [ ] Update affected code
+1. [x] Analyze Current Flow
 
-3. [ ] Final Phase - Verification:
-   - [ ] Run TypeScript compiler
-   - [ ] Fix any type errors
-   - [ ] Test affected functionality
-   - [ ] Update documentation if needed
+   - [x] Review segment-name-generation.mermaid
+   - [x] Identify where artist_fan_segments table is used
+   - [x] Map current segment flow to new table structure
 
-#### Next Steps:
+2. [x] Plan Integration Changes
 
-1. [ ] Review current types/database.types.ts
-2. [ ] Check package.json for existing update-types script
-3. [ ] Set up Supabase CLI if needed
-4. [ ] Generate and apply new types
+   - [x] Replace artist_fan_segments usage with new functions
+   - [x] Update segment generation flow:
+     1. Generate segment names with LLM
+     2. Create segments using createSegments
+     3. Link segments to artist using updateArtistSegments
+     4. Group fans into segments
+     5. Associate fans with segments using createFanSegments
 
-#### Notes:
+3. [x] Implementation Tasks
 
-- Current script in package.json: `update-types`: `npx supabase gen types typescript --project-id godremdqwajrwazhbrue --schema public > types/database.types.ts`
-- Need to ensure Supabase project ID is correct
-- Should verify if any breaking changes will affect existing queries
-- Consider adding type generation to CI/CD pipeline in future
+   - [x] Update SegmentService to use new functions
+   - [x] Refactor groupFansBySegment to work with new structure
+   - [x] Add error handling for new segment flow
+   - [x] Remove legacy table usage
+
+4. [ ] Testing & Verification
+   - [ ] Create unit tests for new flow
+   - [ ] Test integration with LLM
+   - [ ] Verify data consistency
+   - [ ] Check error handling
+
+#### Implementation Details:
+
+Changes Made:
+
+1. Updated `generateSegments.ts`:
+
+   - Added artistAccountId parameter
+   - Integrated new table functions
+   - Improved error handling
+   - Added return type with success metrics
+
+2. Updated `segmentService.ts`:
+   - Modified generateSegmentsForAccount to work with new return type
+   - Added error handling for segment generation
+   - Updated stats to include fan segment count
+
+Next Steps:
+
+1. [ ] Create unit tests for generateSegments
+2. [ ] Create unit tests for generateSegmentsForAccount
+3. [ ] Test integration with LLM
+4. [ ] Verify data consistency
+
+Would you like me to proceed with creating the unit tests?

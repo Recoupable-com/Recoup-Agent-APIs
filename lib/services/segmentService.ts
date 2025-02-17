@@ -28,7 +28,9 @@ export const generateSegmentsForAccount = async (accountId: string) => {
     const socialIds = socialBatch.map((as) => as.id);
 
     console.log(
-      `Processing social batch ${i / SOCIAL_BATCH_SIZE + 1}/${Math.ceil(accountSocials.length / SOCIAL_BATCH_SIZE)}`
+      `Processing social batch ${i / SOCIAL_BATCH_SIZE + 1}/${Math.ceil(
+        accountSocials.length / SOCIAL_BATCH_SIZE
+      )}`
     );
 
     // Step 2: Get social_posts for this batch of socials
@@ -108,7 +110,10 @@ export const generateSegmentsForAccount = async (accountId: string) => {
   console.log("Starting segment generation with deduped comments:", {
     totalRawComments: totalProcessedComments,
     totalDedupedComments: dedupedComments.length,
-    deduplicationRate: `${((1 - dedupedComments.length / totalProcessedComments) * 100).toFixed(2)}%`,
+    deduplicationRate: `${(
+      (1 - dedupedComments.length / totalProcessedComments) *
+      100
+    ).toFixed(2)}%`,
     sampleComment: dedupedComments[0],
     uniqueArtistSocialIds: [
       ...new Set(dedupedComments.map((c) => c.artist_social_id)),
@@ -118,11 +123,19 @@ export const generateSegmentsForAccount = async (accountId: string) => {
     ].length,
   });
 
-  const segmentIds = await generateSegments(dedupedComments);
-  console.log("Generated segment IDs:", {
-    total: segmentIds.length,
-    uniqueIds: [...new Set(segmentIds)].length,
-    sample: segmentIds.slice(0, 3),
+  const { segmentIds, fanSegmentCount, error } = await generateSegments(
+    dedupedComments,
+    accountId
+  );
+
+  if (error) {
+    console.error("[ERROR] Failed to generate segments:", error);
+    throw error;
+  }
+
+  console.log("Generated segments:", {
+    segmentCount: segmentIds.length,
+    fanSegmentCount,
   });
 
   return {
@@ -135,7 +148,8 @@ export const generateSegmentsForAccount = async (accountId: string) => {
       uniqueFanSocialIds: [
         ...new Set(dedupedComments.map((c) => c.fan_social_id)),
       ].length,
-      uniqueSegmentIds: [...new Set(segmentIds)].length,
+      uniqueSegmentIds: segmentIds.length,
+      fanSegmentCount,
     },
   };
 };

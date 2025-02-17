@@ -15,10 +15,7 @@ export const generateSegments = async (
   comments: Comment[],
   artistAccountId: string
 ): Promise<GenerateSegmentsResult> => {
-  console.log("Starting generateSegments with", comments.length, "comments");
-
   try {
-    // Process comments in larger batches to reduce API calls
     const batchSize = 500;
     const commentBatches: string[][] = [];
 
@@ -27,9 +24,6 @@ export const generateSegments = async (
       commentBatches.push(batch);
     }
 
-    console.log("Split comments into", commentBatches.length, "batches");
-
-    // Generate segments for each batch in parallel with concurrency limit
     const allSegmentNames = new Set<string>();
     const concurrencyLimit = 5;
 
@@ -37,21 +31,14 @@ export const generateSegments = async (
       const batchPromises = commentBatches
         .slice(i, i + concurrencyLimit)
         .map(async (batch, index) => {
-          const batchIndex = i + index;
-          console.log(
-            `Processing batch ${batchIndex + 1}/${commentBatches.length}`
-          );
           try {
             const batchSegmentNames = await generateSegmentNames(batch);
             batchSegmentNames.forEach((name) => allSegmentNames.add(name));
-            console.log(
-              `Completed batch ${batchIndex + 1} with ${batchSegmentNames.length} segments`
-            );
           } catch (error) {
             const errorMessage =
               error instanceof Error ? error.message : String(error);
             console.error(
-              `Error processing batch ${batchIndex + 1}: ${errorMessage.substring(0, 500)}${
+              `Error processing batch ${i + index + 1}: ${errorMessage.substring(0, 500)}${
                 errorMessage.length > 500 ? "..." : ""
               }`
             );
@@ -62,9 +49,7 @@ export const generateSegments = async (
     }
 
     const uniqueSegmentNames = Array.from(allSegmentNames);
-    console.log("Generated", uniqueSegmentNames.length, "unique segment names");
 
-    // Create segments in the segments table
     const { segmentIds, error: createError } = await createSegments({
       segmentNames: uniqueSegmentNames,
     });
@@ -73,7 +58,6 @@ export const generateSegments = async (
       throw createError;
     }
 
-    // Update artist-segment associations
     const { success: updateSuccess, error: updateError } =
       await updateArtistSegments({
         artistAccountId,
@@ -84,14 +68,11 @@ export const generateSegments = async (
       throw updateError || new Error("Failed to update artist segments");
     }
 
-    // Group fans into segments
     const segmentGroups = await groupFansBySegment(
       uniqueSegmentNames,
       comments
     );
-    console.log("Grouped fans into", segmentGroups.length, "segments");
 
-    // Create fan-segment associations
     const fanSegments = segmentGroups.flatMap((group) =>
       group.fan_social_ids.map((fanSocialId) => ({
         fan_social_id: fanSocialId,
@@ -99,11 +80,7 @@ export const generateSegments = async (
       }))
     );
 
-    const {
-      successCount,
-      errorCount,
-      error: fanSegmentError,
-    } = await createFanSegments({
+    const { successCount, error: fanSegmentError } = await createFanSegments({
       fanSegments,
     });
 

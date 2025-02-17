@@ -150,90 +150,29 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 Task Description:
 Refactor create_report to use direct Supabase queries instead of getAgents and remove segment data from report context.
 
-First, let's understand what we have:
+#### Current Status: Testing Phase - Found Issues
 
-1. Available Tools:
+1. [x] First Phase - Core Refactoring:
 
-   - ✅ getArtistSegmentComments - gets comments and social metrics in one call
-   - ✅ createReport - creates initial report record
-   - ✅ updateReport - updates report with content
-   - ✅ sendReportEmail - sends the final report
+   - [x] Remove unused imports
+   - [x] Add import for getArtistSegmentComments
+   - [x] Update function parameters
+   - [x] Implement new flow
+   - [x] Update segment metrics calculation
 
-2. Current Flow (to be replaced):
+2. [x] Second Phase - Report Context:
 
-   ```typescript
-   // 1. Create report
-   const { reportId } = await createReport(artistId);
+   - [x] Remove segments array from context
+   - [x] Verify report generation flow
+   - [x] Verify email formatting
 
-   // 2. Get data via getAgents (to be removed)
-   const { segments, commentIds } = await getAgents(agentId, address);
-   const segment = segments.find((s) => s.name === segmentName);
+3. [x] Final Phase - Testing:
+   - [x] Initial test run
+   - [x] Fixed table name in getFansBySegment to use `artist_fan_segment`
+   - [x] Response handling working as expected
 
-   // 3. Get social metrics (to be removed)
-   const { followerCount, username, avatar } =
-     await getAggregatedAgentSocials(agentId);
+#### Next Steps:
 
-   // 4. Get comments (to be removed)
-   const comments = await getComments(commentIds);
-
-   // 5. Generate and send report
-   const { reportContent, nextSteps } = await getReport(context);
-   await updateReport(reportId, reportContent, nextSteps);
-   await sendReportEmail(reportContent, avatar, username, email, subject);
-   ```
-
-3. New Flow (to implement):
-
-   ```typescript
-   // 1. Create report
-   const { reportId } = await createReport(artistId);
-
-   // 2. Get all data in one call
-   const { comments, socialMetrics } = await getArtistSegmentComments(
-     artistId,
-     segmentName
-   );
-   const { followerCount, username, avatar } = socialMetrics;
-
-   // 3. Generate and send report
-   const { reportContent, nextSteps } = await getReport({
-     comments,
-     segmentName,
-     segmentSize: comments.length,
-     segmentPercentage: calculatePercentage(comments.length, followerCount),
-   });
-
-   await updateReport(reportId, reportContent, nextSteps);
-   await sendReportEmail(reportContent, avatar, username, email, subject);
-   ```
-
-Implementation Plan:
-
-1. [ ] First Phase - Core Refactoring:
-
-   - [ ] Read current create_report implementation
-   - [ ] Implement new flow using getArtistSegmentComments
-   - [ ] Remove getAgents dependency
-   - [ ] Test manually with real data
-
-2. [ ] Second Phase - Report Context:
-
-   - [ ] Update report context interface
-   - [ ] Remove segments array
-   - [ ] Ensure report generation still works
-   - [ ] Verify email formatting
-
-3. [ ] Final Phase - Testing:
-   - [ ] Manual testing with different segment sizes
-   - [ ] Verify report format matches existing
-   - [ ] Check error handling
-   - [ ] Document any edge cases found
-
-Success Criteria:
-
-1. No more getAgents calls
-2. Simplified data flow using getArtistSegmentComments
-3. Clean report context without segment data
-4. Maintains existing report format and email delivery
-
-Would you like me to proceed with the first phase?
+1. [ ] Final verification with real data
+2. [ ] Add unit tests for the refactored flow
+3. [ ] Document the changes in the codebase

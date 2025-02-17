@@ -20,7 +20,7 @@ const getFansBySegment = async (
 
   try {
     const { data, error } = await supabase
-      .from("artist_fan_segments")
+      .from("artist_fan_segment")
       .select("fan_social_id")
       .in("artist_social_id", artistSocialIds)
       .eq("segment_name", segmentName);

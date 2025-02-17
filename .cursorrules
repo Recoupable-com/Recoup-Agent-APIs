@@ -145,34 +145,43 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Step 30 - Refactor create_report
+### Current Task: Step 31 - Add Unit Tests to GitHub Actions
 
 Task Description:
-Refactor create_report to use direct Supabase queries instead of getAgents and remove segment data from report context.
+Add unit tests to the GitHub Actions workflow to run on pull request branches.
 
-#### Current Status: Testing Phase - Found Issues
+#### Current Status: Configuration Phase
 
-1. [x] First Phase - Core Refactoring:
+1. [🔄] First Phase - GitHub Actions Configuration:
 
-   - [x] Remove unused imports
-   - [x] Add import for getArtistSegmentComments
-   - [x] Update function parameters
-   - [x] Implement new flow
-   - [x] Update segment metrics calculation
+   - [x] Review current GitHub Actions workflow
+   - [x] Add test job to workflow
+   - [ ] Configure test environment setup
+   - [ ] Set up test dependencies
 
-2. [x] Second Phase - Report Context:
+2. [ ] Second Phase - Test Setup:
 
-   - [x] Remove segments array from context
-   - [x] Verify report generation flow
-   - [x] Verify email formatting
+   - [ ] Verify Jest configuration
+   - [ ] Ensure test environment variables are properly set
+   - [ ] Configure test database if needed
+   - [ ] Set up test mocks and fixtures
 
-3. [x] Final Phase - Testing:
-   - [x] Initial test run
-   - [x] Fixed table name in getFansBySegment to use `artist_fan_segment`
-   - [x] Response handling working as expected
+3. [ ] Final Phase - Implementation:
+   - [ ] Add test job to run on pull requests
+   - [ ] Configure test reporting
+   - [ ] Add status checks
+   - [ ] Test the workflow with a sample PR
 
 #### Next Steps:
 
-1. [ ] Final verification with real data
-2. [ ] Add unit tests for the refactored flow
-3. [ ] Document the changes in the codebase
+1. [x] Review current .github/workflows/deploy.yaml
+2. [x] Add test job configuration
+3. [ ] Verify Jest configuration and test environment
+4. [ ] Add required secrets to GitHub repository
+
+#### Notes:
+
+- Added test job that runs on pull requests to main branch
+- Reused Node.js and pnpm setup from deploy job
+- Need to ensure SUPABASE_URL and SUPABASE_KEY secrets are available
+- Should verify Jest configuration next

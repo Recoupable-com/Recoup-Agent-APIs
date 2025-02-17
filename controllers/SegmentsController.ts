@@ -18,23 +18,19 @@ export const create_report = async (req: Request, res: Response) => {
   try {
     const { segmentName, email, artistId } = req.body;
 
-    // 1. Create report and return ID immediately
     const { reportId } = await createReport(artistId);
     res.status(200).json({ reportId });
     if (!reportId) return;
 
-    // 2. Get all data in one call
     const { comments, socialMetrics } = await getArtistSegmentComments(
       artistId,
       segmentName
     );
     const { followerCount, username, avatar } = socialMetrics;
 
-    // 3. Calculate segment metrics
     const segmentSize = comments.length;
     const segmentPercentage = ((segmentSize / followerCount) * 100).toFixed(2);
 
-    // 4. Generate report with simplified context
     const context = {
       comments,
       segmentName,
@@ -43,7 +39,6 @@ export const create_report = async (req: Request, res: Response) => {
     };
     const { reportContent, nextSteps } = await getReport(context);
 
-    // 5. Update report and send email
     await updateReport(reportId, reportContent, nextSteps);
     await sendReportEmail(
       reportContent,

@@ -150,84 +150,90 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 Task Description:
 Refactor create_report to use direct Supabase queries instead of getAgents and remove segment data from report context.
 
-Current Implementation Analysis:
+First, let's understand what we have:
 
-1. Location: controllers/SegmentsController.ts
-2. Current Flow:
-   - Creates report record with artistId
-   - Gets segments and commentIds via getAgents(agentId, address)
-   - Finds specific segment by name
-   - Gets social metrics via getAggregatedAgentSocials
-   - Calculates segment size and percentage
-   - Fetches comments from post_comments table
-   - Generates report with segments context
-   - Updates report and sends email
+1. Available Tools:
 
-Available Solution:
-✅ We can use getArtistSegmentComments which:
+   - ✅ getArtistSegmentComments - gets comments and social metrics in one call
+   - ✅ createReport - creates initial report record
+   - ✅ updateReport - updates report with content
+   - ✅ sendReportEmail - sends the final report
 
-- Gets artist's social accounts via getAccountSocials
-- Gets fan comments directly from Supabase
-- Returns both comments and social metrics
-- Has unit tests in place
-
-Refactoring Plan:
-
-1. [x] Review current create_report implementation:
-
-   - [x] Flow mapped out above
-   - [x] Dependencies identified
-   - [x] Data structure understood
-
-2. [ ] Replace getAgents with getArtistSegmentComments:
+2. Current Flow (to be replaced):
 
    ```typescript
-   // Old approach:
+   // 1. Create report
+   const { reportId } = await createReport(artistId);
+
+   // 2. Get data via getAgents (to be removed)
    const { segments, commentIds } = await getAgents(agentId, address);
    const segment = segments.find((s) => s.name === segmentName);
+
+   // 3. Get social metrics (to be removed)
    const { followerCount, username, avatar } =
      await getAggregatedAgentSocials(agentId);
 
-   // New approach:
+   // 4. Get comments (to be removed)
+   const comments = await getComments(commentIds);
+
+   // 5. Generate and send report
+   const { reportContent, nextSteps } = await getReport(context);
+   await updateReport(reportId, reportContent, nextSteps);
+   await sendReportEmail(reportContent, avatar, username, email, subject);
+   ```
+
+3. New Flow (to implement):
+
+   ```typescript
+   // 1. Create report
+   const { reportId } = await createReport(artistId);
+
+   // 2. Get all data in one call
    const { comments, socialMetrics } = await getArtistSegmentComments(
      artistId,
      segmentName
    );
    const { followerCount, username, avatar } = socialMetrics;
+
+   // 3. Generate and send report
+   const { reportContent, nextSteps } = await getReport({
+     comments,
+     segmentName,
+     segmentSize: comments.length,
+     segmentPercentage: calculatePercentage(comments.length, followerCount),
+   });
+
+   await updateReport(reportId, reportContent, nextSteps);
+   await sendReportEmail(reportContent, avatar, username, email, subject);
    ```
 
-3. [ ] Clean up report context:
+Implementation Plan:
 
-   - [ ] Remove segments array from context
-   - [ ] Update context type to reflect new structure:
+1. [ ] First Phase - Core Refactoring:
 
-   ```typescript
-   interface ReportContext {
-     comments: string[];
-     segmentName: string;
-     segmentSize: number;
-     segmentPercentage: string;
-   }
-   ```
+   - [ ] Read current create_report implementation
+   - [ ] Implement new flow using getArtistSegmentComments
+   - [ ] Remove getAgents dependency
+   - [ ] Test manually with real data
 
-4. [ ] Update/Add tests:
-   - [ ] Create new test file: tests/unit/controllers/SegmentsController.test.ts
-   - [ ] Reuse getArtistSegmentComments mocks
-   - [ ] Test report generation with new data structure
+2. [ ] Second Phase - Report Context:
 
-Next Actions:
+   - [ ] Update report context interface
+   - [ ] Remove segments array
+   - [ ] Ensure report generation still works
+   - [ ] Verify email formatting
 
-1. [ ] Create new branch for refactoring
-2. [ ] Implement getArtistSegmentComments integration
-3. [ ] Update report context structure
-4. [ ] Add controller tests
-5. [ ] Test end-to-end flow
+3. [ ] Final Phase - Testing:
+   - [ ] Manual testing with different segment sizes
+   - [ ] Verify report format matches existing
+   - [ ] Check error handling
+   - [ ] Document any edge cases found
 
-Questions Answered:
+Success Criteria:
 
-1. Does create_report need all the data that getArtistSegmentComments provides?
-   - Yes, it needs comments and social metrics (followerCount, username, avatar)
-2. Are there any report-specific transformations needed?
-   - Yes, we still need to calculate segmentSize and segmentPercentage
-3. How should we handle multiple segments in a report?
-   - The new implementation will focus on one segment at a time, which matches the current usage
+1. No more getAgents calls
+2. Simplified data flow using getArtistSegmentComments
+3. Clean report context without segment data
+4. Maintains existing report format and email delivery
+
+Would you like me to proceed with the first phase?

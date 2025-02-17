@@ -135,88 +135,44 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - Keep agent status tracking separate from data processing functions to maintain better separation of concerns
 - Use proper error handling and logging in asynchronous operations to catch and report issues early
 - When implementing in-memory caches, always set a reasonable upper bound and implement an eviction strategy (e.g. FIFO) to prevent memory leaks in long-running processes
+- When setting up Jest with TypeScript:
+  - Place mocks in **mocks** directory adjacent to the mocked module
+  - Keep imports clean without .js extensions in TypeScript files
+  - Use simpler Jest configurations and remove unnecessary module mappers
+  - Be explicit about ESM vs CommonJS choice in the configuration
+  - Start with "happy path" tests before adding edge cases
+  - Mock external dependencies at the correct level (as close to the source as possible)
 
 # Scratchpad
 
-### Current Task: Step 29 - Create Mermaid Chart for create_report API
+### Current Task: Step 30 - Refactor create_report
 
 Task Description:
-Create a mermaid chart to document the flow of the create_report API endpoint and organize all mermaid charts in a new folder.
+Refactor create_report to use direct Supabase queries instead of getAgents and remove segment data from report context.
 
-Current Situation:
+#### Current Status: Testing Phase - Found Issues
 
-1. Requirements Analysis:
-   [x] Current State:
+1. [x] First Phase - Core Refactoring:
 
-   - No mermaid chart exists for create_report API
-   - Mermaid charts are scattered across different locations
+   - [x] Remove unused imports
+   - [x] Add import for getArtistSegmentComments
+   - [x] Update function parameters
+   - [x] Implement new flow
+   - [x] Update segment metrics calculation
 
-   [x] Required Changes:
+2. [x] Second Phase - Report Context:
 
-   - Create new mermaid chart for create_report API flow
-   - Create a dedicated folder for all mermaid charts
-   - Move existing mermaid charts to new folder
+   - [x] Remove segments array from context
+   - [x] Verify report generation flow
+   - [x] Verify email formatting
 
-2. API Flow Components to Document:
-   [ ] Request Flow:
+3. [x] Final Phase - Testing:
+   - [x] Initial test run
+   - [x] Fixed table name in getFansBySegment to use `artist_fan_segment`
+   - [x] Response handling working as expected
 
-   - Input parameters (agentId, address, segmentName, email, artistId)
-   - Request validation
-   - Initial response with reportId
+#### Next Steps:
 
-   [ ] Background Processing:
-
-   - Agent data retrieval
-   - Segment analysis
-   - Comment processing
-   - Report generation
-
-   [ ] Database Interactions:
-
-   - segment_reports table operations
-   - post_comments table queries
-   - socials table lookups
-
-3. Implementation Plan:
-   [ ] Phase 1 - Setup:
-
-   - Create new 'docs/mermaid' directory
-   - Move existing mermaid charts
-   - Create create_report.mermaid file
-
-   [ ] Phase 2 - Chart Creation:
-
-   - Document request flow
-   - Document background processing
-   - Document database interactions
-   - Add error handling paths
-
-   [ ] Phase 3 - Review & Integration:
-
-   - Verify chart accuracy
-   - Add comments/documentation
-   - Update README if needed
-
-Progress:
-[x] Analyzed requirements
-[x] Identified API components to document
-[x] Created mermaid directory
-[x] Moved existing mermaid charts
-[x] Created initial chart structure
-[ ] Completed chart documentation
-
-Next Actions:
-
-1. Review chart for accuracy and completeness
-2. Add any missing error handling paths
-3. Add detailed notes about data structures
-4. Review and verify chart accuracy
-5. Update README to reflect new mermaid chart location
-
-Future Improvements:
-
-1. Add sequence numbers to steps
-2. Include timing estimates
-3. Document rate limits
-4. Add links to relevant code files
-5. Include example data payloads
+1. [ ] Final verification with real data
+2. [ ] Add unit tests for the refactored flow
+3. [ ] Document the changes in the codebase

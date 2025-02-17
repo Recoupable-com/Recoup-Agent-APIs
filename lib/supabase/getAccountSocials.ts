@@ -1,4 +1,4 @@
-import supabase from "./serverClient.js";
+import supabase from "./serverClient";
 
 interface SocialAccount {
   id: string;

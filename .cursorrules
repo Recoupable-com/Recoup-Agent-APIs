@@ -145,43 +145,43 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Step 31 - Add Unit Tests to GitHub Actions
+### Current Task: Step 32 - Update Schema Typings
 
 Task Description:
-Add unit tests to the GitHub Actions workflow to run on pull request branches.
+Update the schema typings to match the latest database schema changes using Supabase CLI.
 
-#### Current Status: Configuration Phase
+#### Current Status: Planning Phase
 
-1. [🔄] First Phase - GitHub Actions Configuration:
+1. [ ] First Phase - Environment Setup:
 
-   - [x] Review current GitHub Actions workflow
-   - [x] Add test job to workflow
-   - [ ] Configure test environment setup
-   - [ ] Set up test dependencies
+   - [ ] Review current schema types
+   - [ ] Verify Supabase CLI installation
+   - [ ] Check project configuration
+   - [ ] Ensure access to Supabase project settings
 
-2. [ ] Second Phase - Test Setup:
+2. [ ] Second Phase - Schema Update:
 
-   - [ ] Verify Jest configuration
-   - [ ] Ensure test environment variables are properly set
-   - [ ] Configure test database if needed
-   - [ ] Set up test mocks and fixtures
+   - [ ] Run schema type generation
+   - [ ] Compare old and new types
+   - [ ] Identify breaking changes
+   - [ ] Update affected code
 
-3. [ ] Final Phase - Implementation:
-   - [ ] Add test job to run on pull requests
-   - [ ] Configure test reporting
-   - [ ] Add status checks
-   - [ ] Test the workflow with a sample PR
+3. [ ] Final Phase - Verification:
+   - [ ] Run TypeScript compiler
+   - [ ] Fix any type errors
+   - [ ] Test affected functionality
+   - [ ] Update documentation if needed
 
 #### Next Steps:
 
-1. [x] Review current .github/workflows/deploy.yaml
-2. [x] Add test job configuration
-3. [ ] Verify Jest configuration and test environment
-4. [ ] Add required secrets to GitHub repository
+1. [ ] Review current types/database.types.ts
+2. [ ] Check package.json for existing update-types script
+3. [ ] Set up Supabase CLI if needed
+4. [ ] Generate and apply new types
 
 #### Notes:
 
-- Added test job that runs on pull requests to main branch
-- Reused Node.js and pnpm setup from deploy job
-- Need to ensure SUPABASE_URL and SUPABASE_KEY secrets are available
-- Should verify Jest configuration next
+- Current script in package.json: `update-types`: `npx supabase gen types typescript --project-id godremdqwajrwazhbrue --schema public > types/database.types.ts`
+- Need to ensure Supabase project ID is correct
+- Should verify if any breaking changes will affect existing queries
+- Consider adding type generation to CI/CD pipeline in future

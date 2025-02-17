@@ -447,6 +447,42 @@ export type Database = {
           },
         ]
       }
+      artist_segments: {
+        Row: {
+          artist_account_id: string
+          id: string
+          segment_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          artist_account_id: string
+          id?: string
+          segment_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          artist_account_id?: string
+          id?: string
+          segment_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_segments_artist_account_id_fkey"
+            columns: ["artist_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_segments_segment_id_fkey"
+            columns: ["segment_id"]
+            isOneToOne: false
+            referencedRelation: "segments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_customers: {
         Row: {
           account_id: string
@@ -591,6 +627,42 @@ export type Database = {
           url?: string | null
         }
         Relationships: []
+      }
+      fan_segments: {
+        Row: {
+          fan_social_id: string
+          id: string
+          segment_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          fan_social_id: string
+          id?: string
+          segment_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          fan_social_id?: string
+          id?: string
+          segment_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fan_segments_fan_social_id_fkey"
+            columns: ["fan_social_id"]
+            isOneToOne: false
+            referencedRelation: "socials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fan_segments_segment_id_fkey"
+            columns: ["segment_id"]
+            isOneToOne: false
+            referencedRelation: "segments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fans: {
         Row: {
@@ -1630,6 +1702,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      segments: {
+        Row: {
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       social_posts: {
         Row: {

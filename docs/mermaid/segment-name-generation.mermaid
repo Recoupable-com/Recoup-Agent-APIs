@@ -4,7 +4,6 @@ sequenceDiagram
     participant Service as SegmentService
     participant DB as Supabase
     participant LLM as LLM Service
-    participant Storage as Artist Fan Segments
 
     Client->>API: POST /api/generate_segments {accountId}
     Note over API: SegmentsController.generate_segments
@@ -32,6 +31,14 @@ sequenceDiagram
         LLM-->>Service: Return segment names
     end
 
+    Service->>DB: createSegments()
+    Note over DB: Create in segments table
+    DB-->>Service: Return segment IDs
+
+    Service->>DB: updateArtistSegments()
+    Note over DB: Update artist_segments table
+    DB-->>Service: Confirm artist association
+
     Service->>Service: groupFansBySegment
     
     loop For each comment batch
@@ -40,15 +47,14 @@ sequenceDiagram
         LLM-->>Service: Return fan groupings
     end
 
-    Service->>Storage: createFanSegments
-    Storage->>DB: Save to artist_fan_segment table
-    DB-->>Storage: Confirm save
-    Storage-->>Service: Return segment IDs
+    Service->>DB: createFanSegments()
+    Note over DB: Create in fan_segments table
+    DB-->>Service: Confirm fan associations
 
     Service-->>API: Return {segmentIds, stats}
     API-->>Client: Return success response
 
-    Note over Client,Storage: Error Handling
+    Note over Client,DB: Error Handling
     alt Error occurs
         Service-->>API: Throw error with details
         API-->>Client: Return error response (400/500)

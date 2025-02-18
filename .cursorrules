@@ -145,7 +145,58 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Step 34 - API - create_report - segmentId - one param
+### Current Task: Review and Update segment-name-generation.mermaid
+
+#### Analysis Plan
+
+1. [ ] Review current implementation files:
+
+   - [ ] lib/services/segmentService.ts
+   - [ ] lib/generateSegments.ts
+   - [ ] lib/segments/generateSegmentNames.ts
+   - [ ] lib/segments/groupFansBySegment.ts
+
+2. [ ] Compare with mermaid chart flow:
+
+   - [ ] Verify API endpoint and parameters
+   - [ ] Check data fetching sequence
+   - [ ] Validate LLM interaction points
+   - [ ] Review database operations
+
+3. [ ] Initial Observations from Chart:
+   - Potential discrepancies:
+     - Chart shows separate LLM calls for grouping fans
+     - Chart may be missing deduplication steps
+     - Error handling flow might need updates
+
+#### Research Steps
+
+1. [ ] Check generateSegmentsForAccount implementation:
+
+   - [ ] Verify social data fetching sequence
+   - [ ] Check comment processing flow
+   - [ ] Review deduplication logic
+
+2. [ ] Examine LLM integration:
+
+   - [ ] Check actual LLM call points
+   - [ ] Verify instruction templates used
+   - [ ] Compare batch processing implementation
+
+3. [ ] Review database operations:
+   - [ ] Verify table structure matches chart
+   - [ ] Check operation sequence
+   - [ ] Validate error handling
+
+Next Steps:
+
+1. Complete the research steps
+2. Document findings
+3. Update mermaid chart if needed
+
+---
+
+### Previous Task: Step 34 - API - create_report - segmentId - one param
 
 Task Description:
 Update the new report API endpoint to only require a single parameter (segmentId) instead of both artistId and segmentName.

@@ -24,7 +24,6 @@ export const create_report = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "segmentId is required" });
     }
 
-    // Get artist account ID from segment
     const { artistAccountId, error: artistError } =
       await getArtistBySegmentId(segmentId);
     if (artistError || !artistAccountId) {
@@ -32,7 +31,6 @@ export const create_report = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Artist not found for segment" });
     }
 
-    // Get artist's emails
     const { emails, error: emailsError } =
       await getArtistEmails(artistAccountId);
     if (emailsError || emails.length === 0) {
@@ -40,13 +38,11 @@ export const create_report = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "No emails found for artist" });
     }
 
-    // Create report
     const { reportId } = await createReport(artistAccountId);
     res.status(200).json({ reportId });
     if (!reportId) return;
 
     try {
-      // Get segment comments and metrics
       const { comments, socialMetrics, segmentName } =
         await getArtistSegmentComments(artistAccountId, segmentId);
       const { followerCount, username, avatar } = socialMetrics;
@@ -66,7 +62,6 @@ export const create_report = async (req: Request, res: Response) => {
 
       await updateReport(reportId, reportContent, nextSteps);
 
-      // Send report to all emails
       for (const email of emails) {
         await sendReportEmail(
           reportContent,
@@ -78,8 +73,6 @@ export const create_report = async (req: Request, res: Response) => {
       }
     } catch (error) {
       console.error("[ERROR] Failed to generate report content:", error);
-      // Don't throw - let the process continue
-      // The client already has their response with the reportId
     }
   } catch (error) {
     console.error("[ERROR] Failed to create report:", error);

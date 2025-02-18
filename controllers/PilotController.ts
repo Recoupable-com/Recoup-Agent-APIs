@@ -8,7 +8,6 @@ import { createAgent } from "../lib/supabase/createAgent";
 import updateAgentStatus from "../lib/supabase/updateAgentStatus";
 import createAgentStatus from "../lib/supabase/createAgentStatus";
 import runSpotifyAgent from "../agents/runSpotifyAgent";
-import runTikTokAgent from "../agents/runTikTokAgent";
 import runTwitterAgent from "../agents/runTwitterAgent";
 import { generateSegmentsForAccount } from "../lib/services/segmentService";
 
@@ -226,7 +225,7 @@ export class PilotController {
       tasks.push(runTwitterAgent(agentId, handles.twitter, artistId || ""));
     }
     if (handles.tiktok?.trim()) {
-      tasks.push(runTikTokAgent(agentId, handles.tiktok, artistId || ""));
+      tasks.push(processPlatform("TIKTOK", handles.tiktok));
     }
     if (handles.spotify?.trim()) {
       tasks.push(runSpotifyAgent(agentId, handles.spotify, artistId || ""));

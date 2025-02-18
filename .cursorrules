@@ -145,64 +145,56 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Test TikTok Scraper Integration
+### Current Task: Remove Problematic Progress Updates in TikTok Scraper
 
-#### Analysis
+#### Analysis of Progress Update Points
 
-We need to test the TikTok scraper integration with the agent system through the API endpoint.
+1. Files to Modify:
 
-#### Integration Points
+   - `lib/tiktok/getVideoComments.ts`: Currently causing errors by trying to update progress
+   - `lib/scraping/platforms/tiktok/TikTokScraper.ts`: Passes empty agent_status_id
 
-1. Agent endpoint: `/api/agent/run`
-2. Required parameters:
-   - handle: TikTok username
-   - platform: "tiktok"
-   - accountId: Artist account ID
+2. Current Implementation:
 
-#### Test Plan
+```typescript
+// In getVideoComments.ts
+await updateAgentStatus(agent_status_id, STEP_OF_AGENT.POST_COMMENTS, {
+  progress: currentProgress,
+});
+```
 
-1. [ ] Manual API Test
+#### Modification Plan
 
-   ```bash
-   curl -X POST http://localhost:3000/api/agent/run \
-     -H "Content-Type: application/json" \
-     -d '{
-       "handle": "charlidamelio",
-       "platform": "tiktok",
-       "accountId": "test-account-123"
-     }'
-   ```
+1. [ ] Remove progress updates from getVideoComments.ts:
 
-2. [ ] Verify Response Structure
+   - [ ] Remove updateAgentStatus import
+   - [ ] Remove all progress update calls
+   - [ ] Keep only the core comment fetching logic
 
-   - Should return agent_id
-   - Should start scraping process
+2. [ ] Simplify TikTokScraper.ts:
 
-3. [ ] Monitor Agent Status
+   - [ ] Remove agentStatusId property (not needed if we're not updating progress)
+   - [ ] Remove setAgentStatusId method
+   - [ ] Update getVideoComments call to remove agent_status_id parameter
 
-   ```bash
-   curl http://localhost:3000/api/agent/status/:agent_id
-   ```
+3. [ ] Test changes:
+   - [ ] Verify scraping still works
+   - [ ] Confirm no more "Cannot read properties of null" errors
+   - [ ] Check final status updates still work
 
-4. [ ] Check Database Records
-   - Verify social record created
-   - Verify posts saved
-   - Verify comments saved
+#### Expected Result
 
-Next Steps:
+- Remove intermediate progress updates while keeping final status updates
+- Maintain core scraping functionality
+- Eliminate null reference errors
 
-1. Run initial agent test
-2. Monitor logs for scraping progress
-3. Verify data in database
+#### Next Steps
 
-Note: This approach tests the full integration path rather than just the scraper unit tests.
+1. Remove progress updates from getVideoComments.ts
+2. Update TikTokScraper to match
+3. Test the changes
 
-#### Progress Tracking
-
-1. [x] Implemented TikTokScraper
-2. [x] Created mock implementations
-3. [ ] Tested API integration
-4. [ ] Verified data flow
+Note: We're only removing the problematic progress updates during comment scraping. The final status updates in PilotController (FINISHED, ERROR states) will remain unchanged since they work correctly.
 
 ### Previous Task: Step 34 - API - create_report - segmentId - one param
 

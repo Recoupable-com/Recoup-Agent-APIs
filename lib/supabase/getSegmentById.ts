@@ -12,14 +12,11 @@ interface SegmentResponse {
  */
 const getSegmentById = async (segmentId: string): Promise<SegmentResponse> => {
   try {
-    console.log("[DEBUG] Getting segment name for:", segmentId);
-
     const { data, error } = await supabase
       .from("segments")
       .select("name")
       .eq("id", segmentId)
       .single();
-
     if (error) {
       console.error("[ERROR] Failed to get segment:", error);
       return {
@@ -27,16 +24,12 @@ const getSegmentById = async (segmentId: string): Promise<SegmentResponse> => {
         error: new Error("Failed to get segment"),
       };
     }
-
     if (!data) {
-      console.log("[DEBUG] No segment found for ID:", segmentId);
       return {
         name: null,
         error: new Error("No segment found"),
       };
     }
-
-    console.log("[DEBUG] Found segment name:", data.name);
     return {
       name: data.name,
       error: null,

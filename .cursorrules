@@ -145,66 +145,64 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Update TikTok Scraper Architecture
+### Current Task: Test TikTok Scraper Integration
 
-#### Task Description
+#### Analysis
 
-Update the TikTok scraper to use the new Scraper and AgentService architecture, aligning with the Instagram scraper's implementation.
+We need to test the TikTok scraper integration with the agent system through the API endpoint.
 
-#### Analysis Plan
+#### Integration Points
 
-1. [ ] Review Current Architecture:
+1. Agent endpoint: `/api/agent/run`
+2. Required parameters:
+   - handle: TikTok username
+   - platform: "tiktok"
+   - accountId: Artist account ID
 
-   - [ ] Examine current TikTok scraper implementation
-   - [ ] Identify legacy components and patterns
-   - [ ] Document current data flow and error handling
+#### Test Plan
 
-2. [ ] Study Instagram Reference:
+1. [ ] Manual API Test
 
-   - [ ] Review Instagram scraper's new architecture
-   - [ ] Identify key architectural components
-   - [ ] Document successful patterns to replicate
+   ```bash
+   curl -X POST http://localhost:3000/api/agent/run \
+     -H "Content-Type: application/json" \
+     -d '{
+       "handle": "charlidamelio",
+       "platform": "tiktok",
+       "accountId": "test-account-123"
+     }'
+   ```
 
-3. [ ] Design Changes:
+2. [ ] Verify Response Structure
 
-   - [ ] Map out new TikTok scraper structure
-   - [ ] Plan database schema updates if needed
-   - [ ] Design error handling and logging
-   - [ ] Plan status tracking integration
+   - Should return agent_id
+   - Should start scraping process
 
-4. [ ] Implementation Requirements:
+3. [ ] Monitor Agent Status
 
-   - [ ] Agent Status Integration:
-     - [ ] Add PROFILE step
-     - [ ] Add POSTURLS step
-     - [ ] Add POST_COMMENTS step
-     - [ ] Add FINISHED step
-   - [ ] Database Operations:
-     - [ ] Save posts to posts table
-     - [ ] Save comments to post_comments table
-     - [ ] Link with social_posts table
-   - [ ] Error Handling:
-     - [ ] Add comprehensive error handling
-     - [ ] Implement graceful failure modes
-     - [ ] Add detailed logging
-   - [ ] Progress Tracking:
-     - [ ] Implement status updates
-     - [ ] Add progress percentage tracking
-     - [ ] Log milestone completions
+   ```bash
+   curl http://localhost:3000/api/agent/status/:agent_id
+   ```
 
-5. [ ] Testing Strategy:
-   - [ ] Unit tests for new components
-   - [ ] Integration tests for data flow
-   - [ ] Error handling test cases
-   - [ ] Progress tracking validation
+4. [ ] Check Database Records
+   - Verify social record created
+   - Verify posts saved
+   - Verify comments saved
 
 Next Steps:
 
-1. Begin with reviewing current TikTok scraper implementation
-2. Document the differences from Instagram scraper
-3. Create detailed implementation plan
+1. Run initial agent test
+2. Monitor logs for scraping progress
+3. Verify data in database
 
----
+Note: This approach tests the full integration path rather than just the scraper unit tests.
+
+#### Progress Tracking
+
+1. [x] Implemented TikTokScraper
+2. [x] Created mock implementations
+3. [ ] Tested API integration
+4. [ ] Verified data flow
 
 ### Previous Task: Step 34 - API - create_report - segmentId - one param
 

@@ -10,6 +10,7 @@ import createAgentStatus from "../lib/supabase/createAgentStatus";
 import runSpotifyAgent from "../agents/runSpotifyAgent";
 import runTwitterAgent from "../agents/runTwitterAgent";
 import { generateSegmentsForAccount } from "../lib/services/segmentService";
+import { getProfileUrl } from "../lib/utils/getProfileUrl";
 
 type DbAgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 
@@ -156,7 +157,7 @@ export class PilotController {
         const { social, error: socialError } =
           await this.agentService.createSocial({
             username: handle.replaceAll("@", ""),
-            profile_url: `https://instagram.com/${handle.replaceAll("@", "")}`,
+            profile_url: getProfileUrl(platform, handle),
           });
         if (socialError || !social) {
           console.error(

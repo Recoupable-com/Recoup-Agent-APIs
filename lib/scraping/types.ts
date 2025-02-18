@@ -35,6 +35,7 @@ export interface ScrapedPost {
  */
 export interface ScrapedComment {
   post_url: string;
+  post_id?: string; // Optional post_id field for TikTok API responses
   comment: string;
   username: string;
   profile_url: string;

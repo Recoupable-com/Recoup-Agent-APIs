@@ -5,14 +5,17 @@ jest.mock("../../../lib/supabase/serverClient");
 jest.mock("../../../lib/supabase/getAccountSocials");
 jest.mock("../../../lib/supabase/getFansBySegment");
 jest.mock("../../../lib/supabase/getCommentsBySocialIds");
+jest.mock("../../../lib/supabase/getSegmentById");
 
 import getArtistSegmentComments from "../../../lib/supabase/getArtistSegmentComments";
 import { getAccountSocials } from "../../../lib/supabase/getAccountSocials";
 import getFansBySegment from "../../../lib/supabase/getFansBySegment";
 import getCommentsBySocialIds from "../../../lib/supabase/getCommentsBySocialIds";
+import getSegmentById from "../../../lib/supabase/getSegmentById";
 
 describe("getArtistSegmentComments", () => {
   const mockArtistId = "artist123";
+  const mockSegmentId = "segment123";
   const mockSegmentName = "superfans";
 
   beforeEach(() => {
@@ -20,6 +23,11 @@ describe("getArtistSegmentComments", () => {
     jest.clearAllMocks();
 
     // Setup default mock responses
+    (getSegmentById as jest.Mock).mockResolvedValue({
+      name: mockSegmentName,
+      error: null,
+    });
+
     (getAccountSocials as jest.Mock).mockResolvedValue({
       status: "success",
       socials: [
@@ -44,10 +52,7 @@ describe("getArtistSegmentComments", () => {
   });
 
   it("should successfully fetch comments and metrics for valid inputs", async () => {
-    const result = await getArtistSegmentComments(
-      mockArtistId,
-      mockSegmentName
-    );
+    const result = await getArtistSegmentComments(mockArtistId, mockSegmentId);
 
     expect(result).toEqual({
       comments: ["Great music!", "Awesome show!"],
@@ -56,14 +61,13 @@ describe("getArtistSegmentComments", () => {
         username: "testartist",
         avatar: "https://example.com/avatar.jpg",
       },
+      segmentName: mockSegmentName,
     });
 
     // Verify function calls
+    expect(getSegmentById).toHaveBeenCalledWith(mockSegmentId);
     expect(getAccountSocials).toHaveBeenCalledWith(mockArtistId);
-    expect(getFansBySegment).toHaveBeenCalledWith(
-      ["social123"],
-      mockSegmentName
-    );
+    expect(getFansBySegment).toHaveBeenCalledWith(mockSegmentId);
     expect(getCommentsBySocialIds).toHaveBeenCalledWith(["fan123", "fan456"]);
   });
 });

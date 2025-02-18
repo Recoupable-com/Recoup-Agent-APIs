@@ -13,42 +13,69 @@ import createReport from "../lib/supabase/createReport";
 import updateReport from "../lib/supabase/updateReport";
 import { generateSegmentsForAccount } from "../lib/services/segmentService";
 import getArtistSegmentComments from "../lib/supabase/getArtistSegmentComments";
+import getArtistBySegmentId from "../lib/supabase/getArtistBySegmentId";
+import getArtistEmails from "../lib/supabase/getArtistEmails";
 
 export const create_report = async (req: Request, res: Response) => {
   try {
-    const { segmentName, email, artistId } = req.body;
+    const { segmentId } = req.body;
 
-    const { reportId } = await createReport(artistId);
+    if (!segmentId) {
+      return res.status(400).json({ error: "segmentId is required" });
+    }
+
+    const { artistAccountId, error: artistError } =
+      await getArtistBySegmentId(segmentId);
+    if (artistError || !artistAccountId) {
+      console.error("[ERROR] Failed to get artist:", artistError);
+      return res.status(404).json({ error: "Artist not found for segment" });
+    }
+
+    const { emails, error: emailsError } =
+      await getArtistEmails(artistAccountId);
+    if (emailsError || emails.length === 0) {
+      console.error("[ERROR] Failed to get artist emails:", emailsError);
+      return res.status(404).json({ error: "No emails found for artist" });
+    }
+
+    const { reportId } = await createReport(artistAccountId);
     res.status(200).json({ reportId });
     if (!reportId) return;
 
-    const { comments, socialMetrics } = await getArtistSegmentComments(
-      artistId,
-      segmentName
-    );
-    const { followerCount, username, avatar } = socialMetrics;
+    try {
+      const { comments, socialMetrics, segmentName } =
+        await getArtistSegmentComments(artistAccountId, segmentId);
+      const { followerCount, username, avatar } = socialMetrics;
 
-    const segmentSize = comments.length;
-    const segmentPercentage = ((segmentSize / followerCount) * 100).toFixed(2);
+      const segmentSize = comments.length;
+      const segmentPercentage = ((segmentSize / followerCount) * 100).toFixed(
+        2
+      );
 
-    const context = {
-      comments,
-      segmentName,
-      segmentSize,
-      segmentPercentage,
-    };
-    const { reportContent, nextSteps } = await getReport(context);
+      const context = {
+        comments,
+        segmentName,
+        segmentSize,
+        segmentPercentage,
+      };
+      const { reportContent, nextSteps } = await getReport(context);
 
-    await updateReport(reportId, reportContent, nextSteps);
-    await sendReportEmail(
-      reportContent,
-      avatar,
-      username,
-      email,
-      `${segmentName} Report`
-    );
+      await updateReport(reportId, reportContent, nextSteps);
+
+      for (const email of emails) {
+        await sendReportEmail(
+          reportContent,
+          avatar,
+          username,
+          email,
+          `${segmentName} Report`
+        );
+      }
+    } catch (error) {
+      console.error("[ERROR] Failed to generate report content:", error);
+    }
   } catch (error) {
-    console.error(error);
+    console.error("[ERROR] Failed to create report:", error);
     return res.status(500).json({ error: "API request failed" });
   }
 };

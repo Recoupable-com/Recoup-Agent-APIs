@@ -1,6 +1,7 @@
 import { getAccountSocials } from "./getAccountSocials";
 import getFansBySegment from "./getFansBySegment";
 import getCommentsBySocialIds from "./getCommentsBySocialIds";
+import getSegmentById from "./getSegmentById";
 
 interface ArtistSegmentCommentsResponse {
   comments: string[];
@@ -9,23 +10,27 @@ interface ArtistSegmentCommentsResponse {
     username: string;
     avatar: string;
   };
+  segmentName: string;
 }
 
 const getArtistSegmentComments = async (
   artistId: string,
-  segmentName: string
+  segmentId: string
 ): Promise<ArtistSegmentCommentsResponse> => {
   try {
+    const { name: segmentName, error: segmentError } =
+      await getSegmentById(segmentId);
+    if (segmentError || !segmentName) {
+      throw new Error("Failed to get segment name");
+    }
+
     const { status, socials } = await getAccountSocials(artistId);
     if (status === "error" || !socials.length) {
       throw new Error("Failed to fetch social accounts");
     }
-    const socialIds = socials.map((s) => s.id);
 
-    const { fanSocialIds, error: fansError } = await getFansBySegment(
-      socialIds,
-      segmentName
-    );
+    const { fanSocialIds, error: fansError } =
+      await getFansBySegment(segmentId);
     if (fansError) {
       throw fansError;
     }
@@ -48,6 +53,7 @@ const getArtistSegmentComments = async (
     return {
       comments,
       socialMetrics,
+      segmentName,
     };
   } catch (error) {
     throw error instanceof Error

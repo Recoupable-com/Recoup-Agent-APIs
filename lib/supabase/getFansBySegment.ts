@@ -7,23 +7,15 @@ interface FansBySegmentResponse {
 }
 
 const getFansBySegment = async (
-  artistSocialIds: string[],
-  segmentName: string
+  segmentId: string
 ): Promise<FansBySegmentResponse> => {
-  console.log(
-    "[DEBUG] Fetching fans for segment",
-    segmentName,
-    "across",
-    artistSocialIds.length,
-    "artist socials"
-  );
+  console.log("[DEBUG] Fetching fans for segment", segmentId);
 
   try {
     const { data, error } = await supabase
-      .from("artist_fan_segment")
+      .from("fan_segments")
       .select("fan_social_id")
-      .in("artist_social_id", artistSocialIds)
-      .eq("segment_name", segmentName);
+      .eq("segment_id", segmentId);
 
     if (error) {
       console.error("[ERROR] Failed to fetch fan segments:", error);

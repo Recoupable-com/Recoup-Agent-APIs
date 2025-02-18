@@ -145,29 +145,54 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Step 33 - Segment Generator - New Segments Tables
+### Current Task: Step 34 - API - create_report - segmentId - one param
 
 Task Description:
-Create unit tests for the new segment generation functionality, starting with generateSegments.ts.
+Update the new report API endpoint to only require a single parameter (segmentId) instead of both artistId and segmentName.
 
-#### Current Status: Testing Phase - generateSegments.ts
+#### Progress
 
-1. [x] Initial attempts
+1. [x] Review current implementation
+2. [x] Design changes
+3. [x] Create Supabase query functions
+4. [x] Implementation
+5. [x] Fix Email Lookup Logic
+6. [x] Update getArtistSegmentComments
+   - [x] Modify function signature
+   - [x] Update getFansBySegment
+   - [x] Update error handling and logging
 
-   - [✗] Failed due to module resolution issues
-   - [✗] Complex test setup causing problems
-   - [✗] Simplified mocking still failing
+#### New Issue: Handle No Comments Case
 
-2. [x] Ultra-minimal Approach
-   - [x] Mock entire generateSegments module
-   - [x] Single test case
-   - [x] No dependency imports
-   - [ ] Verify if this passes
+Problem:
+
+- App crashes when no comments are found for a segment
+- Current behavior stops the entire app process when a report fails
+- Need to handle report failure gracefully without crashing
+
+Root Cause:
+
+1. Unhandled error in async report generation process
+2. Error propagates up and crashes the Node process
+3. No try-catch around async report generation
+
+Design Decision:
+
+- Keep early response for better UX (non-blocking)
+- Let report generation continue asynchronously
+- Handle failures gracefully without crashing app
+
+Action Items:
+
+1. [x] Update error handling in async report generation:
+   - [x] Add try-catch around report generation logic
+   - [x] Log errors appropriately
+   - [x] Allow process to continue even if report fails
+2. [ ] Add test cases:
+   - [ ] Test empty comments scenario
+   - [ ] Verify app continues running after report failure
 
 Next Steps:
 
-1. [ ] Run ultra-minimal test
-2. [ ] If it fails, remove unit tests and try a different approach
-3. [ ] If it passes, gradually add more test coverage
-
-Would you like me to run the test?
+1. Add test cases to verify error handling
+2. Test the complete flow

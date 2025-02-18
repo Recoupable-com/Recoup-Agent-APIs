@@ -1,50 +1,71 @@
 sequenceDiagram
     participant Client
     participant API as /api/create_report
-    participant ReportDB as Segment Reports DB
-    participant AgentSvc as Agent Service
-    participant CommentDB as Post Comments DB
-    participant SocialDB as Socials DB
+    participant DB as Supabase
     participant Report as Report Generator
     participant Email as Email Service
+    participant Logger as Logger Service
 
     Client->>API: POST /api/create_report
-    Note over Client,API: {agentId, address, segmentName, email, artistId}
+    Note over Client,API: {segmentId}
+    
+    alt Invalid Parameters
+        API-->>Client: Return error response (400)<br/>Missing segmentId
+    end
 
-    API->>ReportDB: createReport(artistId)
-    ReportDB-->>API: Return reportId
+    API->>DB: getArtistBySegmentId(segmentId)
+    DB-->>API: Return artistAccountId
+    
+    alt Artist Not Found
+        API-->>Client: Return error response (404)<br/>Artist not found for segment
+    end
+
+    API->>DB: getArtistEmails(artistAccountId)
+    DB-->>API: Return emails[]
+    
+    alt No Emails Found
+        API-->>Client: Return error response (404)<br/>No emails found for artist
+    end
+
+    API->>DB: createReport(artistAccountId)
+    DB-->>API: Return reportId
     API-->>Client: Return {reportId}
 
     Note over API: Async Processing Begins
 
-    API->>AgentSvc: getAgents(agentId, address)
-    AgentSvc-->>API: Return {segments, commentIds}
+    par Async Report Generation
+        API->>DB: getArtistSegmentComments(artistAccountId, segmentId)
+        Note over DB: 1. Get segment name<br/>2. Get account socials<br/>3. Get fans in segment<br/>4. Get comments from fans
+        DB-->>API: Return {comments, socialMetrics, segmentName}
 
-    API->>SocialDB: Get agent socials
-    SocialDB-->>API: Return {followerCount, username, avatar}
+        API->>Report: Generate report content
+        Note over Report: Process comments<br/>Calculate segment metrics<br/>Format report data
+        Report-->>API: Return {reportContent, nextSteps}
 
-    API->>CommentDB: Get comments by IDs
-    Note over CommentDB: Limit to 100 comments
-    CommentDB-->>API: Return post_comments
+        API->>DB: updateReport(reportId, content)
+        DB-->>API: Confirm update
 
-    API->>Report: Generate report content
-    Note over Report: Process segments and comments<br/>Calculate segment metrics<br/>Format report data
-    Report-->>API: Return {reportContent, nextSteps}
+        loop For each email
+            API->>Email: sendReportEmail
+            Note over Email: Send with report content,<br/>avatar, username, and segment name
+            Email-->>API: Confirm sent
+        end
 
-    API->>ReportDB: updateReport(reportId, content)
-    ReportDB-->>API: Confirm update
+        alt Report Generation Error
+            API->>Logger: Log error details
+            Note over Logger: Non-blocking error handling
+        end
+    end
 
-    API->>Email: sendReportEmail
-    Note over Email: Send to provided email address<br/>with report content and metrics
-    Email-->>API: Confirm sent
-
-    Note over Client,Email: Error Handling
+    Note over Client,Logger: Error Handling
     alt Database Error
-        ReportDB-->>API: Database error
-        API-->>Client: Return error response (500)<br/>Database operation failed
-    else Agent Not Found
-        AgentSvc-->>API: Agent not found
-        API-->>Client: Return error response (404)<br/>Invalid agent ID
-    else Invalid Parameters
-        API-->>Client: Return error response (400)<br/>Missing or invalid parameters
+        DB-->>API: Database error
+        API->>Logger: Log database error
+        API-->>Client: Return error response (500)
+    else Validation Error
+        API->>Logger: Log validation error
+        API-->>Client: Return error response (400)
+    else Processing Error
+        API->>Logger: Log processing details
+        Note over Logger: Continue async processing
     end 

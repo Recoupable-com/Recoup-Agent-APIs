@@ -145,6 +145,59 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
+### Current Task: Split createOrGetCommentSocials Following SRP
+
+#### Analysis
+
+1. Current Issue:
+
+   - `createOrGetCommentSocials` has multiple responsibilities:
+     - Platform detection and validation
+     - Author extraction and mapping
+     - Fetching existing social records
+     - Creating new social records
+   - This violates Single Responsibility Principle
+   - Makes the function harder to test and maintain
+
+2. Required Changes:
+
+   - [x] Create new lib functions:
+     - [x] `lib/supabase/getSocialsByUsernames.ts` for fetching existing socials
+     - [x] `lib/supabase/createSocials.ts` for creating new socials
+     - [x] `lib/utils/extractUniqueAuthors.ts` for author extraction and platform validation
+   - [x] Update `createOrGetCommentSocials.ts`:
+     - [x] Use new utility functions
+     - [x] Focus on orchestrating the process
+     - [x] Improve error handling
+
+3. Implementation Plan:
+
+   1. [x] Create `getSocialsByUsernames.ts`:
+      - [x] Function to fetch socials by username list
+      - [x] Return type: `{ [username: string]: string }`
+      - [x] Proper error handling
+   2. [x] Create `createSocials.ts`:
+      - [x] Function to create new social records
+      - [x] Accept array of author objects
+      - [x] Return new social IDs
+   3. [x] Create `extractUniqueAuthors.ts`:
+      - [x] Function to extract and validate authors
+      - [x] Use existing platform validation
+      - [x] Return validated author objects
+   4. [x] Update `createOrGetCommentSocials.ts`:
+      - [x] Import new utility functions
+      - [x] Remove old implementation
+      - [x] Implement orchestration flow
+      - [x] Add proper error handling
+
+Implementation Complete! ✅
+
+Next Steps:
+
+1. Consider adding unit tests for each new function
+2. Document the new architecture in the project documentation
+3. Update any dependent code that might be affected by these changes
+
 ### Current Task: Move isValidPlatform to Standalone Library
 
 #### Analysis
@@ -474,3 +527,60 @@ Next Action:
 
 1. Update AgentService.storeComments implementation
 2. Add platform extraction logic
+
+### Tradeoff Analysis: Removing Existing Socials Check
+
+#### Context
+
+Considering removing the existing socials check in `createOrGetCommentSocials` and relying on database constraints.
+
+#### Tradeoffs
+
+1. Pros of Removing Check:
+
+   - Simpler code - single responsibility of just creating socials
+   - One less database query per batch of comments
+   - Relies on database constraints for uniqueness
+   - Potentially faster in cases where most authors are new
+   - Less error handling code needed
+
+2. Cons of Removing Check:
+
+   - More write operations to database
+   - Higher database load under high concurrency
+   - More likely to hit rate limits
+   - Potential race conditions if multiple requests try to create same social
+   - More error logs from constraint violations
+   - Higher costs (if using paid database with write limits)
+
+3. Database Impact:
+
+   - More write operations vs read operations
+   - Relies heavily on database's conflict resolution
+   - May need to handle more deadlocks
+   - Index contention on username/profile_url columns
+
+4. Performance Impact:
+
+   - Better for write-heavy workloads with mostly new users
+   - Worse for read-heavy workloads with existing users
+   - More database resources used overall
+   - Higher latency due to conflict resolution
+
+5. Maintenance Impact:
+   - Simpler code to maintain
+   - More difficult to debug database issues
+   - Need stronger monitoring of database errors
+   - May need to implement retry logic for conflicts
+
+#### Recommendation
+
+While removing the check would simplify the code, the potential downsides in terms of database load, error handling, and resource usage suggest keeping the current implementation. The existing "check-then-write" pattern is a standard practice that usually performs better than "write-and-handle-conflicts" in most real-world scenarios.
+
+Next Steps:
+
+1. Consider adding metrics to measure:
+   - Ratio of new vs existing socials
+   - Database operation latencies
+   - Error rates
+2. This would provide data to make a more informed decision about optimization

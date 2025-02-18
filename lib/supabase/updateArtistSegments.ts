@@ -20,14 +20,7 @@ const updateArtistSegments = async ({
   artistAccountId,
   segmentIds,
 }: UpdateArtistSegmentsParams): Promise<UpdateArtistSegmentsResult> => {
-  console.log("[DEBUG] Updating artist segments:", {
-    artistAccountId,
-    segmentCount: segmentIds.length,
-    sampleSegments: segmentIds.slice(0, 3),
-  });
-
   try {
-    // Start a transaction to ensure atomic operations
     const { error: deleteError } = await supabase
       .from("artist_segments")
       .delete()
@@ -41,9 +34,6 @@ const updateArtistSegments = async ({
       throw deleteError;
     }
 
-    console.log("[DEBUG] Successfully deleted existing artist segments");
-
-    // Create new artist-segment associations
     const artistSegmentRecords = segmentIds.map((segmentId) => ({
       artist_account_id: artistAccountId,
       segment_id: segmentId,
@@ -58,10 +48,6 @@ const updateArtistSegments = async ({
       console.error("[ERROR] Failed to insert artist segments:", insertError);
       throw insertError;
     }
-
-    console.log("[DEBUG] Successfully created new artist segments:", {
-      totalCreated: artistSegmentRecords.length,
-    });
 
     return {
       success: true,

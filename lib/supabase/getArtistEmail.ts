@@ -14,8 +14,6 @@ const getArtistEmail = async (
   artistAccountId: string
 ): Promise<ArtistEmailResponse> => {
   try {
-    console.log("[DEBUG] Getting email for artist:", artistAccountId);
-
     const { data, error } = await supabase
       .from("account_emails")
       .select("email")
@@ -31,14 +29,12 @@ const getArtistEmail = async (
     }
 
     if (!data || !data.email) {
-      console.log("[DEBUG] No email found for artist:", artistAccountId);
       return {
         email: null,
         error: new Error("No email found for artist"),
       };
     }
 
-    console.log("[DEBUG] Found email for artist");
     return {
       email: data.email,
       error: null,

@@ -1,30 +1,20 @@
 import supabase from "./serverClient";
-import { Database } from "../../types/database.types";
 import { getProfileUrl } from "../utils/getProfileUrl";
 import getSocialPlatformByLink from "../getSocialPlatformByLink";
 import { CommentInput } from "./savePostComments";
-
-type SocialType = Database["public"]["Enums"]["social_type"];
-
-// Type guard to check if a platform is a valid SocialType
-function isValidPlatform(platform: string | null): platform is SocialType {
-  return platform !== null && platform !== "NONE" && platform !== "APPPLE";
-}
+import { isValidPlatform } from "../utils/validatePlatform";
 
 const createOrGetCommentSocials = async (
   comments: CommentInput[]
 ): Promise<{ [username: string]: string }> => {
   try {
-    // Get unique usernames and detect their platforms
     const uniqueAuthors = [...new Set(comments.map((c) => c.ownerUsername))]
       .map((username) => {
-        // Find the first comment for this username to get its postUrl
         const comment = comments.find((c) => c.ownerUsername === username);
         if (!comment) {
           throw new Error(`No comment found for username ${username}`);
         }
 
-        // Detect platform from post URL
         const platform = getSocialPlatformByLink(comment.postUrl);
         if (!isValidPlatform(platform)) {
           console.warn(
@@ -62,7 +52,6 @@ const createOrGetCommentSocials = async (
       return {};
     }
 
-    // Create map of existing socials
     const existingSocialMap = existingSocials.reduce<{
       [username: string]: string;
     }>((acc, social) => {
@@ -70,13 +59,11 @@ const createOrGetCommentSocials = async (
       return acc;
     }, {});
 
-    // Filter out authors that need to be created
     const authorsToCreate = uniqueAuthors.filter(
       (author) => !existingSocialMap[author.username]
     );
 
     if (authorsToCreate.length > 0) {
-      // Create new social records
       const { data: newSocials, error: insertError } = await supabase
         .from("socials")
         .insert(
@@ -92,7 +79,6 @@ const createOrGetCommentSocials = async (
         return existingSocialMap;
       }
 
-      // Add new socials to the map
       newSocials?.forEach((social) => {
         existingSocialMap[social.username] = social.id;
       });

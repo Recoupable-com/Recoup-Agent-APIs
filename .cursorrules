@@ -145,66 +145,84 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Fix createOrGetCommentSocials Platform Handling
+### Current Task: Move isValidPlatform to Standalone Library
 
 #### Analysis
 
 1. Current Issue:
 
-   - Complex type transformations happening at multiple levels
-   - Platform detection logic duplicated
-   - Unnecessary mapping between types
+   - `isValidPlatform` function is defined in `createOrGetCommentSocials.ts`
+   - This violates Single Responsibility Principle
+   - Function could be reused in other parts of the codebase
 
-2. Better Solution:
+2. Required Changes:
 
-   - Keep platform detection in `createOrGetCommentSocials.ts` only
-   - Share types between files
-   - Let `savePostComments.ts` pass comments through directly
-   - Use database types as source of truth
+   - [x] Create new lib file for platform validation
+   - [x] Move isValidPlatform function to new file
+   - [x] Update imports in createOrGetCommentSocials.ts
+   - [x] Add proper error handling and logging
 
-3. Required Changes:
+3. Implementation Complete:
 
-   - [x] Export CommentInput from savePostComments.ts
-   - [x] Update createOrGetCommentSocials.ts:
-     - [x] Use CommentInput type
-     - [x] Keep platform detection logic here only
-     - [x] Reference socials table schema
-   - [x] Update savePostComments.ts:
-     - [x] Pass comments directly to createOrGetCommentSocials
-     - [x] Remove unnecessary mapping
-   - [ ] Update AgentService.ts:
-     - [ ] Use CommentInput type
-     - [ ] Remove platform-related transformations
+   - [x] Created `lib/utils/validatePlatform.ts`:
+     - [x] Exported isValidPlatform function
+     - [x] Added proper TypeScript types
+     - [x] Added JSDoc documentation with examples
+     - [x] Added explicit platform validation
+   - [x] Updated `createOrGetCommentSocials.ts`:
+     - [x] Imported from new location
+     - [x] Removed old implementation
+   - [x] Added error handling:
+     - [x] Added descriptive warning messages
+     - [x] Added platform-specific validation
 
-4. Implementation Complete:
+4. Improvements Made:
 
-   ```typescript
-   // In savePostComments.ts - Simple interface
-   export interface CommentInput {
-     text: string;
-     timestamp: string;
-     ownerUsername: string;
-     postUrl: string;
-   }
-
-   // In createOrGetCommentSocials.ts - Platform detection encapsulated
-   function isValidPlatform(platform: string | null): platform is SocialType {
-     return platform !== null && platform !== "NONE" && platform !== "APPPLE";
-   }
-   ```
+   - Added explicit validation against known platforms
+   - Enhanced error messages for different failure cases
+   - Added JSDoc documentation with usage examples
+   - Improved type safety with explicit platform list
 
 5. Benefits Achieved:
-   - Simpler code flow ✅
-   - Single source of truth for types ✅
-   - Platform detection in one place ✅
-   - Better type safety ✅
-   - Easier maintenance ✅
+   - Better code organization ✅
+   - Reusable platform validation ✅
+   - Clearer responsibilities ✅
+   - Easier testing ✅
+   - Improved maintainability ✅
 
-Next Action:
+Implementation Details:
 
-1. Update AgentService.ts to use the simplified CommentInput type
+```typescript
+// New validatePlatform.ts
+export function isValidPlatform(
+  platform: string | null
+): platform is SocialType {
+  if (!platform) {
+    console.warn("Platform is null or undefined");
+    return false;
+  }
 
-### Current Task: Debug TikTok Comment Storage
+  if (platform === "NONE" || platform === "APPPLE") {
+    console.warn(`Invalid platform value: ${platform}`);
+    return false;
+  }
+
+  const validPlatforms = ["INSTAGRAM", "TIKTOK", "TWITTER", "SPOTIFY"];
+  if (!validPlatforms.includes(platform)) {
+    console.warn(`Unknown platform: ${platform}`);
+    return false;
+  }
+
+  return true;
+}
+```
+
+Next Steps:
+
+1. Consider adding unit tests for the validation function
+2. Document the new utility in the project documentation
+
+### Current Task: Fix TikTok Comment Storage
 
 #### Analysis
 

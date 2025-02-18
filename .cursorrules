@@ -145,6 +145,65 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
+### Current Task: Fix createOrGetCommentSocials Platform Handling
+
+#### Analysis
+
+1. Current Issue:
+
+   - Complex type transformations happening at multiple levels
+   - Platform detection logic duplicated
+   - Unnecessary mapping between types
+
+2. Better Solution:
+
+   - Keep platform detection in `createOrGetCommentSocials.ts` only
+   - Share types between files
+   - Let `savePostComments.ts` pass comments through directly
+   - Use database types as source of truth
+
+3. Required Changes:
+
+   - [x] Export CommentInput from savePostComments.ts
+   - [x] Update createOrGetCommentSocials.ts:
+     - [x] Use CommentInput type
+     - [x] Keep platform detection logic here only
+     - [x] Reference socials table schema
+   - [x] Update savePostComments.ts:
+     - [x] Pass comments directly to createOrGetCommentSocials
+     - [x] Remove unnecessary mapping
+   - [ ] Update AgentService.ts:
+     - [ ] Use CommentInput type
+     - [ ] Remove platform-related transformations
+
+4. Implementation Complete:
+
+   ```typescript
+   // In savePostComments.ts - Simple interface
+   export interface CommentInput {
+     text: string;
+     timestamp: string;
+     ownerUsername: string;
+     postUrl: string;
+   }
+
+   // In createOrGetCommentSocials.ts - Platform detection encapsulated
+   function isValidPlatform(platform: string | null): platform is SocialType {
+     return platform !== null && platform !== "NONE" && platform !== "APPPLE";
+   }
+   ```
+
+5. Benefits Achieved:
+   - Simpler code flow ✅
+   - Single source of truth for types ✅
+   - Platform detection in one place ✅
+   - Better type safety ✅
+   - Easier maintenance ✅
+
+Next Action:
+
+1. Update AgentService.ts to use the simplified CommentInput type
+
 ### Current Task: Debug TikTok Comment Storage
 
 #### Analysis
@@ -344,3 +403,56 @@ Next Steps:
 
 1. Add test cases to verify error handling
 2. Test the complete flow
+
+### Current Task: Debug TypeScript Error in AgentService
+
+#### Analysis
+
+1. Error Location:
+
+   - File: `lib/services/AgentService.ts`
+   - Line: 91
+   - Error: Missing required `platform` field in comment object
+
+2. Error Details:
+
+   ```typescript
+   Argument of type '{ text: string; timestamp: string; ownerUsername: string; postUrl: string; }[]'
+   is not assignable to parameter of type 'CommentInput[]'.
+   Property 'platform' is missing in type '{ text: string; timestamp: string; ownerUsername: string; postUrl: string; }'
+   ```
+
+3. Root Cause:
+
+   - `savePostComments` requires `platform` in `CommentInput` interface
+   - `AgentService.storeComments` is not providing the platform field
+   - Looking at `ScrapedComment` type, we have:
+     - `post_url` which can be used to extract platform
+     - `profile_url` which can also be used to extract platform
+   - We can use either URL to determine the platform
+
+4. Solution:
+   - Use `getSocialPlatformByLink` to extract platform from either:
+     - `comment.post_url` (primary)
+     - `comment.profile_url` (fallback)
+   - Add platform field to comment mapping in `storeComments`
+   - Keep backward compatibility by using URL-based platform detection
+
+#### Implementation Plan
+
+1. [ ] Update AgentService.storeComments:
+
+   - [ ] Import getSocialPlatformByLink
+   - [ ] Extract platform from post_url or profile_url
+   - [ ] Add platform field to comment mapping
+   - [ ] Add error handling for invalid URLs
+
+2. [ ] Test Changes:
+   - [ ] Verify TypeScript compilation succeeds
+   - [ ] Test with different platforms
+   - [ ] Ensure backward compatibility
+
+Next Action:
+
+1. Update AgentService.storeComments implementation
+2. Add platform extraction logic

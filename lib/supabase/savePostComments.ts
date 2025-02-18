@@ -1,16 +1,15 @@
 import supabase from "./serverClient";
 import createOrGetCommentSocials from "./createOrGetCommentSocials";
 
-const savePostComments = async (
-  comments: Array<{
-    text: string;
-    timestamp: string;
-    ownerUsername: string;
-    postUrl: string;
-  }>,
-): Promise<void> => {
+export interface CommentInput {
+  text: string;
+  timestamp: string;
+  ownerUsername: string;
+  postUrl: string;
+}
+
+const savePostComments = async (comments: CommentInput[]): Promise<void> => {
   try {
-    // First, get the post_ids for the post_urls
     const postUrls = [...new Set(comments.map((comment) => comment.postUrl))];
     const { data: posts, error: postsError } = await supabase
       .from("posts")
@@ -22,16 +21,13 @@ const savePostComments = async (
       return;
     }
 
-    // Create a map of post_url to post_id
     const postUrlToId = posts.reduce((acc: { [key: string]: string }, post) => {
       acc[post.post_url] = post.id;
       return acc;
     }, {});
 
-    // Get or create social records for comment authors
     const usernameToSocialId = await createOrGetCommentSocials(comments);
 
-    // Format comments for insertion
     const formattedComments = comments
       .map((comment) => ({
         comment: comment.text,
@@ -46,7 +42,6 @@ const savePostComments = async (
       return;
     }
 
-    // Insert comments
     const { error: commentsError } = await supabase
       .from("post_comments")
       .upsert(formattedComments);

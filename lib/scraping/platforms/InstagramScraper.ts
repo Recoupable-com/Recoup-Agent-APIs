@@ -4,14 +4,6 @@ import { Database } from "../../../types/database.types";
 import getProfile from "../../instagram/getProfile";
 import getPostComments from "../../instagram/getPostComments";
 
-type InstagramComment = {
-  post_url: string;
-  comment: string | null;
-  username: string;
-  profile_url: string;
-  commented_at: string;
-};
-
 export class InstagramScraper extends BaseScraper {
   async scrapeProfile(handle: string): Promise<ScrapedProfile> {
     console.log("InstagramScraper.scrapeProfile: Scraping profile", { handle });

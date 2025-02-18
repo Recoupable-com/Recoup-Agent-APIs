@@ -145,87 +145,153 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Update create_report.mermaid Chart
+### Current Task: Debug TikTok Comment Storage
 
-#### Analysis Plan
+#### Analysis
 
-1. [x] Review current implementation files:
+1. Current Status:
 
-   - [x] controllers/SegmentsController.ts
-   - [x] lib/supabase/getArtistSegmentComments.ts
-   - [x] lib/supabase/getFansBySegment.ts
-   - [x] lib/supabase/getArtistBySegmentId.ts
+   - ✅ Social records are being created correctly
+   - ✅ Posts are being scraped and stored
+   - ✅ Social_posts associations are working
+   - ❌ Post comments are not being stored
+   - ✅ Profile URL generation is working
 
-2. [x] Compare with mermaid chart flow:
+2. Root Cause Found:
 
-   - [x] Verify API endpoint parameters
-   - [x] Check data fetching sequence
-   - [x] Review error handling
-   - [x] Validate email flow
+   - Comments were being filtered out as invalid because:
+     - TikTok API returns comments with `post_id` field
+     - Our validation was checking for `post_url` field
+     - All 982 comments were being rejected by validation
 
-3. [x] Initial Observations from Chart:
-   - Found Discrepancies:
-     1. Parameters:
-        - Chart shows {agentId, address, segmentName, email, artistId}
-        - Actual code only requires {segmentId}
-     2. Data Flow:
-        - Chart uses AgentService and getAgents
-        - Actual code uses getArtistBySegmentId and getArtistSegmentComments
-     3. Comment Retrieval:
-        - Chart shows direct CommentDB access
-        - Actual code uses getFansBySegment and getCommentsBySocialIds
-     4. Email Handling:
-        - Chart shows single email
-        - Actual code fetches multiple emails from getArtistEmails
+3. Fix Implemented:
 
-#### Required Chart Updates
+   - [x] Updated ScrapedComment type to include optional post_id field
+   - [x] Modified comment validation to accept either post_url or post_id
+   - [x] Added mapping to convert post_id to post_url when needed
 
-1. [ ] API Parameters:
+4. Next Steps:
+   - [ ] Test the changes with a new TikTok scrape
+   - [ ] Verify comments are being stored in database
+   - [ ] Monitor logs for any remaining issues
 
-   - Update input to only require segmentId
-   - Remove agentId, address, segmentName references
-   - Add validation step for segmentId
+#### Implementation Progress
 
-2. [ ] Data Flow:
+1. [x] Add logging to TikTokScraper:
 
-   - Add getArtistBySegmentId step
-   - Add getArtistEmails step
-   - Replace AgentService with direct Supabase queries
-   - Update social metrics retrieval flow
+   - [x] Add debug logs in scrapeComments
+   - [x] Add validation checks for comment data
+   - [x] Add detailed logging of validation results
 
-3. [ ] Comment Processing:
+2. [x] Add logging to getVideoComments:
 
-   - Add getFansBySegment step
-   - Add getCommentsBySocialIds step
-   - Update comment processing flow
-   - Add segment metrics calculation
+   - [x] Log API responses
+   - [x] Log data transformation steps
+   - [x] Add error context
 
-4. [ ] Email Flow:
+3. [x] Fix comment validation:
 
-   - Update to handle multiple emails
-   - Add email validation
-   - Show parallel email sending
+   - [x] Update ScrapedComment type
+   - [x] Modify validation logic
+   - [x] Add post_id to post_url mapping
 
-5. [ ] Error Handling:
+4. [ ] Test and verify:
+   - [ ] Run scraper with test account
+   - [ ] Check logs at each step
+   - [ ] Verify database state
 
-   - Add specific error cases for each step
-   - Include logging points
-   - Show non-blocking error handling for report generation
-   - Add validation steps
+Next Action:
+Run a test scrape to verify the fix works and comments are now being stored correctly.
 
-6. [ ] Response Structure:
-   - Update initial response to match actual API
-   - Show async processing more clearly
-   - Add progress tracking
-   - Include error response formats
+### Previous Task: Fix Hardcoded Profile URL in PilotController
+
+#### Analysis
+
+1. Current Issue:
+
+   - In `PilotController.ts`, profile_url is hardcoded to Instagram format: `https://instagram.com/${handle}`
+   - This is incorrect for other platforms like TikTok, Twitter, etc.
+   - Each platform has its own URL format:
+     - Instagram: `https://instagram.com/${handle}`
+     - TikTok: `https://tiktok.com/@${handle}`
+     - Twitter: `https://x.com/${handle}`
+     - Spotify: `https://open.spotify.com/artist/${handle}`
+
+2. Required Changes:
+   - ✅ Create a new lib function to generate platform-specific profile URLs
+   - ✅ Update PilotController to use this function
+   - ✅ Ensure consistent URL generation across the codebase
+
+#### Implementation Plan
+
+1. [x] Create new lib function:
+
+   - [x] Create `lib/utils/getProfileUrl.ts`
+   - [x] Implement URL generation for all platforms
+   - [x] Add proper typing and error handling
+
+2. [x] Update PilotController:
+
+   - [x] Import new getProfileUrl function
+   - [x] Replace hardcoded URL with dynamic generation
+   - [x] Update error handling
+
+3. [ ] Test changes:
+
+   - [ ] Verify URL generation for each platform
+   - [ ] Test with various handle formats
+   - [ ] Ensure backward compatibility
+
+4. [x] Documentation:
+   - [x] Add JSDoc comments to new function
+   - [x] Update any relevant documentation
 
 Next Steps:
 
-1. Create updated mermaid chart with all changes
-2. Add detailed comments for each step
-3. Validate with implementation
+1. Add test cases for the new getProfileUrl function
+2. Test the changes in the PilotController with different platforms
 
----
+Note: After this task, we'll continue with the TikTok scraper architecture update.
+
+### Previous Task: Remove Problematic Progress Updates in TikTok Scraper
+
+#### Analysis of Progress Update Points
+
+1. Files Modified:
+
+   - `lib/tiktok/getVideoComments.ts`: ✅ Removed progress updates and agent_status_id parameter
+   - `lib/scraping/platforms/tiktok/TikTokScraper.ts`: ✅ Updated to call getVideoComments without agent_status_id
+   - `agents/runTikTokAgent.ts`: ✅ Deleted as it's no longer used (replaced by TikTokScraper)
+
+2. Changes Made:
+   - Removed updateAgentStatus import and calls
+   - Removed agent_status_id parameter from getVideoComments
+   - Updated TikTokScraper to match new function signature
+   - Kept core comment fetching logic intact
+   - Deleted unused runTikTokAgent.ts file
+
+#### Next Steps
+
+1. [x] Remove progress updates from getVideoComments.ts:
+
+   - [x] Remove updateAgentStatus import
+   - [x] Remove all progress update calls
+   - [x] Keep only the core comment fetching logic
+
+2. [x] Simplify TikTokScraper.ts:
+
+   - [x] Update getVideoComments call to remove agent_status_id parameter
+
+3. [x] Clean up old code:
+
+   - [x] Delete unused runTikTokAgent.ts
+
+4. [ ] Test changes:
+   - [ ] Verify scraping still works
+   - [ ] Confirm no more "Cannot read properties of null" errors
+   - [ ] Check final status updates still work
+
+Note: The final status updates in PilotController (FINISHED, ERROR states) remain unchanged since they work correctly.
 
 ### Previous Task: Step 34 - API - create_report - segmentId - one param
 

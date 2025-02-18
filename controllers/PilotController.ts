@@ -8,9 +8,9 @@ import { createAgent } from "../lib/supabase/createAgent";
 import updateAgentStatus from "../lib/supabase/updateAgentStatus";
 import createAgentStatus from "../lib/supabase/createAgentStatus";
 import runSpotifyAgent from "../agents/runSpotifyAgent";
-import runTikTokAgent from "../agents/runTikTokAgent";
 import runTwitterAgent from "../agents/runTwitterAgent";
 import { generateSegmentsForAccount } from "../lib/services/segmentService";
+import { getProfileUrl } from "../lib/utils/getProfileUrl";
 
 type DbAgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 
@@ -157,7 +157,7 @@ export class PilotController {
         const { social, error: socialError } =
           await this.agentService.createSocial({
             username: handle.replaceAll("@", ""),
-            profile_url: `https://instagram.com/${handle.replaceAll("@", "")}`,
+            profile_url: getProfileUrl(platform, handle),
           });
         if (socialError || !social) {
           console.error(
@@ -226,7 +226,7 @@ export class PilotController {
       tasks.push(runTwitterAgent(agentId, handles.twitter, artistId || ""));
     }
     if (handles.tiktok?.trim()) {
-      tasks.push(runTikTokAgent(agentId, handles.tiktok, artistId || ""));
+      tasks.push(processPlatform("TIKTOK", handles.tiktok));
     }
     if (handles.spotify?.trim()) {
       tasks.push(runSpotifyAgent(agentId, handles.spotify, artistId || ""));

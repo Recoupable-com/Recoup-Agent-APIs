@@ -1,6 +1,7 @@
 import { Database } from "../../types/database.types";
 import { SocialScraper } from "./types";
 import { InstagramScraper } from "./platforms/InstagramScraper";
+import { TikTokScraper } from "./platforms/tiktok/TikTokScraper";
 
 type SocialType = Database["public"]["Enums"]["social_type"];
 
@@ -26,12 +27,11 @@ export class ScraperFactory {
     switch (platform) {
       case "INSTAGRAM":
         return new InstagramScraper();
+      case "TIKTOK":
+        return new TikTokScraper();
       // TODO: Implement other platform scrapers
       case "TWITTER":
-      case "TIKTOK":
-      case "YOUTUBE":
       case "SPOTIFY":
-      case "APPLE":
         throw new Error(`Scraper for ${platform} not yet implemented`);
       default:
         throw new Error(`Unknown platform: ${platform}`);

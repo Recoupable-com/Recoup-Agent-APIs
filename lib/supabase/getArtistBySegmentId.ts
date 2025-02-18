@@ -14,8 +14,6 @@ const getArtistBySegmentId = async (
   segmentId: string
 ): Promise<ArtistBySegmentResponse> => {
   try {
-    console.log("[DEBUG] Getting artist for segment:", segmentId);
-
     const { data, error } = await supabase
       .from("artist_segments")
       .select("artist_account_id")
@@ -31,14 +29,12 @@ const getArtistBySegmentId = async (
     }
 
     if (!data) {
-      console.log("[DEBUG] No artist found for segment:", segmentId);
       return {
         artistAccountId: null,
         error: new Error("No artist found for segment"),
       };
     }
 
-    console.log("[DEBUG] Found artist:", data.artist_account_id);
     return {
       artistAccountId: data.artist_account_id,
       error: null,

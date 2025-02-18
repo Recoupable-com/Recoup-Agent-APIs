@@ -145,85 +145,64 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Update create_report.mermaid Chart
+### Current Task: Update TikTok Scraper Architecture
+
+#### Task Description
+
+Update the TikTok scraper to use the new Scraper and AgentService architecture, aligning with the Instagram scraper's implementation.
 
 #### Analysis Plan
 
-1. [x] Review current implementation files:
+1. [ ] Review Current Architecture:
 
-   - [x] controllers/SegmentsController.ts
-   - [x] lib/supabase/getArtistSegmentComments.ts
-   - [x] lib/supabase/getFansBySegment.ts
-   - [x] lib/supabase/getArtistBySegmentId.ts
+   - [ ] Examine current TikTok scraper implementation
+   - [ ] Identify legacy components and patterns
+   - [ ] Document current data flow and error handling
 
-2. [x] Compare with mermaid chart flow:
+2. [ ] Study Instagram Reference:
 
-   - [x] Verify API endpoint parameters
-   - [x] Check data fetching sequence
-   - [x] Review error handling
-   - [x] Validate email flow
+   - [ ] Review Instagram scraper's new architecture
+   - [ ] Identify key architectural components
+   - [ ] Document successful patterns to replicate
 
-3. [x] Initial Observations from Chart:
-   - Found Discrepancies:
-     1. Parameters:
-        - Chart shows {agentId, address, segmentName, email, artistId}
-        - Actual code only requires {segmentId}
-     2. Data Flow:
-        - Chart uses AgentService and getAgents
-        - Actual code uses getArtistBySegmentId and getArtistSegmentComments
-     3. Comment Retrieval:
-        - Chart shows direct CommentDB access
-        - Actual code uses getFansBySegment and getCommentsBySocialIds
-     4. Email Handling:
-        - Chart shows single email
-        - Actual code fetches multiple emails from getArtistEmails
+3. [ ] Design Changes:
 
-#### Required Chart Updates
+   - [ ] Map out new TikTok scraper structure
+   - [ ] Plan database schema updates if needed
+   - [ ] Design error handling and logging
+   - [ ] Plan status tracking integration
 
-1. [ ] API Parameters:
+4. [ ] Implementation Requirements:
 
-   - Update input to only require segmentId
-   - Remove agentId, address, segmentName references
-   - Add validation step for segmentId
+   - [ ] Agent Status Integration:
+     - [ ] Add PROFILE step
+     - [ ] Add POSTURLS step
+     - [ ] Add POST_COMMENTS step
+     - [ ] Add FINISHED step
+   - [ ] Database Operations:
+     - [ ] Save posts to posts table
+     - [ ] Save comments to post_comments table
+     - [ ] Link with social_posts table
+   - [ ] Error Handling:
+     - [ ] Add comprehensive error handling
+     - [ ] Implement graceful failure modes
+     - [ ] Add detailed logging
+   - [ ] Progress Tracking:
+     - [ ] Implement status updates
+     - [ ] Add progress percentage tracking
+     - [ ] Log milestone completions
 
-2. [ ] Data Flow:
-
-   - Add getArtistBySegmentId step
-   - Add getArtistEmails step
-   - Replace AgentService with direct Supabase queries
-   - Update social metrics retrieval flow
-
-3. [ ] Comment Processing:
-
-   - Add getFansBySegment step
-   - Add getCommentsBySocialIds step
-   - Update comment processing flow
-   - Add segment metrics calculation
-
-4. [ ] Email Flow:
-
-   - Update to handle multiple emails
-   - Add email validation
-   - Show parallel email sending
-
-5. [ ] Error Handling:
-
-   - Add specific error cases for each step
-   - Include logging points
-   - Show non-blocking error handling for report generation
-   - Add validation steps
-
-6. [ ] Response Structure:
-   - Update initial response to match actual API
-   - Show async processing more clearly
-   - Add progress tracking
-   - Include error response formats
+5. [ ] Testing Strategy:
+   - [ ] Unit tests for new components
+   - [ ] Integration tests for data flow
+   - [ ] Error handling test cases
+   - [ ] Progress tracking validation
 
 Next Steps:
 
-1. Create updated mermaid chart with all changes
-2. Add detailed comments for each step
-3. Validate with implementation
+1. Begin with reviewing current TikTok scraper implementation
+2. Document the differences from Instagram scraper
+3. Create detailed implementation plan
 
 ---
 

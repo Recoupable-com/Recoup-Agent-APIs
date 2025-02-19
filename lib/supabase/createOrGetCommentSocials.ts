@@ -1,64 +1,72 @@
-import supabase from "./serverClient";
+import { CommentInput } from "./savePostComments";
+import extractUniqueAuthors from "../utils/extractUniqueAuthors";
+import getSocialsByUrls from "./getSocialsByUrls";
+import createSocials from "./createSocials";
 
+/**
+ * Creates or retrieves social records for comment authors
+ *
+ * This function orchestrates the process of:
+ * 1. Extracting unique authors from comments
+ * 2. Fetching existing social records
+ * 3. Creating new social records for missing authors
+ *
+ * @param comments - Array of comments to process
+ * @returns Object mapping usernames to social IDs
+ */
 const createOrGetCommentSocials = async (
-  comments: Array<{
-    ownerUsername: string;
-  }>,
+  comments: CommentInput[]
 ): Promise<{ [username: string]: string }> => {
   try {
-    // Get unique usernames
-    const usernames = [
-      ...new Set(comments.map((comment) => comment.ownerUsername)),
-    ];
+    // Extract unique authors with validated platforms
+    const { authors, error: extractError } = extractUniqueAuthors(comments);
+    if (extractError) {
+      console.error("Failed to extract authors:", extractError);
+      return {};
+    }
 
-    // First try to get existing social records
-    const { data: existingSocials, error: fetchError } = await supabase
-      .from("socials")
-      .select("id, username")
-      .in("username", usernames);
+    if (authors.length === 0) {
+      return {};
+    }
 
+    // Get existing social records by profile URLs
+    const { socialMap: existingSocials, error: fetchError } =
+      await getSocialsByUrls(authors);
     if (fetchError) {
       console.error("Failed to fetch existing socials:", fetchError);
       return {};
     }
 
-    // Create a map of existing username to social id
-    const usernameToId = existingSocials.reduce(
-      (acc: { [key: string]: string }, social) => {
-        acc[social.username] = social.id;
+    // Convert profile_url map to username map for consistency
+    const usernameMap = authors.reduce<{ [username: string]: string }>(
+      (acc, author) => {
+        if (existingSocials[author.profile_url]) {
+          acc[author.username] = existingSocials[author.profile_url];
+        }
         return acc;
       },
-      {},
+      {}
     );
 
-    // Find usernames that don't have social records yet
-    const missingUsernames = usernames.filter(
-      (username) => !usernameToId[username],
+    // Find authors that need new social records
+    const authorsToCreate = authors.filter(
+      (author) => !existingSocials[author.profile_url]
     );
 
-    if (missingUsernames.length > 0) {
-      // Create new social records for missing usernames
-      const { data: newSocials, error: insertError } = await supabase
-        .from("socials")
-        .upsert(
-          missingUsernames.map((username) => ({
-            username,
-            profile_url: `https://instagram.com/${username}`,
-          })),
-        )
-        .select("id, username");
-
-      if (insertError) {
-        console.error("Failed to create new socials:", insertError);
-      } else if (newSocials) {
-        // Add new socials to the map
-        newSocials.forEach((social) => {
-          usernameToId[social.username] = social.id;
-        });
+    if (authorsToCreate.length > 0) {
+      // Create new social records
+      const { socialMap: newSocials, error: createError } =
+        await createSocials(authorsToCreate);
+      if (createError) {
+        console.error("Failed to create new socials:", createError);
+        return usernameMap;
       }
+
+      // Merge existing and new social maps
+      return { ...usernameMap, ...newSocials };
     }
 
-    return usernameToId;
+    return usernameMap;
   } catch (error) {
     console.error("Error in createOrGetCommentSocials:", error);
     return {};

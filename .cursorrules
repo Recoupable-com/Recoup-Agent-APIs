@@ -145,7 +145,137 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Debug TikTok Comment Storage
+### Current Task: Split createOrGetCommentSocials Following SRP
+
+#### Analysis
+
+1. Current Issue:
+
+   - `createOrGetCommentSocials` has multiple responsibilities:
+     - Platform detection and validation
+     - Author extraction and mapping
+     - Fetching existing social records
+     - Creating new social records
+   - This violates Single Responsibility Principle
+   - Makes the function harder to test and maintain
+
+2. Required Changes:
+
+   - [x] Create new lib functions:
+     - [x] `lib/supabase/getSocialsByUsernames.ts` for fetching existing socials
+     - [x] `lib/supabase/createSocials.ts` for creating new socials
+     - [x] `lib/utils/extractUniqueAuthors.ts` for author extraction and platform validation
+   - [x] Update `createOrGetCommentSocials.ts`:
+     - [x] Use new utility functions
+     - [x] Focus on orchestrating the process
+     - [x] Improve error handling
+
+3. Implementation Plan:
+
+   1. [x] Create `getSocialsByUsernames.ts`:
+      - [x] Function to fetch socials by username list
+      - [x] Return type: `{ [username: string]: string }`
+      - [x] Proper error handling
+   2. [x] Create `createSocials.ts`:
+      - [x] Function to create new social records
+      - [x] Accept array of author objects
+      - [x] Return new social IDs
+   3. [x] Create `extractUniqueAuthors.ts`:
+      - [x] Function to extract and validate authors
+      - [x] Use existing platform validation
+      - [x] Return validated author objects
+   4. [x] Update `createOrGetCommentSocials.ts`:
+      - [x] Import new utility functions
+      - [x] Remove old implementation
+      - [x] Implement orchestration flow
+      - [x] Add proper error handling
+
+Implementation Complete! ✅
+
+Next Steps:
+
+1. Consider adding unit tests for each new function
+2. Document the new architecture in the project documentation
+3. Update any dependent code that might be affected by these changes
+
+### Current Task: Move isValidPlatform to Standalone Library
+
+#### Analysis
+
+1. Current Issue:
+
+   - `isValidPlatform` function is defined in `createOrGetCommentSocials.ts`
+   - This violates Single Responsibility Principle
+   - Function could be reused in other parts of the codebase
+
+2. Required Changes:
+
+   - [x] Create new lib file for platform validation
+   - [x] Move isValidPlatform function to new file
+   - [x] Update imports in createOrGetCommentSocials.ts
+   - [x] Add proper error handling and logging
+
+3. Implementation Complete:
+
+   - [x] Created `lib/utils/validatePlatform.ts`:
+     - [x] Exported isValidPlatform function
+     - [x] Added proper TypeScript types
+     - [x] Added JSDoc documentation with examples
+     - [x] Added explicit platform validation
+   - [x] Updated `createOrGetCommentSocials.ts`:
+     - [x] Imported from new location
+     - [x] Removed old implementation
+   - [x] Added error handling:
+     - [x] Added descriptive warning messages
+     - [x] Added platform-specific validation
+
+4. Improvements Made:
+
+   - Added explicit validation against known platforms
+   - Enhanced error messages for different failure cases
+   - Added JSDoc documentation with usage examples
+   - Improved type safety with explicit platform list
+
+5. Benefits Achieved:
+   - Better code organization ✅
+   - Reusable platform validation ✅
+   - Clearer responsibilities ✅
+   - Easier testing ✅
+   - Improved maintainability ✅
+
+Implementation Details:
+
+```typescript
+// New validatePlatform.ts
+export function isValidPlatform(
+  platform: string | null
+): platform is SocialType {
+  if (!platform) {
+    console.warn("Platform is null or undefined");
+    return false;
+  }
+
+  if (platform === "NONE" || platform === "APPPLE") {
+    console.warn(`Invalid platform value: ${platform}`);
+    return false;
+  }
+
+  const validPlatforms = ["INSTAGRAM", "TIKTOK", "TWITTER", "SPOTIFY"];
+  if (!validPlatforms.includes(platform)) {
+    console.warn(`Unknown platform: ${platform}`);
+    return false;
+  }
+
+  return true;
+}
+```
+
+Next Steps:
+
+1. Consider adding unit tests for the validation function
+2. Document the new utility in the project documentation
+
+### Current Task: Fix TikTok Comment Storage
 
 #### Analysis
 
@@ -344,3 +474,262 @@ Next Steps:
 
 1. Add test cases to verify error handling
 2. Test the complete flow
+
+### Current Task: Debug TypeScript Error in AgentService
+
+#### Analysis
+
+1. Error Location:
+
+   - File: `lib/services/AgentService.ts`
+   - Line: 91
+   - Error: Missing required `platform` field in comment object
+
+2. Error Details:
+
+   ```typescript
+   Argument of type '{ text: string; timestamp: string; ownerUsername: string; postUrl: string; }[]'
+   is not assignable to parameter of type 'CommentInput[]'.
+   Property 'platform' is missing in type '{ text: string; timestamp: string; ownerUsername: string; postUrl: string; }'
+   ```
+
+3. Root Cause:
+
+   - `savePostComments` requires `platform` in `CommentInput` interface
+   - `AgentService.storeComments` is not providing the platform field
+   - Looking at `ScrapedComment` type, we have:
+     - `post_url` which can be used to extract platform
+     - `profile_url` which can also be used to extract platform
+   - We can use either URL to determine the platform
+
+4. Solution:
+   - Use `getSocialPlatformByLink` to extract platform from either:
+     - `comment.post_url` (primary)
+     - `comment.profile_url` (fallback)
+   - Add platform field to comment mapping in `storeComments`
+   - Keep backward compatibility by using URL-based platform detection
+
+#### Implementation Plan
+
+1. [ ] Update AgentService.storeComments:
+
+   - [ ] Import getSocialPlatformByLink
+   - [ ] Extract platform from post_url or profile_url
+   - [ ] Add platform field to comment mapping
+   - [ ] Add error handling for invalid URLs
+
+2. [ ] Test Changes:
+   - [ ] Verify TypeScript compilation succeeds
+   - [ ] Test with different platforms
+   - [ ] Ensure backward compatibility
+
+Next Action:
+
+1. Update AgentService.storeComments implementation
+2. Add platform extraction logic
+
+### Tradeoff Analysis: Single Upsert vs Check-then-Create for Socials
+
+#### Context
+
+Comparing two approaches for handling social record creation:
+
+1. Current: Check existing records first (`getSocialsByUrls`), then create only new ones (`createSocials`)
+2. Proposed: Single upsert operation for all records (`upsertSocials`)
+
+#### Performance Tradeoffs
+
+1. Database Operations:
+
+   - Current Approach:
+     - ✅ One read query for all records
+     - ✅ One write query only for new records
+     - ✅ Minimal write operations
+     - ❌ Always requires a read operation
+     - ❌ Two round trips for new records
+   - Upsert Approach:
+     - ✅ Single database round trip
+     - ✅ Simpler code flow
+     - ❌ Write operation for every record
+     - ❌ Higher database write load
+     - ❌ More index updates
+
+2. Resource Usage:
+
+   - Current Approach:
+     - ✅ Lower write IOPS
+     - ✅ Better for paid databases with write limits
+     - ✅ Less index contention
+     - ❌ More complex application logic
+     - ❌ Higher memory usage for tracking state
+   - Upsert Approach:
+     - ✅ Less application memory usage
+     - ✅ Simpler state management
+     - ❌ Higher write IOPS
+     - ❌ More index locks
+     - ❌ Higher database resource usage
+
+3. Error Handling:
+
+   - Current Approach:
+     - ✅ Clear separation of failures
+     - ✅ Easier to retry only failed operations
+     - ✅ Better error context
+     - ❌ More complex error handling code
+     - ❌ Multiple points of failure
+   - Upsert Approach:
+     - ✅ Single point of failure
+     - ✅ Simpler error handling
+     - ❌ All-or-nothing failures
+     - ❌ Less granular error reporting
+     - ❌ Harder to identify specific failures
+
+4. Scalability:
+
+   - Current Approach:
+     - ✅ Better for read-heavy workloads
+     - ✅ Lower database contention
+     - ✅ More predictable performance
+     - ❌ More network latency
+     - ❌ More complex caching
+   - Upsert Approach:
+     - ✅ Better for write-heavy workloads
+     - ✅ Lower latency for new records
+     - ❌ Higher database load
+     - ❌ More deadlock potential
+     - ❌ Less predictable performance
+
+#### Use Case Analysis
+
+Best for Current Approach:
+
+- High percentage of existing records
+- Read-heavy workloads
+- Paid databases with write limits
+- Need for detailed error tracking
+- Systems with high concurrent access
+
+Best for Upsert Approach:
+
+- High percentage of new records
+- Write-heavy workloads
+- Simple architectures
+- Low concurrency systems
+- Need for minimal latency
+
+#### Recommendation
+
+The choice depends heavily on the usage pattern:
+
+1. If most social records already exist (e.g., returning users):
+
+   - Stick with current check-then-create approach
+   - Lower database load
+   - Better resource utilization
+
+2. If most social records are new (e.g., initial data import):
+   - Consider upsert approach
+   - Lower latency
+   - Simpler code
+
+For this specific application, since we're dealing with social media comments where:
+
+- Many comments come from the same users
+- Database write costs are significant
+- Concurrent access is common
+- Error tracking is important
+
+The current check-then-create approach is likely the better choice, despite being more complex.
+
+#### Monitoring Suggestions
+
+To validate this decision, consider tracking:
+
+1. Ratio of existing vs new socials
+2. Database operation latencies
+3. Error rates and types
+4. Resource utilization
+5. Concurrent access patterns
+
+### Current Task: Create getSocialsByUrl Function
+
+#### Analysis
+
+1. Current State:
+
+   - We have `getSocialsByUsernames` that looks up socials by username
+   - No direct way to look up socials by profile_url
+   - `AuthorInput` type from `createSocials.ts` has both username and profile_url
+
+2. Required Changes:
+
+   - [ ] Create new lib function `lib/supabase/getSocialsByUrl.ts`:
+     - [ ] Accept `AuthorInput[]` parameter
+     - [ ] Return map of profile_urls to social IDs
+     - [ ] Add proper error handling and logging
+     - [ ] Add TypeScript types and JSDoc documentation
+
+3. Implementation Plan:
+
+   1. [ ] Create `getSocialsByUrl.ts`:
+      - [ ] Define return type interface
+      - [ ] Implement Supabase query using profile_url
+      - [ ] Add error handling for failed queries
+      - [ ] Add detailed logging
+   2. [ ] Add TypeScript Types:
+      - [ ] Define response interface
+      - [ ] Reuse AuthorInput type from createSocials
+      - [ ] Add proper JSDoc documentation
+   3. [ ] Add Error Handling:
+      - [ ] Handle empty input array
+      - [ ] Handle database query errors
+      - [ ] Add appropriate error logging
+   4. [ ] Add Tests:
+      - [ ] Test with empty array
+      - [ ] Test with valid profile URLs
+      - [ ] Test with invalid profile URLs
+      - [ ] Test error cases
+
+Next Action:
+
+1. Create the new `getSocialsByUrl.ts` file
+2. Implement the basic function structure with types
+
+### Current Task: Update createOrGetCommentSocials to use getSocialsByUrls
+
+#### Analysis
+
+1. Current State:
+
+   - `createOrGetCommentSocials.ts` uses `getSocialsByUsernames`
+   - We have a new `getSocialsByUrls` function
+   - Both functions exist in parallel
+
+2. Required Changes:
+
+   - [x] Update `createOrGetCommentSocials.ts`:
+     - [x] Replace `getSocialsByUsernames` with `getSocialsByUrls`
+     - [x] Update function call to pass authors directly
+     - [x] Keep error handling consistent
+   - [x] Delete unused `getSocialsByUsernames.ts`
+   - [x] Verify functionality remains the same
+
+3. Implementation Plan:
+   1. [x] Update imports in `createOrGetCommentSocials.ts`
+   2. [x] Modify the function to use `getSocialsByUrls`
+   3. [x] Test the changes
+   4. [x] Remove `getSocialsByUsernames.ts`
+
+Implementation Complete! ✅
+
+Key Changes Made:
+
+1. Updated `createOrGetCommentSocials.ts` to use `getSocialsByUrls`
+2. Added conversion from profile_url map to username map for backward compatibility
+3. Updated author filtering to use profile_url as the key
+4. Removed unused `getSocialsByUsernames.ts`
+
+Next Steps:
+
+1. Consider adding unit tests for the updated functionality
+2. Monitor for any issues in production use

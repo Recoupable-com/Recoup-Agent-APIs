@@ -2,6 +2,7 @@ import { Database } from "../../types/database.types";
 import { SocialScraper } from "./types";
 import { InstagramScraper } from "./platforms/InstagramScraper";
 import { TikTokScraper } from "./platforms/tiktok/TikTokScraper";
+import { TwitterScraper } from "./platforms/TwitterScraper";
 
 type SocialType = Database["public"]["Enums"]["social_type"];
 
@@ -29,8 +30,8 @@ export class ScraperFactory {
         return new InstagramScraper();
       case "TIKTOK":
         return new TikTokScraper();
-      // TODO: Implement other platform scrapers
       case "TWITTER":
+        return new TwitterScraper();
       case "SPOTIFY":
         throw new Error(`Scraper for ${platform} not yet implemented`);
       default:

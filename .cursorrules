@@ -142,594 +142,105 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
   - Be explicit about ESM vs CommonJS choice in the configuration
   - Start with "happy path" tests before adding edge cases
   - Mock external dependencies at the correct level (as close to the source as possible)
+- When implementing error status mapping:
+  - Use specific error states for different types of failures (e.g. separate setup errors from processing errors)
+  - Don't reuse error states across different failure modes
+  - Add proper logging context to identify where the error originated
+  - Consider the full error flow from origin to final status
+  - Handle null/undefined values gracefully in setup phases
+  - Add appropriate error states to enum/constants file
+  - Document error state transitions and their meanings
 
 # Scratchpad
 
-### Current Task: Split createOrGetCommentSocials Following SRP
-
-#### Analysis
-
-1. Current Issue:
-
-   - `createOrGetCommentSocials` has multiple responsibilities:
-     - Platform detection and validation
-     - Author extraction and mapping
-     - Fetching existing social records
-     - Creating new social records
-   - This violates Single Responsibility Principle
-   - Makes the function harder to test and maintain
-
-2. Required Changes:
-
-   - [x] Create new lib functions:
-     - [x] `lib/supabase/getSocialsByUsernames.ts` for fetching existing socials
-     - [x] `lib/supabase/createSocials.ts` for creating new socials
-     - [x] `lib/utils/extractUniqueAuthors.ts` for author extraction and platform validation
-   - [x] Update `createOrGetCommentSocials.ts`:
-     - [x] Use new utility functions
-     - [x] Focus on orchestrating the process
-     - [x] Improve error handling
-
-3. Implementation Plan:
-
-   1. [x] Create `getSocialsByUsernames.ts`:
-      - [x] Function to fetch socials by username list
-      - [x] Return type: `{ [username: string]: string }`
-      - [x] Proper error handling
-   2. [x] Create `createSocials.ts`:
-      - [x] Function to create new social records
-      - [x] Accept array of author objects
-      - [x] Return new social IDs
-   3. [x] Create `extractUniqueAuthors.ts`:
-      - [x] Function to extract and validate authors
-      - [x] Use existing platform validation
-      - [x] Return validated author objects
-   4. [x] Update `createOrGetCommentSocials.ts`:
-      - [x] Import new utility functions
-      - [x] Remove old implementation
-      - [x] Implement orchestration flow
-      - [x] Add proper error handling
-
-Implementation Complete! ✅
-
-Next Steps:
-
-1. Consider adding unit tests for each new function
-2. Document the new architecture in the project documentation
-3. Update any dependent code that might be affected by these changes
-
-### Current Task: Move isValidPlatform to Standalone Library
-
-#### Analysis
-
-1. Current Issue:
-
-   - `isValidPlatform` function is defined in `createOrGetCommentSocials.ts`
-   - This violates Single Responsibility Principle
-   - Function could be reused in other parts of the codebase
-
-2. Required Changes:
-
-   - [x] Create new lib file for platform validation
-   - [x] Move isValidPlatform function to new file
-   - [x] Update imports in createOrGetCommentSocials.ts
-   - [x] Add proper error handling and logging
-
-3. Implementation Complete:
-
-   - [x] Created `lib/utils/validatePlatform.ts`:
-     - [x] Exported isValidPlatform function
-     - [x] Added proper TypeScript types
-     - [x] Added JSDoc documentation with examples
-     - [x] Added explicit platform validation
-   - [x] Updated `createOrGetCommentSocials.ts`:
-     - [x] Imported from new location
-     - [x] Removed old implementation
-   - [x] Added error handling:
-     - [x] Added descriptive warning messages
-     - [x] Added platform-specific validation
-
-4. Improvements Made:
-
-   - Added explicit validation against known platforms
-   - Enhanced error messages for different failure cases
-   - Added JSDoc documentation with usage examples
-   - Improved type safety with explicit platform list
-
-5. Benefits Achieved:
-   - Better code organization ✅
-   - Reusable platform validation ✅
-   - Clearer responsibilities ✅
-   - Easier testing ✅
-   - Improved maintainability ✅
-
-Implementation Details:
-
-```typescript
-// New validatePlatform.ts
-export function isValidPlatform(
-  platform: string | null
-): platform is SocialType {
-  if (!platform) {
-    console.warn("Platform is null or undefined");
-    return false;
-  }
-
-  if (platform === "NONE" || platform === "APPPLE") {
-    console.warn(`Invalid platform value: ${platform}`);
-    return false;
-  }
-
-  const validPlatforms = ["INSTAGRAM", "TIKTOK", "TWITTER", "SPOTIFY"];
-  if (!validPlatforms.includes(platform)) {
-    console.warn(`Unknown platform: ${platform}`);
-    return false;
-  }
-
-  return true;
-}
-```
-
-Next Steps:
-
-1. Consider adding unit tests for the validation function
-2. Document the new utility in the project documentation
-
-### Current Task: Fix TikTok Comment Storage
-
-#### Analysis
-
-1. Current Status:
-
-   - ✅ Social records are being created correctly
-   - ✅ Posts are being scraped and stored
-   - ✅ Social_posts associations are working
-   - ❌ Post comments are not being stored
-   - ✅ Profile URL generation is working
-
-2. Root Cause Found:
-
-   - Comments were being filtered out as invalid because:
-     - TikTok API returns comments with `post_id` field
-     - Our validation was checking for `post_url` field
-     - All 982 comments were being rejected by validation
-
-3. Fix Implemented:
-
-   - [x] Updated ScrapedComment type to include optional post_id field
-   - [x] Modified comment validation to accept either post_url or post_id
-   - [x] Added mapping to convert post_id to post_url when needed
-
-4. Next Steps:
-   - [ ] Test the changes with a new TikTok scrape
-   - [ ] Verify comments are being stored in database
-   - [ ] Monitor logs for any remaining issues
-
-#### Implementation Progress
-
-1. [x] Add logging to TikTokScraper:
-
-   - [x] Add debug logs in scrapeComments
-   - [x] Add validation checks for comment data
-   - [x] Add detailed logging of validation results
-
-2. [x] Add logging to getVideoComments:
-
-   - [x] Log API responses
-   - [x] Log data transformation steps
-   - [x] Add error context
-
-3. [x] Fix comment validation:
-
-   - [x] Update ScrapedComment type
-   - [x] Modify validation logic
-   - [x] Add post_id to post_url mapping
-
-4. [ ] Test and verify:
-   - [ ] Run scraper with test account
-   - [ ] Check logs at each step
-   - [ ] Verify database state
-
-Next Action:
-Run a test scrape to verify the fix works and comments are now being stored correctly.
-
-### Previous Task: Fix Hardcoded Profile URL in PilotController
-
-#### Analysis
-
-1. Current Issue:
-
-   - In `PilotController.ts`, profile_url is hardcoded to Instagram format: `https://instagram.com/${handle}`
-   - This is incorrect for other platforms like TikTok, Twitter, etc.
-   - Each platform has its own URL format:
-     - Instagram: `https://instagram.com/${handle}`
-     - TikTok: `https://tiktok.com/@${handle}`
-     - Twitter: `https://x.com/${handle}`
-     - Spotify: `https://open.spotify.com/artist/${handle}`
-
-2. Required Changes:
-   - ✅ Create a new lib function to generate platform-specific profile URLs
-   - ✅ Update PilotController to use this function
-   - ✅ Ensure consistent URL generation across the codebase
-
-#### Implementation Plan
-
-1. [x] Create new lib function:
-
-   - [x] Create `lib/utils/getProfileUrl.ts`
-   - [x] Implement URL generation for all platforms
-   - [x] Add proper typing and error handling
-
-2. [x] Update PilotController:
-
-   - [x] Import new getProfileUrl function
-   - [x] Replace hardcoded URL with dynamic generation
-   - [x] Update error handling
-
-3. [ ] Test changes:
-
-   - [ ] Verify URL generation for each platform
-   - [ ] Test with various handle formats
-   - [ ] Ensure backward compatibility
-
-4. [x] Documentation:
-   - [x] Add JSDoc comments to new function
-   - [x] Update any relevant documentation
-
-Next Steps:
-
-1. Add test cases for the new getProfileUrl function
-2. Test the changes in the PilotController with different platforms
-
-Note: After this task, we'll continue with the TikTok scraper architecture update.
-
-### Previous Task: Remove Problematic Progress Updates in TikTok Scraper
-
-#### Analysis of Progress Update Points
-
-1. Files Modified:
-
-   - `lib/tiktok/getVideoComments.ts`: ✅ Removed progress updates and agent_status_id parameter
-   - `lib/scraping/platforms/tiktok/TikTokScraper.ts`: ✅ Updated to call getVideoComments without agent_status_id
-   - `agents/runTikTokAgent.ts`: ✅ Deleted as it's no longer used (replaced by TikTokScraper)
-
-2. Changes Made:
-   - Removed updateAgentStatus import and calls
-   - Removed agent_status_id parameter from getVideoComments
-   - Updated TikTokScraper to match new function signature
-   - Kept core comment fetching logic intact
-   - Deleted unused runTikTokAgent.ts file
-
-#### Next Steps
-
-1. [x] Remove progress updates from getVideoComments.ts:
-
-   - [x] Remove updateAgentStatus import
-   - [x] Remove all progress update calls
-   - [x] Keep only the core comment fetching logic
-
-2. [x] Simplify TikTokScraper.ts:
-
-   - [x] Update getVideoComments call to remove agent_status_id parameter
-
-3. [x] Clean up old code:
-
-   - [x] Delete unused runTikTokAgent.ts
-
-4. [ ] Test changes:
-   - [ ] Verify scraping still works
-   - [ ] Confirm no more "Cannot read properties of null" errors
-   - [ ] Check final status updates still work
-
-Note: The final status updates in PilotController (FINISHED, ERROR states) remain unchanged since they work correctly.
-
-### Previous Task: Step 34 - API - create_report - segmentId - one param
-
-Task Description:
-Update the new report API endpoint to only require a single parameter (segmentId) instead of both artistId and segmentName.
-
-#### Progress
-
-1. [x] Review current implementation
-2. [x] Design changes
-3. [x] Create Supabase query functions
-4. [x] Implementation
-5. [x] Fix Email Lookup Logic
-6. [x] Update getArtistSegmentComments
-   - [x] Modify function signature
-   - [x] Update getFansBySegment
-   - [x] Update error handling and logging
-
-#### New Issue: Handle No Comments Case
-
-Problem:
-
-- App crashes when no comments are found for a segment
-- Current behavior stops the entire app process when a report fails
-- Need to handle report failure gracefully without crashing
-
-Root Cause:
-
-1. Unhandled error in async report generation process
-2. Error propagates up and crashes the Node process
-3. No try-catch around async report generation
-
-Design Decision:
-
-- Keep early response for better UX (non-blocking)
-- Let report generation continue asynchronously
-- Handle failures gracefully without crashing app
-
-Action Items:
-
-1. [x] Update error handling in async report generation:
-   - [x] Add try-catch around report generation logic
-   - [x] Log errors appropriately
-   - [x] Allow process to continue even if report fails
-2. [ ] Add test cases:
-   - [ ] Test empty comments scenario
-   - [ ] Verify app continues running after report failure
-
-Next Steps:
-
-1. Add test cases to verify error handling
-2. Test the complete flow
-
-### Current Task: Debug TypeScript Error in AgentService
-
-#### Analysis
-
-1. Error Location:
-
-   - File: `lib/services/AgentService.ts`
-   - Line: 91
-   - Error: Missing required `platform` field in comment object
-
-2. Error Details:
-
-   ```typescript
-   Argument of type '{ text: string; timestamp: string; ownerUsername: string; postUrl: string; }[]'
-   is not assignable to parameter of type 'CommentInput[]'.
-   Property 'platform' is missing in type '{ text: string; timestamp: string; ownerUsername: string; postUrl: string; }'
+### Current Task: Debug Twitter Missing Posts Error - Final Analysis
+
+#### New Error Analysis
+
+1. Error Stack:
+
+   ```
+   Error in setArtistImage for : TypeError: Cannot read properties of null (reading 'account_info')
+   at setArtistImage
+   at processTicksAndRejections
+   at async runTwitterAgent
+   at async Promise.all
+   at async PilotController.processPlatforms
    ```
 
-3. Root Cause:
+2. Error Flow:
 
-   - `savePostComments` requires `platform` in `CommentInput` interface
-   - `AgentService.storeComments` is not providing the platform field
-   - Looking at `ScrapedComment` type, we have:
-     - `post_url` which can be used to extract platform
-     - `profile_url` which can also be used to extract platform
-   - We can use either URL to determine the platform
+   - Error originates in `setArtistImage`
+   - Bubbles up through `runTwitterAgent`
+   - Ends in `MISSING_POSTS` status
 
-4. Solution:
-   - Use `getSocialPlatformByLink` to extract platform from either:
-     - `comment.post_url` (primary)
-     - `comment.profile_url` (fallback)
-   - Add platform field to comment mapping in `storeComments`
-   - Keep backward compatibility by using URL-based platform detection
+3. Key Observations:
 
-#### Implementation Plan
+   - ✅ Our TwitterScraper changes were applied
+   - ✅ Posts validation logic was fixed
+   - ❌ But error is happening in a different place
+   - ❌ Error is in `setArtistImage` during artist setup
+   - ❌ This causes the process to fail before posts are saved
 
-1. [ ] Update AgentService.storeComments:
+4. Actual Root Cause (Updated):
 
-   - [ ] Import getSocialPlatformByLink
-   - [ ] Extract platform from post_url or profile_url
-   - [ ] Add platform field to comment mapping
-   - [ ] Add error handling for invalid URLs
+   - The error isn't in TwitterScraper's post validation
+   - It's in the artist setup phase in `runTwitterAgent`
+   - When `setArtistImage` fails, it marks the status as `MISSING_POSTS`
+   - This happens before posts are even processed
 
-2. [ ] Test Changes:
-   - [ ] Verify TypeScript compilation succeeds
-   - [ ] Test with different platforms
-   - [ ] Ensure backward compatibility
+5. Required Changes (New):
+   - [ ] Fix error handling in `runTwitterAgent`:
+     - [ ] Handle null account_info gracefully
+     - [ ] Don't mark as MISSING_POSTS for artist setup failures
+     - [ ] Separate artist setup errors from post processing errors
+   - [ ] Review error status mapping:
+     - [ ] Add specific status for artist setup failures
+     - [ ] Keep MISSING_POSTS only for actual post issues
 
-Next Action:
+Next Steps for Tomorrow:
 
-1. Update AgentService.storeComments implementation
-2. Add platform extraction logic
+1. Add Strategic Logging Points:
 
-### Tradeoff Analysis: Single Upsert vs Check-then-Create for Socials
+   - [ ] In setArtistImage:
+     - Log input parameters (artistId, avatar)
+     - Log account_info state before access
+     - Add try/catch with detailed error context
+   - [ ] In runTwitterAgent:
+     - Log artist setup phase start/end
+     - Log state transitions with context
+     - Add timing information for each phase
 
-#### Context
+2. Look at `setArtistImage` implementation:
 
-Comparing two approaches for handling social record creation:
+   - [ ] Review account_info access pattern
+   - [ ] Add null checks
+   - [ ] Consider fallback behavior
 
-1. Current: Check existing records first (`getSocialsByUrls`), then create only new ones (`createSocials`)
-2. Proposed: Single upsert operation for all records (`upsertSocials`)
+3. Review error handling in `runTwitterAgent`:
 
-#### Performance Tradeoffs
+   - [ ] Map setup errors to appropriate states
+   - [ ] Add error recovery options
+   - [ ] Improve error messages
 
-1. Database Operations:
+4. Error State Updates:
+   - [ ] Add ARTIST_SETUP_ERROR state
+   - [ ] Update error state mapping
+   - [ ] Document new error states
 
-   - Current Approach:
-     - ✅ One read query for all records
-     - ✅ One write query only for new records
-     - ✅ Minimal write operations
-     - ❌ Always requires a read operation
-     - ❌ Two round trips for new records
-   - Upsert Approach:
-     - ✅ Single database round trip
-     - ✅ Simpler code flow
-     - ❌ Write operation for every record
-     - ❌ Higher database write load
-     - ❌ More index updates
+Logging Strategy:
 
-2. Resource Usage:
+- Add prefixes for easy filtering: "ARTIST_SETUP:", "TWITTER_AGENT:", etc.
+- Include relevant IDs in all log messages
+- Log state transitions with before/after values
+- Add timing information for performance tracking
+- Structure error logs with full context
 
-   - Current Approach:
-     - ✅ Lower write IOPS
-     - ✅ Better for paid databases with write limits
-     - ✅ Less index contention
-     - ❌ More complex application logic
-     - ❌ Higher memory usage for tracking state
-   - Upsert Approach:
-     - ✅ Less application memory usage
-     - ✅ Simpler state management
-     - ❌ Higher write IOPS
-     - ❌ More index locks
-     - ❌ Higher database resource usage
+Current Status:
 
-3. Error Handling:
+- We fixed the post validation logic but uncovered a deeper issue
+- The MISSING_POSTS error is being used too broadly
+- Need to separate artist setup errors from post processing errors
 
-   - Current Approach:
-     - ✅ Clear separation of failures
-     - ✅ Easier to retry only failed operations
-     - ✅ Better error context
-     - ❌ More complex error handling code
-     - ❌ Multiple points of failure
-   - Upsert Approach:
-     - ✅ Single point of failure
-     - ✅ Simpler error handling
-     - ❌ All-or-nothing failures
-     - ❌ Less granular error reporting
-     - ❌ Harder to identify specific failures
-
-4. Scalability:
-
-   - Current Approach:
-     - ✅ Better for read-heavy workloads
-     - ✅ Lower database contention
-     - ✅ More predictable performance
-     - ❌ More network latency
-     - ❌ More complex caching
-   - Upsert Approach:
-     - ✅ Better for write-heavy workloads
-     - ✅ Lower latency for new records
-     - ❌ Higher database load
-     - ❌ More deadlock potential
-     - ❌ Less predictable performance
-
-#### Use Case Analysis
-
-Best for Current Approach:
-
-- High percentage of existing records
-- Read-heavy workloads
-- Paid databases with write limits
-- Need for detailed error tracking
-- Systems with high concurrent access
-
-Best for Upsert Approach:
-
-- High percentage of new records
-- Write-heavy workloads
-- Simple architectures
-- Low concurrency systems
-- Need for minimal latency
-
-#### Recommendation
-
-The choice depends heavily on the usage pattern:
-
-1. If most social records already exist (e.g., returning users):
-
-   - Stick with current check-then-create approach
-   - Lower database load
-   - Better resource utilization
-
-2. If most social records are new (e.g., initial data import):
-   - Consider upsert approach
-   - Lower latency
-   - Simpler code
-
-For this specific application, since we're dealing with social media comments where:
-
-- Many comments come from the same users
-- Database write costs are significant
-- Concurrent access is common
-- Error tracking is important
-
-The current check-then-create approach is likely the better choice, despite being more complex.
-
-#### Monitoring Suggestions
-
-To validate this decision, consider tracking:
-
-1. Ratio of existing vs new socials
-2. Database operation latencies
-3. Error rates and types
-4. Resource utilization
-5. Concurrent access patterns
-
-### Current Task: Create getSocialsByUrl Function
-
-#### Analysis
-
-1. Current State:
-
-   - We have `getSocialsByUsernames` that looks up socials by username
-   - No direct way to look up socials by profile_url
-   - `AuthorInput` type from `createSocials.ts` has both username and profile_url
-
-2. Required Changes:
-
-   - [ ] Create new lib function `lib/supabase/getSocialsByUrl.ts`:
-     - [ ] Accept `AuthorInput[]` parameter
-     - [ ] Return map of profile_urls to social IDs
-     - [ ] Add proper error handling and logging
-     - [ ] Add TypeScript types and JSDoc documentation
-
-3. Implementation Plan:
-
-   1. [ ] Create `getSocialsByUrl.ts`:
-      - [ ] Define return type interface
-      - [ ] Implement Supabase query using profile_url
-      - [ ] Add error handling for failed queries
-      - [ ] Add detailed logging
-   2. [ ] Add TypeScript Types:
-      - [ ] Define response interface
-      - [ ] Reuse AuthorInput type from createSocials
-      - [ ] Add proper JSDoc documentation
-   3. [ ] Add Error Handling:
-      - [ ] Handle empty input array
-      - [ ] Handle database query errors
-      - [ ] Add appropriate error logging
-   4. [ ] Add Tests:
-      - [ ] Test with empty array
-      - [ ] Test with valid profile URLs
-      - [ ] Test with invalid profile URLs
-      - [ ] Test error cases
-
-Next Action:
-
-1. Create the new `getSocialsByUrl.ts` file
-2. Implement the basic function structure with types
-
-### Current Task: Update createOrGetCommentSocials to use getSocialsByUrls
-
-#### Analysis
-
-1. Current State:
-
-   - `createOrGetCommentSocials.ts` uses `getSocialsByUsernames`
-   - We have a new `getSocialsByUrls` function
-   - Both functions exist in parallel
-
-2. Required Changes:
-
-   - [x] Update `createOrGetCommentSocials.ts`:
-     - [x] Replace `getSocialsByUsernames` with `getSocialsByUrls`
-     - [x] Update function call to pass authors directly
-     - [x] Keep error handling consistent
-   - [x] Delete unused `getSocialsByUsernames.ts`
-   - [x] Verify functionality remains the same
-
-3. Implementation Plan:
-   1. [x] Update imports in `createOrGetCommentSocials.ts`
-   2. [x] Modify the function to use `getSocialsByUrls`
-   3. [x] Test the changes
-   4. [x] Remove `getSocialsByUsernames.ts`
-
-Implementation Complete! ✅
-
-Key Changes Made:
-
-1. Updated `createOrGetCommentSocials.ts` to use `getSocialsByUrls`
-2. Added conversion from profile_url map to username map for backward compatibility
-3. Updated author filtering to use profile_url as the key
-4. Removed unused `getSocialsByUsernames.ts`
-
-Next Steps:
-
-1. Consider adding unit tests for the updated functionality
-2. Monitor for any issues in production use
+Note for Tomorrow:
+The fix needs to focus on the artist setup phase in `runTwitterAgent` rather than the TwitterScraper implementation.

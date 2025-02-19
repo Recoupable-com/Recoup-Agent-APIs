@@ -528,59 +528,208 @@ Next Action:
 1. Update AgentService.storeComments implementation
 2. Add platform extraction logic
 
-### Tradeoff Analysis: Removing Existing Socials Check
+### Tradeoff Analysis: Single Upsert vs Check-then-Create for Socials
 
 #### Context
 
-Considering removing the existing socials check in `createOrGetCommentSocials` and relying on database constraints.
+Comparing two approaches for handling social record creation:
 
-#### Tradeoffs
+1. Current: Check existing records first (`getSocialsByUrls`), then create only new ones (`createSocials`)
+2. Proposed: Single upsert operation for all records (`upsertSocials`)
 
-1. Pros of Removing Check:
+#### Performance Tradeoffs
 
-   - Simpler code - single responsibility of just creating socials
-   - One less database query per batch of comments
-   - Relies on database constraints for uniqueness
-   - Potentially faster in cases where most authors are new
-   - Less error handling code needed
+1. Database Operations:
 
-2. Cons of Removing Check:
+   - Current Approach:
+     - ✅ One read query for all records
+     - ✅ One write query only for new records
+     - ✅ Minimal write operations
+     - ❌ Always requires a read operation
+     - ❌ Two round trips for new records
+   - Upsert Approach:
+     - ✅ Single database round trip
+     - ✅ Simpler code flow
+     - ❌ Write operation for every record
+     - ❌ Higher database write load
+     - ❌ More index updates
 
-   - More write operations to database
-   - Higher database load under high concurrency
-   - More likely to hit rate limits
-   - Potential race conditions if multiple requests try to create same social
-   - More error logs from constraint violations
-   - Higher costs (if using paid database with write limits)
+2. Resource Usage:
 
-3. Database Impact:
+   - Current Approach:
+     - ✅ Lower write IOPS
+     - ✅ Better for paid databases with write limits
+     - ✅ Less index contention
+     - ❌ More complex application logic
+     - ❌ Higher memory usage for tracking state
+   - Upsert Approach:
+     - ✅ Less application memory usage
+     - ✅ Simpler state management
+     - ❌ Higher write IOPS
+     - ❌ More index locks
+     - ❌ Higher database resource usage
 
-   - More write operations vs read operations
-   - Relies heavily on database's conflict resolution
-   - May need to handle more deadlocks
-   - Index contention on username/profile_url columns
+3. Error Handling:
 
-4. Performance Impact:
+   - Current Approach:
+     - ✅ Clear separation of failures
+     - ✅ Easier to retry only failed operations
+     - ✅ Better error context
+     - ❌ More complex error handling code
+     - ❌ Multiple points of failure
+   - Upsert Approach:
+     - ✅ Single point of failure
+     - ✅ Simpler error handling
+     - ❌ All-or-nothing failures
+     - ❌ Less granular error reporting
+     - ❌ Harder to identify specific failures
 
-   - Better for write-heavy workloads with mostly new users
-   - Worse for read-heavy workloads with existing users
-   - More database resources used overall
-   - Higher latency due to conflict resolution
+4. Scalability:
 
-5. Maintenance Impact:
-   - Simpler code to maintain
-   - More difficult to debug database issues
-   - Need stronger monitoring of database errors
-   - May need to implement retry logic for conflicts
+   - Current Approach:
+     - ✅ Better for read-heavy workloads
+     - ✅ Lower database contention
+     - ✅ More predictable performance
+     - ❌ More network latency
+     - ❌ More complex caching
+   - Upsert Approach:
+     - ✅ Better for write-heavy workloads
+     - ✅ Lower latency for new records
+     - ❌ Higher database load
+     - ❌ More deadlock potential
+     - ❌ Less predictable performance
+
+#### Use Case Analysis
+
+Best for Current Approach:
+
+- High percentage of existing records
+- Read-heavy workloads
+- Paid databases with write limits
+- Need for detailed error tracking
+- Systems with high concurrent access
+
+Best for Upsert Approach:
+
+- High percentage of new records
+- Write-heavy workloads
+- Simple architectures
+- Low concurrency systems
+- Need for minimal latency
 
 #### Recommendation
 
-While removing the check would simplify the code, the potential downsides in terms of database load, error handling, and resource usage suggest keeping the current implementation. The existing "check-then-write" pattern is a standard practice that usually performs better than "write-and-handle-conflicts" in most real-world scenarios.
+The choice depends heavily on the usage pattern:
+
+1. If most social records already exist (e.g., returning users):
+
+   - Stick with current check-then-create approach
+   - Lower database load
+   - Better resource utilization
+
+2. If most social records are new (e.g., initial data import):
+   - Consider upsert approach
+   - Lower latency
+   - Simpler code
+
+For this specific application, since we're dealing with social media comments where:
+
+- Many comments come from the same users
+- Database write costs are significant
+- Concurrent access is common
+- Error tracking is important
+
+The current check-then-create approach is likely the better choice, despite being more complex.
+
+#### Monitoring Suggestions
+
+To validate this decision, consider tracking:
+
+1. Ratio of existing vs new socials
+2. Database operation latencies
+3. Error rates and types
+4. Resource utilization
+5. Concurrent access patterns
+
+### Current Task: Create getSocialsByUrl Function
+
+#### Analysis
+
+1. Current State:
+
+   - We have `getSocialsByUsernames` that looks up socials by username
+   - No direct way to look up socials by profile_url
+   - `AuthorInput` type from `createSocials.ts` has both username and profile_url
+
+2. Required Changes:
+
+   - [ ] Create new lib function `lib/supabase/getSocialsByUrl.ts`:
+     - [ ] Accept `AuthorInput[]` parameter
+     - [ ] Return map of profile_urls to social IDs
+     - [ ] Add proper error handling and logging
+     - [ ] Add TypeScript types and JSDoc documentation
+
+3. Implementation Plan:
+
+   1. [ ] Create `getSocialsByUrl.ts`:
+      - [ ] Define return type interface
+      - [ ] Implement Supabase query using profile_url
+      - [ ] Add error handling for failed queries
+      - [ ] Add detailed logging
+   2. [ ] Add TypeScript Types:
+      - [ ] Define response interface
+      - [ ] Reuse AuthorInput type from createSocials
+      - [ ] Add proper JSDoc documentation
+   3. [ ] Add Error Handling:
+      - [ ] Handle empty input array
+      - [ ] Handle database query errors
+      - [ ] Add appropriate error logging
+   4. [ ] Add Tests:
+      - [ ] Test with empty array
+      - [ ] Test with valid profile URLs
+      - [ ] Test with invalid profile URLs
+      - [ ] Test error cases
+
+Next Action:
+
+1. Create the new `getSocialsByUrl.ts` file
+2. Implement the basic function structure with types
+
+### Current Task: Update createOrGetCommentSocials to use getSocialsByUrls
+
+#### Analysis
+
+1. Current State:
+
+   - `createOrGetCommentSocials.ts` uses `getSocialsByUsernames`
+   - We have a new `getSocialsByUrls` function
+   - Both functions exist in parallel
+
+2. Required Changes:
+
+   - [x] Update `createOrGetCommentSocials.ts`:
+     - [x] Replace `getSocialsByUsernames` with `getSocialsByUrls`
+     - [x] Update function call to pass authors directly
+     - [x] Keep error handling consistent
+   - [x] Delete unused `getSocialsByUsernames.ts`
+   - [x] Verify functionality remains the same
+
+3. Implementation Plan:
+   1. [x] Update imports in `createOrGetCommentSocials.ts`
+   2. [x] Modify the function to use `getSocialsByUrls`
+   3. [x] Test the changes
+   4. [x] Remove `getSocialsByUsernames.ts`
+
+Implementation Complete! ✅
+
+Key Changes Made:
+
+1. Updated `createOrGetCommentSocials.ts` to use `getSocialsByUrls`
+2. Added conversion from profile_url map to username map for backward compatibility
+3. Updated author filtering to use profile_url as the key
+4. Removed unused `getSocialsByUsernames.ts`
 
 Next Steps:
 
-1. Consider adding metrics to measure:
-   - Ratio of new vs existing socials
-   - Database operation latencies
-   - Error rates
-2. This would provide data to make a more informed decision about optimization
+1. Consider adding unit tests for the updated functionality
+2. Monitor for any issues in production use

@@ -1,6 +1,6 @@
 import { CommentInput } from "./savePostComments";
 import extractUniqueAuthors from "../utils/extractUniqueAuthors";
-import getSocialsByUsernames from "./getSocialsByUsernames";
+import getSocialsByUrls from "./getSocialsByUrls";
 import createSocials from "./createSocials";
 
 /**
@@ -29,17 +29,28 @@ const createOrGetCommentSocials = async (
       return {};
     }
 
-    // Get existing social records
+    // Get existing social records by profile URLs
     const { socialMap: existingSocials, error: fetchError } =
-      await getSocialsByUsernames(authors.map((a) => a.username));
+      await getSocialsByUrls(authors);
     if (fetchError) {
       console.error("Failed to fetch existing socials:", fetchError);
       return {};
     }
 
+    // Convert profile_url map to username map for consistency
+    const usernameMap = authors.reduce<{ [username: string]: string }>(
+      (acc, author) => {
+        if (existingSocials[author.profile_url]) {
+          acc[author.username] = existingSocials[author.profile_url];
+        }
+        return acc;
+      },
+      {}
+    );
+
     // Find authors that need new social records
     const authorsToCreate = authors.filter(
-      (author) => !existingSocials[author.username]
+      (author) => !existingSocials[author.profile_url]
     );
 
     if (authorsToCreate.length > 0) {
@@ -48,14 +59,14 @@ const createOrGetCommentSocials = async (
         await createSocials(authorsToCreate);
       if (createError) {
         console.error("Failed to create new socials:", createError);
-        return existingSocials;
+        return usernameMap;
       }
 
       // Merge existing and new social maps
-      return { ...existingSocials, ...newSocials };
+      return { ...usernameMap, ...newSocials };
     }
 
-    return existingSocials;
+    return usernameMap;
   } catch (error) {
     console.error("Error in createOrGetCommentSocials:", error);
     return {};

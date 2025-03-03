@@ -1,19 +1,9 @@
 import getTikTokProfile from "../tiktok/getTikTokProfile";
 import uploadPfpToArweave from "../arweave/uploadPfpToArweave";
 import { Database } from "../../types/database.types";
+import randomDelay from "../utils/randomDelay";
 
 type Social = Database["public"]["Tables"]["socials"]["Row"];
-
-/**
- * Add a random delay between min and max milliseconds
- */
-async function randomDelay(min = 2000, max = 4000): Promise<void> {
-  const delay = Math.floor(Math.random() * (max - min + 1)) + min;
-  console.log(
-    `Waiting ${(delay / 1000).toFixed(1)} seconds before next request...`
-  );
-  await new Promise((resolve) => setTimeout(resolve, delay));
-}
 
 /**
  * Enhances TikTok social profiles with additional data like avatars, follower counts, following counts, and bios

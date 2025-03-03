@@ -25,8 +25,7 @@ async function enhanceAuthorsWithAvatars(authors: Social[]): Promise<Social[]> {
 
   let enhancedTikTokAuthors: Social[] = [];
   if (tiktokAuthors.length > 0) {
-    const { enhancedProfiles, stats } =
-      await enhanceTikTokProfiles(tiktokAuthors);
+    const { enhancedProfiles } = await enhanceTikTokProfiles(tiktokAuthors);
     enhancedTikTokAuthors = enhancedProfiles;
   }
 

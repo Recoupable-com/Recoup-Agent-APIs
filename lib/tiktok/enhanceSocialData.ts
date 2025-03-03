@@ -23,44 +23,14 @@ async function randomDelay(min = 2000, max = 4000): Promise<void> {
  */
 export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
   enhancedProfiles: Social[];
-  stats: {
-    total: number;
-    enhanced: number;
-    skipped: number;
-    failed: number;
-    avatarsFound: number;
-    followerCountsFound: number;
-    followingCountsFound: number;
-    biosFound: number;
-    arweaveUploads: number;
-  };
 }> {
   if (!profiles.length) {
     return {
       enhancedProfiles: [],
-      stats: {
-        total: 0,
-        enhanced: 0,
-        skipped: 0,
-        failed: 0,
-        avatarsFound: 0,
-        followerCountsFound: 0,
-        followingCountsFound: 0,
-        biosFound: 0,
-        arweaveUploads: 0,
-      },
     };
   }
 
   const enhancedProfiles: Social[] = [];
-  let enhancedCount = 0;
-  let skippedCount = 0;
-  let failedCount = 0;
-  let avatarsFound = 0;
-  let followerCountsFound = 0;
-  let followingCountsFound = 0;
-  let biosFound = 0;
-  let arweaveUploads = 0;
 
   console.log(`Enhancing ${profiles.length} TikTok profiles`);
 
@@ -94,7 +64,6 @@ export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
 
         if (arweaveUrl) {
           enhancedProfile.avatar = arweaveUrl;
-          arweaveUploads++;
           console.log(
             `✅ Uploaded avatar to Arweave for TikTok user: ${username}`
           );
@@ -108,14 +77,12 @@ export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
           );
         }
 
-        avatarsFound++;
         dataFound = true;
         console.log(`✅ Found avatar for TikTok user: ${username}`);
       }
 
       if (followerCount !== null) {
         enhancedProfile.followerCount = followerCount;
-        followerCountsFound++;
         dataFound = true;
         console.log(
           `✅ Found follower count for TikTok user: ${username}: ${followerCount}`
@@ -124,7 +91,6 @@ export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
 
       if (followingCount !== null) {
         enhancedProfile.followingCount = followingCount;
-        followingCountsFound++;
         dataFound = true;
         console.log(
           `✅ Found following count for TikTok user: ${username}: ${followingCount}`
@@ -133,14 +99,11 @@ export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
 
       if (description) {
         enhancedProfile.bio = description;
-        biosFound++;
         dataFound = true;
         console.log(`✅ Found bio for TikTok user: ${username}`);
       }
 
-      if (dataFound) {
-        enhancedCount++;
-      } else {
+      if (!dataFound) {
         if (error) {
           console.warn(
             `⚠️ Error fetching TikTok profile data for ${username}:`,
@@ -149,40 +112,17 @@ export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
         } else {
           console.warn(`⚠️ No profile data found for TikTok user: ${username}`);
         }
-        failedCount++;
       }
 
       enhancedProfiles.push(enhancedProfile);
     } catch (profileError) {
       console.error("Failed to fetch TikTok profile data:", profileError);
       enhancedProfiles.push(profile);
-      failedCount++;
     }
   }
 
-  console.log(
-    `Enhanced ${enhancedCount}/${profiles.length} TikTok profiles (${skippedCount} skipped, ${failedCount} failed)`
-  );
-  console.log(
-    `Data found: ${avatarsFound} avatars, ${followerCountsFound} follower counts, ${followingCountsFound} following counts, ${biosFound} bios`
-  );
-  console.log(
-    `Arweave uploads: ${arweaveUploads}/${avatarsFound} avatars uploaded to Arweave`
-  );
-
   return {
     enhancedProfiles,
-    stats: {
-      total: profiles.length,
-      enhanced: enhancedCount,
-      skipped: skippedCount,
-      failed: failedCount,
-      avatarsFound,
-      followerCountsFound,
-      followingCountsFound,
-      biosFound,
-      arweaveUploads,
-    },
   };
 }
 

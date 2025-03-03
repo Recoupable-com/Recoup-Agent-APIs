@@ -33,20 +33,13 @@ const createSocials = async (
       return { socialMap: {}, error: null };
     }
 
-    // Clean the authors array to remove any error fields
-    const cleanAuthors = authors.map((author) => {
-      // Use destructuring to remove error field if it exists
-      const { error: _error, ...cleanAuthor } = author as any;
-      return cleanAuthor;
-    });
-
     // Filter out authors with empty profile_url or username
-    const validAuthors = cleanAuthors.filter(
+    const validAuthors = authors.filter(
       (author) => author.profile_url && author.username
     );
 
     console.log(
-      `Filtered out ${cleanAuthors.length - validAuthors.length} authors with empty profile_url or username`
+      `Filtered out ${authors.length - validAuthors.length} authors with empty profile_url or username`
     );
 
     const { data: upsertedSocials, error: upsertError } = await supabase

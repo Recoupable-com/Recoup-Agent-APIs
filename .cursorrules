@@ -150,97 +150,302 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
   - Handle null/undefined values gracefully in setup phases
   - Add appropriate error states to enum/constants file
   - Document error state transitions and their meanings
+- When scraping TikTok profiles, implement anti-bot detection measures including:
+  - Add randomized delays between requests to avoid rate limiting
+  - Use rotating user agents to prevent pattern detection
+  - Implement exponential backoff for failed requests
+  - Add proper error handling for TikTok's anti-scraping responses
+  - Consider using a proxy rotation service for high-volume scraping
+- When using Supabase upsert operations, ensure the onConflict parameter matches an actual unique or exclusion constraint in the database table
+- When uploading images to permanent storage like Arweave, implement proper fallback mechanisms to handle upload failures and maintain the original URL as a backup
 
 # Scratchpad
 
-### Current Task: Debug Twitter Missing Posts Error - Final Analysis
+### Current Task: Implement Arweave Uploads for TikTok Profile Pictures
 
-#### New Error Analysis
+#### Task Analysis
 
-1. Error Stack:
+1. **Current Issue**:
+
+   - TikTok profile pictures are currently being saved with their original URLs
+   - These URLs may have caching issues or expire over time
+   - We need to upload these images to Arweave for permanent storage
+
+2. **Required Changes**:
+   - Integrate the existing `uploadPfpToArweave.ts` function with the TikTok profile scraping process
+   - Update the `enhanceSocialData.ts` file to upload avatar images to Arweave
+   - Add fallback to original URLs if Arweave upload fails
+   - Track and report Arweave upload statistics
+
+#### Implementation Plan
+
+1. [x] Update `enhanceSocialData.ts` to:
+
+   - Import the `uploadPfpToArweave` function
+   - Add Arweave upload logic for avatar URLs
+   - Implement fallback to original URLs if upload fails
+   - Add tracking for successful Arweave uploads
+   - Update statistics reporting to include Arweave uploads
+
+2. [ ] Test the implementation with real TikTok profiles
+
+   - Verify that avatars are successfully uploaded to Arweave
+   - Confirm that the Arweave URLs are correctly saved to the database
+   - Check that fallback to original URLs works when needed
+
+3. [ ] Consider batch processing for existing profiles
+   - Create a script to find profiles with original TikTok avatar URLs
+   - Upload these to Arweave and update the database records
+
+#### Previous Task: Add followingCount to TikTok Profile Scraping
+
+#### Task Analysis
+
+1. **Current Issue**:
+
+   - The TikTok profile scraping is currently saving `avatar`, `followerCount`, and `bio` to the socials table
+   - The `followingCount` field is defined in the database schema but not being populated
+
+2. **Required Changes**:
+   - Update `getTikTokProfile.ts` to extract the following count from TikTok profiles
+   - Update `enhanceSocialData.ts` to process and save the following count to the socials record
+
+#### Implementation Plan
+
+1. [x] Update `getTikTokProfile.ts` to:
+
+   - Add `followingCount` to the `TikTokProfileResult` interface
+   - Add selectors to extract following count from HTML
+   - Add patterns to extract following count from script tags
+   - Update logging to include following count information
+
+2. [x] Update `enhanceSocialData.ts` to:
+   - Process the `followingCount` returned from `getTikTokProfile`
+   - Add `followingCount` to the enhanced profile object
+   - Update statistics tracking to include following count
+   - Update logging to include following count information
+
+#### Previous Task: Fix ON CONFLICT Error in Socials Table Upsert Operation
+
+1. **Current Error**:
 
    ```
-   Error in setArtistImage for : TypeError: Cannot read properties of null (reading 'account_info')
-   at setArtistImage
-   at processTicksAndRejections
-   at async runTwitterAgent
-   at async Promise.all
-   at async PilotController.processPlatforms
+   Failed to create/update socials: {
+     code: '42P10',
+     details: null,
+     hint: null,
+     message: 'there is no unique or exclusion constraint matching the ON CONFLICT specification'
+   }
    ```
 
-2. Error Flow:
+2. **Root Cause**:
 
-   - Error originates in `setArtistImage`
-   - Bubbles up through `runTwitterAgent`
-   - Ends in `MISSING_POSTS` status
+   - The error code `42P10` indicates a PostgreSQL error related to the ON CONFLICT clause
+   - The current code in `createSocials.ts` is using `onConflict: "username, profile_url"`
+   - This suggests we're trying to upsert based on a composite unique constraint on `username` and `profile_url`
+   - However, the error message indicates that this constraint doesn't exist in the database
 
-3. Key Observations:
+3. **Current Implementation**:
 
-   - ✅ Our TwitterScraper changes were applied
-   - ✅ Posts validation logic was fixed
-   - ❌ But error is happening in a different place
-   - ❌ Error is in `setArtistImage` during artist setup
-   - ❌ This causes the process to fail before posts are saved
+   ```typescript
+   const { data: upsertedSocials, error: upsertError } = await supabase
+     .from("socials")
+     .upsert(authors, {
+       onConflict: "username, profile_url",
+       ignoreDuplicates: false, // Update existing records
+     })
+     .select("id, username");
+   ```
 
-4. Actual Root Cause (Updated):
+4. **Database Schema Analysis**:
 
-   - The error isn't in TwitterScraper's post validation
-   - It's in the artist setup phase in `runTwitterAgent`
-   - When `setArtistImage` fails, it marks the status as `MISSING_POSTS`
-   - This happens before posts are even processed
+   From the migration file for the socials table:
 
-5. Required Changes (New):
-   - [ ] Fix error handling in `runTwitterAgent`:
-     - [ ] Handle null account_info gracefully
-     - [ ] Don't mark as MISSING_POSTS for artist setup failures
-     - [ ] Separate artist setup errors from post processing errors
-   - [ ] Review error status mapping:
-     - [ ] Add specific status for artist setup failures
-     - [ ] Keep MISSING_POSTS only for actual post issues
+   ```sql
+   CREATE UNIQUE INDEX socials_pkey ON public.socials USING btree (id);
+   CREATE UNIQUE INDEX socials_profile_url_key ON public.socials USING btree (profile_url);
 
-Next Steps for Tomorrow:
+   alter table "public"."socials" add constraint "socials_pkey" PRIMARY KEY using index "socials_pkey";
+   alter table "public"."socials" add constraint "socials_profile_url_key" UNIQUE using index "socials_profile_url_key";
+   ```
 
-1. Add Strategic Logging Points:
+   Key findings:
 
-   - [ ] In setArtistImage:
-     - Log input parameters (artistId, avatar)
-     - Log account_info state before access
-     - Add try/catch with detailed error context
-   - [ ] In runTwitterAgent:
-     - Log artist setup phase start/end
-     - Log state transitions with context
-     - Add timing information for each phase
+   - The socials table has a PRIMARY KEY constraint on the `id` column
+   - The socials table has a UNIQUE constraint on the `profile_url` column
+   - There is NO composite unique constraint on `username, profile_url`
+   - The `username` column is NOT part of any unique constraint
 
-2. Look at `setArtistImage` implementation:
+#### Solution
 
-   - [ ] Review account_info access pattern
-   - [ ] Add null checks
-   - [ ] Consider fallback behavior
+Based on the database schema, we need to update the `createSocials.ts` file to use the correct unique constraint for the ON CONFLICT clause. The correct constraint to use is `profile_url` since that's the only unique constraint available besides the primary key.
 
-3. Review error handling in `runTwitterAgent`:
+```typescript
+const { data: upsertedSocials, error: upsertError } = await supabase
+  .from("socials")
+  .upsert(authors, {
+    onConflict: "profile_url", // Changed from "username, profile_url" to match the actual unique constraint
+    ignoreDuplicates: false, // Update existing records
+  })
+  .select("id, username");
+```
 
-   - [ ] Map setup errors to appropriate states
-   - [ ] Add error recovery options
-   - [ ] Improve error messages
+#### Action Plan
 
-4. Error State Updates:
-   - [ ] Add ARTIST_SETUP_ERROR state
-   - [ ] Update error state mapping
-   - [ ] Document new error states
+1. [x] Identify the actual unique constraints in the socials table
 
-Logging Strategy:
+   - Found that there's a unique constraint on `profile_url` but not on the combination of `username, profile_url`
 
-- Add prefixes for easy filtering: "ARTIST_SETUP:", "TWITTER_AGENT:", etc.
-- Include relevant IDs in all log messages
-- Log state transitions with before/after values
-- Add timing information for performance tracking
-- Structure error logs with full context
+2. [x] Determine the correct constraint to use
 
-Current Status:
+   - Should use `onConflict: "profile_url"` instead of `onConflict: "username, profile_url"`
 
-- We fixed the post validation logic but uncovered a deeper issue
-- The MISSING_POSTS error is being used too broadly
-- Need to separate artist setup errors from post processing errors
+3. [x] Update the `createSocials.ts` file to use the correct constraint
 
-Note for Tomorrow:
-The fix needs to focus on the artist setup phase in `runTwitterAgent` rather than the TwitterScraper implementation.
+   - Changed the onConflict parameter to "profile_url"
+   - Added a comment explaining the constraint usage
+
+4. [x] Test the fix to ensure it resolves the error
+
+   - Run the code that was previously failing to confirm the fix works
+
+5. [x] Update documentation to reflect the correct constraint usage
+   - Added comments in the code to explain the constraint usage
+
+#### Previous Task: Integrate TikTok Avatar Fetching for Comment Social Records
+
+1. **Current Flow**:
+
+   - Comments are processed in `lib/tiktok/getFormattedComments.ts`
+   - Social records are created in `lib/supabase/createOrGetCommentSocials.ts`
+   - Avatar URLs are currently missing in the process
+
+2. **Avatar Fetching Tool**:
+
+   - ✅ Successfully built and tested `lib/tiktok/getTikTokAvatar.ts`
+   - ✅ Can fetch high-resolution avatar URLs (1080x1080) directly from TikTok profiles
+   - ✅ Works reliably for test cases (teddyswims, charlidamelio, khaby.lame)
+   - ✅ Handles errors gracefully and includes detailed logging
+
+3. **Integration Points Analysis**:
+   a. Where to Add Avatar Fetching:
+
+   - Option A: During comment formatting in `getFormattedComments.ts`
+     - Pros: Early in the process, could avoid storing records without avatars
+     - Cons: Would need to modify each platform's comment formatting logic
+   - Option B: During social record creation in `createSocials.ts` ⬅ (Implemented)
+     - Pros: Centralized point for all platforms, minimal code changes
+     - Cons: Adds processing time during social record creation
+   - Option C: As a separate batch process for existing records ⬅ (Implemented)
+     - Pros: No changes to existing flow, can run asynchronously
+     - Cons: Records would initially be created without avatars
+
+   b. Performance Considerations:
+
+   - ✅ Added rate limiting (500ms delay between requests) to avoid TikTok blocks
+   - ✅ Implemented staggered requests in both real-time and batch processes
+   - ✅ Added detailed logging for monitoring and debugging
+
+4. **Implementation Summary**:
+
+   1. ✅ Modified `lib/supabase/createSocials.ts` to:
+
+      - Check if the profile is from TikTok (based on profile_url)
+      - For TikTok profiles, extract username and call getTikTokAvatar
+      - Add the avatar URL to the author object before database insertion
+      - Include rate limiting (delay between requests)
+      - Add logging for avatar fetch success/failure
+
+   2. ✅ Created batch update script `tools/update_tiktok_avatars.ts` to:
+      - Query socials table for TikTok profiles without avatars
+      - Fetch and update avatars in batches with rate limiting
+      - Provide dry-run option for testing
+      - Include detailed statistics and progress reporting
+
+5. **Required Changes**:
+   [X] Convert avatar fetching tool to a reusable module
+   [X] Add rate limiting and error handling
+   [X] Integrate with social record creation flow
+   [X] Create batch update process for existing records
+
+6. **TikTok Avatar Fetching Failures Analysis**:
+
+   a. **Observed Issues**:
+
+   - Most avatar fetch attempts are failing with "No avatar found for user"
+   - The HTML response is very short (1155 bytes) for failed requests
+   - Successful fetches show much larger responses (250,000+ bytes)
+   - Only a small percentage of requests succeed (e.g., 1/5 or 0/15 in test batches)
+
+   b. **Root Causes**:
+
+   - TikTok is likely detecting and blocking our scraping attempts
+   - The short HTML responses (1155 bytes) indicate we're getting a bot detection page
+   - Multiple concurrent requests from the same IP are triggering anti-bot measures
+   - Our current headers may not be convincing enough to bypass TikTok's detection
+
+   c. **Steps to Fix**:
+
+   - [x] Reduce concurrency: Process one profile at a time instead of in parallel
+   - [x] Increase delays: Extend the delay between requests from 500ms to 2-3 seconds
+   - [x] Enhance browser simulation: Add more realistic browser headers and cookies
+   - [x] Implement session rotation: Create and maintain multiple TikTok sessions
+   - [x] Add detection for bot-challenge pages: Identify when we're being blocked
+   - [x] Implement exponential backoff: Retry failed requests with increasing delays
+   - [x] Skip likely bot accounts: Filter out usernames that look like spam/bot accounts
+   - [ ] Consider using a headless browser: For more complex scraping scenarios (future enhancement)
+
+7. **Fixes Implemented**:
+
+   a. **In `getTikTokAvatar.ts`**:
+
+   - ✅ Added rotating user agents to prevent pattern detection
+   - ✅ Implemented exponential backoff for failed requests (retry with increasing delays)
+   - ✅ Added detection for bot challenge pages with specific patterns
+   - ✅ Enhanced browser simulation with more realistic headers and cookies
+   - ✅ Added more robust error handling and retry logic
+   - ✅ Expanded avatar detection patterns to find more avatar URLs
+
+   b. **In `createSocials.ts`**:
+
+   - ✅ Changed from parallel to sequential processing for TikTok profiles
+   - ✅ Increased delays between requests (2-4 seconds with randomization)
+   - ✅ Added filtering to skip likely bot accounts
+   - ✅ Separated TikTok profiles from other platforms for specialized handling
+   - ✅ Improved error handling and logging
+
+   c. **In `update_tiktok_avatars.ts`**:
+
+   - ✅ Increased default delay between requests to 3 seconds
+   - ✅ Added randomization to delays to appear more human-like
+   - ✅ Added filtering to skip likely bot accounts
+   - ✅ Improved error handling and reporting
+   - ✅ Added command-line option to customize delay
+
+Progress:
+[X] Built and tested avatar fetching tool
+[X] Verified it works with test accounts
+[X] Converted to reusable module
+[X] Integrated with social record creation
+[X] Added rate limiting
+[X] Created batch update process
+[X] Fixed TikTok anti-bot detection issues
+
+Notes:
+
+- Avatar URLs are high resolution (1080x1080)
+- URLs include authentication tokens that may expire
+- Need to consider token refresh mechanism
+- Should store original URL format to allow future updates
+- Successfully finding avatars in script tags when not in HTML
+- TikTok is actively blocking our scraping attempts with anti-bot measures
+- Implemented more sophisticated scraping techniques to bypass detection
+- Sequential processing with longer delays significantly improves success rate
+- Skipping likely bot accounts reduces unnecessary processing
+
+Next Steps:
+
+1. Test the improved avatar fetching with real TikTok comments
+2. Run the batch update script on production data with the new improvements
+3. Monitor avatar fetch success rates
+4. Consider implementing a proxy rotation system for higher volume processing if needed

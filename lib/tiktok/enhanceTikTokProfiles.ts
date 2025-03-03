@@ -1,7 +1,7 @@
 import scrapeTikTokProfile from "../scraping/platforms/tiktok/scrapeTikTokProfile";
 import uploadPfpToArweave from "../arweave/uploadPfpToArweave";
 import randomDelay from "../utils/randomDelay";
-import { Social } from "../../types/agent";
+import { AuthorInput, Social } from "../../types/agent";
 
 /**
  * Enhances TikTok social profiles with additional data like avatars, follower counts, following counts, and bios
@@ -9,7 +9,7 @@ import { Social } from "../../types/agent";
  * @param profiles - Array of social profiles to enhance
  * @returns Enhanced profiles with additional data where available
  */
-export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
+export async function enhanceTikTokProfiles(profiles: AuthorInput[]): Promise<{
   enhancedProfiles: Social[];
 }> {
   if (!profiles.length) {
@@ -71,9 +71,11 @@ export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
       enhancedProfiles.push(enhancedProfile);
     } catch (profileError) {
       console.error("Failed to fetch TikTok profile data:", profileError);
-      enhancedProfiles.push(profile);
+      enhancedProfiles.push(profile as Social);
     }
   }
+
+  console.log("enhancedProfiles", enhancedProfiles);
 
   return {
     enhancedProfiles,

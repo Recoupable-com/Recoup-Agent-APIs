@@ -1,5 +1,5 @@
 import { CommentInput } from "../supabase/savePostComments";
-import { AuthorInput } from "../supabase/createSocials";
+import { AuthorInput } from "../../types/agent";
 import getSocialPlatformByLink from "../getSocialPlatformByLink";
 import { isValidPlatform } from "./validatePlatform";
 import { getProfileUrl } from "./getProfileUrl";

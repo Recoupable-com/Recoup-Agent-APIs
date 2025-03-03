@@ -1,5 +1,5 @@
+import { AuthorInput } from "../../types/agent";
 import supabase from "./serverClient";
-import { AuthorInput } from "./createSocials";
 
 interface GetSocialsByUrlsResponse {
   socialMap: { [profile_url: string]: string };

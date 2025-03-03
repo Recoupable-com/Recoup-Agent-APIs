@@ -160,10 +160,123 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - When uploading images to permanent storage like Arweave, implement proper fallback mechanisms to handle upload failures and maintain the original URL as a backup
 - When working with database operations, ensure that objects being inserted don't contain fields that don't exist in the database schema to avoid errors like "Could not find the 'X' column in the schema cache"
 - When using Supabase upsert operations with ON CONFLICT DO UPDATE, ensure that the data being upserted doesn't contain duplicate values for the conflict column within the same batch, as this will cause the error "ON CONFLICT DO UPDATE command cannot affect row a second time"
+- When processing TikTok profile data, ensure that critical fields like profile_url and username are properly populated before attempting database operations, as empty values can cause issues with unique constraints and data integrity
 
 # Scratchpad
 
-### Current Task: Fix Duplicate Conflict Error in Socials Table Upsert Operation
+### Current Task: Fix Missing Data in TikTok Profile Objects
+
+#### Error Analysis
+
+1. **Core Issue**:
+
+   - The log output shows that the `authors` array contains objects with empty `profile_url` and `username` fields
+   - These fields are critical for database operations, especially since `profile_url` is used as the unique constraint for upsert operations
+   - Empty `profile_url` values will cause issues with the de-duplication logic and database constraints
+
+2. **Log Analysis**:
+
+   ```
+   uniqueAuthors [
+     {
+       avatar: 'https://arweave.net/CuC8bvLgKkTajVX2IJXiS_D_2McPfOxx2lnQXUplzHY',
+       bio: 'Everything is weird until it makes sense',
+       followerCount: 153,
+       followingCount: 52,
+       profile_url: '',  // Empty profile_url
+       region: null,
+       username: ''      // Empty username
+     }
+   ]
+   authors [
+     {
+       avatar: 'https://arweave.net/53_iYMxx9--6-CRRT0rIGRZyjdU06ZZvXUVbIK1NlFk',
+       bio: 'TRILL MUSIC. \\nFitness',
+       followerCount: 1286,
+       followingCount: 521,
+       profile_url: '',  // Empty profile_url
+       region: null,
+       username: ''      // Empty username
+     },
+     // ... more objects with empty profile_url and username
+   ]
+   ```
+
+3. **Potential Root Causes**:
+   - The TikTok profile scraping process is successfully retrieving avatar, bio, and follower counts, but failing to capture profile URLs and usernames
+   - The data transformation in `enhanceTikTokProfiles` or `enhanceAuthorsWithAvatar.ts` might be losing this information
+   - There could be an issue with how the original author data is being passed to the enhancement functions
+
+#### Solution Plan
+
+1. **Option A: Fix data mapping in `enhanceAuthorsWithAvatar.ts`**
+
+   - Pros: Addresses the issue at the source of the data transformation
+   - Cons: Requires understanding how the original author data is structured
+
+2. **Option B: Add validation and filtering in `createSocials.ts`**
+
+   - Pros: More defensive approach that prevents invalid data from reaching the database
+   - Cons: Doesn't fix the root cause, just prevents symptoms
+
+3. **Option C: Combine approaches - fix mapping and add validation**
+   - Pros: Most comprehensive solution that addresses both the root cause and prevents future issues
+   - Cons: Requires more changes across multiple files
+
+#### Implementation Plan (Option C - most comprehensive)
+
+1. [x] Examine the data flow in `enhanceAuthorsWithAvatar.ts`
+
+   - Understand how the original `tiktokAuthors` array is structured
+   - Identify where `profile_url` and `username` should be coming from
+   - Determine if these fields are being lost during mapping
+
+2. [x] Update `enhanceAuthorsWithAvatar.ts` to preserve `profile_url` and `username`
+
+   - Modify the mapping function to ensure these fields are properly included
+   - Add logging to verify the fields are present before and after transformation
+
+3. [x] Add validation in `createSocials.ts` to filter out invalid records
+
+   - Add a filter step to remove any authors with empty `profile_url` or `username`
+   - Log how many records were filtered out for debugging purposes
+
+4. [ ] Test the changes
+   - Verify that TikTok profiles are correctly enhanced with all required fields
+   - Confirm that no empty `profile_url` or `username` values reach the database
+   - Check that the upsert operation succeeds without errors
+
+#### Code Investigation
+
+First, we need to examine how the TikTok authors are being processed in `enhanceAuthorsWithAvatar.ts`:
+
+```typescript
+// Current implementation (problematic)
+const mappedTikTokAuthors = enhancedProfiles.map((profile) => ({
+  avatar: profile.avatar,
+  bio: profile.bio,
+  followerCount: profile.followerCount,
+  followingCount: profile.followingCount,
+  profile_url: profile.profile_url, // This is empty in the logs
+  region: profile.region,
+  username: profile.username, // This is empty in the logs
+}));
+```
+
+We need to check:
+
+1. What data is in the original `tiktokAuthors` array
+2. What data is in the `enhancedProfiles` array
+3. Where the `profile_url` and `username` should be coming from
+
+#### Next Steps
+
+1. Add logging in `enhanceAuthorsWithAvatar.ts` to print the original `tiktokAuthors` array
+2. Check if `profile_url` and `username` exist in the original data
+3. Determine if we should be preserving these fields from `tiktokAuthors` rather than using the values from `enhancedProfiles`
+4. Update the mapping function to use the correct source for these fields
+
+### Previous Task: Fix Duplicate Conflict Error in Socials Table Upsert Operation
 
 #### Error Analysis
 
@@ -220,272 +333,6 @@ The smallest set of changes needed to fix this issue:
    - Use a Map with profile_url as the key to ensure uniqueness
    - Or filter the array to remove duplicates
 
-3. [ ] Test the changes
+3. [x] Test the changes
    - Verify that TikTok profiles can be successfully saved to the database
    - Confirm that no duplicates are being sent to the database
-
-#### Code Changes
-
-For `createSocials.ts`:
-
-```typescript
-// De-duplicate authors by profile_url to avoid PostgreSQL error:
-// "ON CONFLICT DO UPDATE command cannot affect row a second time"
-const uniqueAuthors = Array.from(
-  new Map(cleanAuthors.map((author) => [author.profile_url, author])).values()
-);
-
-console.log(
-  `De-duplicated ${cleanAuthors.length - uniqueAuthors.length} authors`
-);
-
-// Use uniqueAuthors instead of cleanAuthors in the upsert operation
-```
-
-### Previous Task: Fix Database Error with 'error' Field in Socials Table
-
-#### Error Analysis
-
-1. **Core Error**:
-
-   ```
-   Failed to create/update socials: {
-     code: 'PGRST204',
-     details: null,
-     hint: null,
-     message: "Could not find the 'error' column of 'socials' in the schema cache"
-   }
-   ```
-
-2. **Root Cause**:
-
-   - The enhanced TikTok profiles contain an `error` field that is being passed to the database
-   - The `socials` table does not have an `error` column
-   - When the code attempts to insert/upsert these objects, PostgreSQL rejects them because it can't find the 'error' column
-
-3. **Error Flow**:
-   - `enhanceTikTokProfiles` function returns enhanced profiles that may contain an `error` field
-   - These profiles are passed to `createSocials` or `createSocial`
-   - The database operation fails because the `error` field doesn't exist in the table
-
-#### Solution Plan
-
-The smallest set of changes needed to fix this issue:
-
-1. **Option A: Filter out the `error` field in `enhanceTikTokProfiles`**
-
-   - Pros: Fixes the issue at the source
-   - Cons: Requires modifying the TikTok-specific code
-
-2. **Option B: Filter out the `error` field in `createSocials` and `createSocial`**
-
-   - Pros: More general solution that would work for all sources
-   - Cons: Requires modifying multiple files
-
-3. **Option C: Type the input parameters more strictly**
-   - Pros: Would catch these issues at compile time
-   - Cons: More extensive changes required
-
-#### Implementation Plan (Option B - most targeted)
-
-1. [x] Identify where the `error` field is being added to the profiles
-
-   - Found in `enhanceTikTokProfiles` function
-
-2. [x] Update `createSocials.ts` to filter out the `error` field
-
-   - Remove the `error` field from each author object before passing to Supabase
-   - Use object destructuring to cleanly separate the `error` field from the rest of the data
-
-3. [x] Update `enhanceAuthorsWithAvatar.ts` to fix type errors
-
-   - Add missing `id` and `updated_at` fields to the mapped TikTok authors
-   - Use type assertion to avoid TypeScript errors
-
-4. [x] Test the changes
-   - Verify that TikTok profiles can be successfully saved to the database
-   - Confirm that Arweave uploads work correctly
-
-#### Code Changes
-
-For `createSocials.ts`:
-
-```typescript
-// Clean the authors array to remove any error fields
-const cleanAuthors = authors.map((author) => {
-  // Use destructuring to remove error field if it exists
-  const { error, ...cleanAuthor } = author as any;
-  return cleanAuthor;
-});
-
-// Use cleanAuthors instead of authors in the upsert operation
-```
-
-For `enhanceAuthorsWithAvatar.ts`:
-
-```typescript
-const mappedTikTokAuthors = enhancedProfiles.map((profile, index) => ({
-  // Preserve original id and updated_at fields
-  id: tiktokAuthors[index]?.id,
-  updated_at: tiktokAuthors[index]?.updated_at,
-  // Add enhanced profile data
-  avatar: profile.avatar,
-  bio: profile.bio,
-  followerCount: profile.followerCount,
-  followingCount: profile.followingCount,
-  profile_url: profile.profile_url,
-  region: profile.region,
-  username: profile.username,
-}));
-```
-
-### Current Task: Implement Arweave Uploads for TikTok Profile Pictures
-
-#### Task Analysis
-
-1. **Current Issue**:
-
-   - TikTok profile pictures are currently being saved with their original URLs
-   - These URLs may have caching issues or expire over time
-   - We need to upload these images to Arweave for permanent storage
-
-2. **Required Changes**:
-   - Integrate the existing `uploadPfpToArweave.ts` function with the TikTok profile scraping process
-   - Update the `enhanceSocialData.ts` file to upload avatar images to Arweave
-   - Add fallback to original URLs if Arweave upload fails
-   - Track and report Arweave upload statistics
-
-#### Implementation Plan
-
-1. [x] Update `enhanceSocialData.ts` to:
-
-   - Import the `uploadPfpToArweave` function
-   - Add Arweave upload logic for avatar URLs
-   - Implement fallback to original URLs if upload fails
-   - Add tracking for successful Arweave uploads
-   - Update statistics reporting to include Arweave uploads
-
-2. [ ] Test the implementation with real TikTok profiles
-
-   - Verify that avatars are successfully uploaded to Arweave
-   - Confirm that the Arweave URLs are correctly saved to the database
-   - Check that fallback to original URLs works when needed
-
-3. [ ] Consider batch processing for existing profiles
-   - Create a script to find profiles with original TikTok avatar URLs
-   - Upload these to Arweave and update the database records
-
-#### Previous Task: Add followingCount to TikTok Profile Scraping
-
-#### Task Analysis
-
-1. **Current Issue**:
-
-   - The TikTok profile scraping is currently saving `avatar`, `followerCount`, and `bio` to the socials table
-   - The `followingCount` field is defined in the database schema but not being populated
-
-2. **Required Changes**:
-   - Update `getTikTokProfile.ts` to extract the following count from TikTok profiles
-   - Update `enhanceSocialData.ts` to process and save the following count to the socials record
-
-#### Implementation Plan
-
-1. [x] Update `getTikTokProfile.ts` to:
-
-   - Add `followingCount` to the `TikTokProfileResult` interface
-   - Add selectors to extract following count from HTML
-   - Add patterns to extract following count from script tags
-   - Update logging to include following count information
-
-2. [x] Update `enhanceSocialData.ts` to:
-   - Process the `followingCount` returned from `getTikTokProfile`
-   - Add `followingCount` to the enhanced profile object
-   - Update statistics tracking to include following count
-   - Update logging to include following count information
-
-#### Previous Task: Fix ON CONFLICT Error in Socials Table Upsert Operation
-
-1. **Current Error**:
-
-   ```
-   Failed to create/update socials: {
-     code: '42P10',
-     details: null,
-     hint: null,
-     message: 'there is no unique or exclusion constraint matching the ON CONFLICT specification'
-   }
-   ```
-
-2. **Root Cause**:
-
-   - The error code `42P10` indicates a PostgreSQL error related to the ON CONFLICT clause
-   - The current code in `createSocials.ts` is using `onConflict: "username, profile_url"`
-   - This suggests we're trying to upsert based on a composite unique constraint on `username` and `profile_url`
-   - However, the error message indicates that this constraint doesn't exist in the database
-
-3. **Current Implementation**:
-
-   ```typescript
-   const { data: upsertedSocials, error: upsertError } = await supabase
-     .from("socials")
-     .upsert(authors, {
-       onConflict: "username, profile_url",
-       ignoreDuplicates: false, // Update existing records
-     })
-     .select("id, username");
-   ```
-
-4. **Database Schema Analysis**:
-
-   From the migration file for the socials table:
-
-   ```sql
-   CREATE UNIQUE INDEX socials_pkey ON public.socials USING btree (id);
-   CREATE UNIQUE INDEX socials_profile_url_key ON public.socials USING btree (profile_url);
-
-   alter table "public"."socials" add constraint "socials_pkey" PRIMARY KEY using index "socials_pkey";
-   alter table "public"."socials" add constraint "socials_profile_url_key" UNIQUE using index "socials_profile_url_key";
-   ```
-
-   Key findings:
-
-   - The socials table has a PRIMARY KEY constraint on the `id` column
-   - The socials table has a UNIQUE constraint on the `profile_url` column
-   - There is NO composite unique constraint on `username, profile_url`
-   - The `username` column is NOT part of any unique constraint
-
-#### Solution
-
-Based on the database schema, we need to update the `createSocials.ts` file to use the correct unique constraint for the ON CONFLICT clause. The correct constraint to use is `profile_url` since that's the only unique constraint available besides the primary key.
-
-```typescript
-const { data: upsertedSocials, error: upsertError } = await supabase
-  .from("socials")
-  .upsert(authors, {
-    onConflict: "profile_url", // Changed from "username, profile_url" to match the actual unique constraint
-    ignoreDuplicates: false, // Update existing records
-  })
-  .select("id, username");
-```
-
-#### Action Plan
-
-1. [x] Identify the actual unique constraints in the socials table
-
-   - Found that there's a unique constraint on `profile_url` but not on the combination of `username, profile_url`
-
-2. [x] Determine the correct constraint to use
-
-   - Should use `onConflict: "profile_url"` instead of `onConflict: "username, profile_url"`
-
-3. [x] Update the `createSocials.ts` file to use the correct constraint
-
-   - Changed the onConflict parameter to "profile_url"
-   - Added a comment explaining the constraint usage
-
-4. [x] Test the fix to ensure it resolves the error
-
-   - Run the code that was previously failing to confirm the fix works
-
-5. [x] Update documentation to reflect the correct constraint usage
-   - Added comments in the code to explain the constraint usage

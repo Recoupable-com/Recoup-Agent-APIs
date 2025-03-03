@@ -15,15 +15,10 @@ const uploadPfpToArweave = async (image: string): Promise<string | null> => {
         read() {
           this.push(buffer);
           this.push(null);
-        }
+        },
       });
       return stream;
     };
-
-    // Get upload costs and upload the file
-    const [{ winc: fileSizeCost }] = await turboClient.getUploadCosts({
-      bytes: [fileSize],
-    });
 
     const { id } = await turboClient.uploadFile({
       fileStreamFactory,
@@ -51,4 +46,4 @@ const uploadPfpToArweave = async (image: string): Promise<string | null> => {
   }
 };
 
-export default uploadPfpToArweave; 
+export default uploadPfpToArweave;

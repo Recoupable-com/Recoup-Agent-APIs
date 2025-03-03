@@ -57,8 +57,8 @@ importers:
         specifier: ^4.21.1
         version: 4.21.2
       node-fetch:
-        specifier: ^3.3.2
-        version: 3.3.2
+        specifier: ^2.7.0
+        version: 2.7.0
       nodemon:
         specifier: ^3.1.7
         version: 3.1.9
@@ -93,6 +93,9 @@ importers:
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
+      '@types/node-fetch':
+        specifier: ^2.6.12
+        version: 2.6.12
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@22.13.1)(ts-node@10.9.2(@types/node@22.13.1)(typescript@5.7.3))

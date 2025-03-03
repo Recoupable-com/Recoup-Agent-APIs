@@ -142,594 +142,197 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
   - Be explicit about ESM vs CommonJS choice in the configuration
   - Start with "happy path" tests before adding edge cases
   - Mock external dependencies at the correct level (as close to the source as possible)
+- When implementing error status mapping:
+  - Use specific error states for different types of failures (e.g. separate setup errors from processing errors)
+  - Don't reuse error states across different failure modes
+  - Add proper logging context to identify where the error originated
+  - Consider the full error flow from origin to final status
+  - Handle null/undefined values gracefully in setup phases
+  - Add appropriate error states to enum/constants file
+  - Document error state transitions and their meanings
+- When scraping TikTok profiles, implement anti-bot detection measures including:
+  - Add randomized delays between requests to avoid rate limiting
+  - Use rotating user agents to prevent pattern detection
+  - Implement exponential backoff for failed requests
+  - Add proper error handling for TikTok's anti-scraping responses
+  - Consider using a proxy rotation service for high-volume scraping
+- When using Supabase upsert operations, ensure the onConflict parameter matches an actual unique or exclusion constraint in the database table
+- When uploading images to permanent storage like Arweave, implement proper fallback mechanisms to handle upload failures and maintain the original URL as a backup
+- When working with database operations, ensure that objects being inserted don't contain fields that don't exist in the database schema to avoid errors like "Could not find the 'X' column in the schema cache"
+- When using Supabase upsert operations with ON CONFLICT DO UPDATE, ensure that the data being upserted doesn't contain duplicate values for the conflict column within the same batch, as this will cause the error "ON CONFLICT DO UPDATE command cannot affect row a second time"
+- When processing TikTok profile data, ensure that critical fields like profile_url and username are properly populated before attempting database operations, as empty values can cause issues with unique constraints and data integrity
 
 # Scratchpad
 
-### Current Task: Split createOrGetCommentSocials Following SRP
+### Current Task: Fix Missing Data in TikTok Profile Objects
 
-#### Analysis
+#### Error Analysis
 
-1. Current Issue:
+1. **Core Issue**:
 
-   - `createOrGetCommentSocials` has multiple responsibilities:
-     - Platform detection and validation
-     - Author extraction and mapping
-     - Fetching existing social records
-     - Creating new social records
-   - This violates Single Responsibility Principle
-   - Makes the function harder to test and maintain
+   - The log output shows that the `authors` array contains objects with empty `profile_url` and `username` fields
+   - These fields are critical for database operations, especially since `profile_url` is used as the unique constraint for upsert operations
+   - Empty `profile_url` values will cause issues with the de-duplication logic and database constraints
 
-2. Required Changes:
+2. **Log Analysis**:
 
-   - [x] Create new lib functions:
-     - [x] `lib/supabase/getSocialsByUsernames.ts` for fetching existing socials
-     - [x] `lib/supabase/createSocials.ts` for creating new socials
-     - [x] `lib/utils/extractUniqueAuthors.ts` for author extraction and platform validation
-   - [x] Update `createOrGetCommentSocials.ts`:
-     - [x] Use new utility functions
-     - [x] Focus on orchestrating the process
-     - [x] Improve error handling
+   ```
+   uniqueAuthors [
+     {
+       avatar: 'https://arweave.net/CuC8bvLgKkTajVX2IJXiS_D_2McPfOxx2lnQXUplzHY',
+       bio: 'Everything is weird until it makes sense',
+       followerCount: 153,
+       followingCount: 52,
+       profile_url: '',  // Empty profile_url
+       region: null,
+       username: ''      // Empty username
+     }
+   ]
+   authors [
+     {
+       avatar: 'https://arweave.net/53_iYMxx9--6-CRRT0rIGRZyjdU06ZZvXUVbIK1NlFk',
+       bio: 'TRILL MUSIC. \\nFitness',
+       followerCount: 1286,
+       followingCount: 521,
+       profile_url: '',  // Empty profile_url
+       region: null,
+       username: ''      // Empty username
+     },
+     // ... more objects with empty profile_url and username
+   ]
+   ```
 
-3. Implementation Plan:
+3. **Potential Root Causes**:
+   - The TikTok profile scraping process is successfully retrieving avatar, bio, and follower counts, but failing to capture profile URLs and usernames
+   - The data transformation in `enhanceTikTokProfiles` or `enhanceAuthorsWithAvatar.ts` might be losing this information
+   - There could be an issue with how the original author data is being passed to the enhancement functions
 
-   1. [x] Create `getSocialsByUsernames.ts`:
-      - [x] Function to fetch socials by username list
-      - [x] Return type: `{ [username: string]: string }`
-      - [x] Proper error handling
-   2. [x] Create `createSocials.ts`:
-      - [x] Function to create new social records
-      - [x] Accept array of author objects
-      - [x] Return new social IDs
-   3. [x] Create `extractUniqueAuthors.ts`:
-      - [x] Function to extract and validate authors
-      - [x] Use existing platform validation
-      - [x] Return validated author objects
-   4. [x] Update `createOrGetCommentSocials.ts`:
-      - [x] Import new utility functions
-      - [x] Remove old implementation
-      - [x] Implement orchestration flow
-      - [x] Add proper error handling
+#### Solution Plan
 
-Implementation Complete! ✅
+1. **Option A: Fix data mapping in `enhanceAuthorsWithAvatar.ts`**
 
-Next Steps:
+   - Pros: Addresses the issue at the source of the data transformation
+   - Cons: Requires understanding how the original author data is structured
 
-1. Consider adding unit tests for each new function
-2. Document the new architecture in the project documentation
-3. Update any dependent code that might be affected by these changes
+2. **Option B: Add validation and filtering in `createSocials.ts`**
 
-### Current Task: Move isValidPlatform to Standalone Library
+   - Pros: More defensive approach that prevents invalid data from reaching the database
+   - Cons: Doesn't fix the root cause, just prevents symptoms
 
-#### Analysis
+3. **Option C: Combine approaches - fix mapping and add validation**
+   - Pros: Most comprehensive solution that addresses both the root cause and prevents future issues
+   - Cons: Requires more changes across multiple files
 
-1. Current Issue:
+#### Implementation Plan (Option C - most comprehensive)
 
-   - `isValidPlatform` function is defined in `createOrGetCommentSocials.ts`
-   - This violates Single Responsibility Principle
-   - Function could be reused in other parts of the codebase
+1. [x] Examine the data flow in `enhanceAuthorsWithAvatar.ts`
 
-2. Required Changes:
+   - Understand how the original `tiktokAuthors` array is structured
+   - Identify where `profile_url` and `username` should be coming from
+   - Determine if these fields are being lost during mapping
 
-   - [x] Create new lib file for platform validation
-   - [x] Move isValidPlatform function to new file
-   - [x] Update imports in createOrGetCommentSocials.ts
-   - [x] Add proper error handling and logging
+2. [x] Update `enhanceAuthorsWithAvatar.ts` to preserve `profile_url` and `username`
 
-3. Implementation Complete:
+   - Modify the mapping function to ensure these fields are properly included
+   - Add logging to verify the fields are present before and after transformation
 
-   - [x] Created `lib/utils/validatePlatform.ts`:
-     - [x] Exported isValidPlatform function
-     - [x] Added proper TypeScript types
-     - [x] Added JSDoc documentation with examples
-     - [x] Added explicit platform validation
-   - [x] Updated `createOrGetCommentSocials.ts`:
-     - [x] Imported from new location
-     - [x] Removed old implementation
-   - [x] Added error handling:
-     - [x] Added descriptive warning messages
-     - [x] Added platform-specific validation
+3. [x] Add validation in `createSocials.ts` to filter out invalid records
 
-4. Improvements Made:
+   - Add a filter step to remove any authors with empty `profile_url` or `username`
+   - Log how many records were filtered out for debugging purposes
 
-   - Added explicit validation against known platforms
-   - Enhanced error messages for different failure cases
-   - Added JSDoc documentation with usage examples
-   - Improved type safety with explicit platform list
+4. [ ] Test the changes
+   - Verify that TikTok profiles are correctly enhanced with all required fields
+   - Confirm that no empty `profile_url` or `username` values reach the database
+   - Check that the upsert operation succeeds without errors
 
-5. Benefits Achieved:
-   - Better code organization ✅
-   - Reusable platform validation ✅
-   - Clearer responsibilities ✅
-   - Easier testing ✅
-   - Improved maintainability ✅
+#### Code Investigation
 
-Implementation Details:
+First, we need to examine how the TikTok authors are being processed in `enhanceAuthorsWithAvatar.ts`:
 
 ```typescript
-// New validatePlatform.ts
-export function isValidPlatform(
-  platform: string | null
-): platform is SocialType {
-  if (!platform) {
-    console.warn("Platform is null or undefined");
-    return false;
-  }
-
-  if (platform === "NONE" || platform === "APPPLE") {
-    console.warn(`Invalid platform value: ${platform}`);
-    return false;
-  }
-
-  const validPlatforms = ["INSTAGRAM", "TIKTOK", "TWITTER", "SPOTIFY"];
-  if (!validPlatforms.includes(platform)) {
-    console.warn(`Unknown platform: ${platform}`);
-    return false;
-  }
-
-  return true;
-}
+// Current implementation (problematic)
+const mappedTikTokAuthors = enhancedProfiles.map((profile) => ({
+  avatar: profile.avatar,
+  bio: profile.bio,
+  followerCount: profile.followerCount,
+  followingCount: profile.followingCount,
+  profile_url: profile.profile_url, // This is empty in the logs
+  region: profile.region,
+  username: profile.username, // This is empty in the logs
+}));
 ```
 
-Next Steps:
+We need to check:
 
-1. Consider adding unit tests for the validation function
-2. Document the new utility in the project documentation
-
-### Current Task: Fix TikTok Comment Storage
-
-#### Analysis
-
-1. Current Status:
-
-   - ✅ Social records are being created correctly
-   - ✅ Posts are being scraped and stored
-   - ✅ Social_posts associations are working
-   - ❌ Post comments are not being stored
-   - ✅ Profile URL generation is working
-
-2. Root Cause Found:
-
-   - Comments were being filtered out as invalid because:
-     - TikTok API returns comments with `post_id` field
-     - Our validation was checking for `post_url` field
-     - All 982 comments were being rejected by validation
-
-3. Fix Implemented:
-
-   - [x] Updated ScrapedComment type to include optional post_id field
-   - [x] Modified comment validation to accept either post_url or post_id
-   - [x] Added mapping to convert post_id to post_url when needed
-
-4. Next Steps:
-   - [ ] Test the changes with a new TikTok scrape
-   - [ ] Verify comments are being stored in database
-   - [ ] Monitor logs for any remaining issues
-
-#### Implementation Progress
-
-1. [x] Add logging to TikTokScraper:
-
-   - [x] Add debug logs in scrapeComments
-   - [x] Add validation checks for comment data
-   - [x] Add detailed logging of validation results
-
-2. [x] Add logging to getVideoComments:
-
-   - [x] Log API responses
-   - [x] Log data transformation steps
-   - [x] Add error context
-
-3. [x] Fix comment validation:
-
-   - [x] Update ScrapedComment type
-   - [x] Modify validation logic
-   - [x] Add post_id to post_url mapping
-
-4. [ ] Test and verify:
-   - [ ] Run scraper with test account
-   - [ ] Check logs at each step
-   - [ ] Verify database state
-
-Next Action:
-Run a test scrape to verify the fix works and comments are now being stored correctly.
-
-### Previous Task: Fix Hardcoded Profile URL in PilotController
-
-#### Analysis
-
-1. Current Issue:
-
-   - In `PilotController.ts`, profile_url is hardcoded to Instagram format: `https://instagram.com/${handle}`
-   - This is incorrect for other platforms like TikTok, Twitter, etc.
-   - Each platform has its own URL format:
-     - Instagram: `https://instagram.com/${handle}`
-     - TikTok: `https://tiktok.com/@${handle}`
-     - Twitter: `https://x.com/${handle}`
-     - Spotify: `https://open.spotify.com/artist/${handle}`
-
-2. Required Changes:
-   - ✅ Create a new lib function to generate platform-specific profile URLs
-   - ✅ Update PilotController to use this function
-   - ✅ Ensure consistent URL generation across the codebase
-
-#### Implementation Plan
-
-1. [x] Create new lib function:
-
-   - [x] Create `lib/utils/getProfileUrl.ts`
-   - [x] Implement URL generation for all platforms
-   - [x] Add proper typing and error handling
-
-2. [x] Update PilotController:
-
-   - [x] Import new getProfileUrl function
-   - [x] Replace hardcoded URL with dynamic generation
-   - [x] Update error handling
-
-3. [ ] Test changes:
-
-   - [ ] Verify URL generation for each platform
-   - [ ] Test with various handle formats
-   - [ ] Ensure backward compatibility
-
-4. [x] Documentation:
-   - [x] Add JSDoc comments to new function
-   - [x] Update any relevant documentation
-
-Next Steps:
-
-1. Add test cases for the new getProfileUrl function
-2. Test the changes in the PilotController with different platforms
-
-Note: After this task, we'll continue with the TikTok scraper architecture update.
-
-### Previous Task: Remove Problematic Progress Updates in TikTok Scraper
-
-#### Analysis of Progress Update Points
-
-1. Files Modified:
-
-   - `lib/tiktok/getVideoComments.ts`: ✅ Removed progress updates and agent_status_id parameter
-   - `lib/scraping/platforms/tiktok/TikTokScraper.ts`: ✅ Updated to call getVideoComments without agent_status_id
-   - `agents/runTikTokAgent.ts`: ✅ Deleted as it's no longer used (replaced by TikTokScraper)
-
-2. Changes Made:
-   - Removed updateAgentStatus import and calls
-   - Removed agent_status_id parameter from getVideoComments
-   - Updated TikTokScraper to match new function signature
-   - Kept core comment fetching logic intact
-   - Deleted unused runTikTokAgent.ts file
+1. What data is in the original `tiktokAuthors` array
+2. What data is in the `enhancedProfiles` array
+3. Where the `profile_url` and `username` should be coming from
 
 #### Next Steps
 
-1. [x] Remove progress updates from getVideoComments.ts:
+1. Add logging in `enhanceAuthorsWithAvatar.ts` to print the original `tiktokAuthors` array
+2. Check if `profile_url` and `username` exist in the original data
+3. Determine if we should be preserving these fields from `tiktokAuthors` rather than using the values from `enhancedProfiles`
+4. Update the mapping function to use the correct source for these fields
 
-   - [x] Remove updateAgentStatus import
-   - [x] Remove all progress update calls
-   - [x] Keep only the core comment fetching logic
+### Previous Task: Fix Duplicate Conflict Error in Socials Table Upsert Operation
 
-2. [x] Simplify TikTokScraper.ts:
+#### Error Analysis
 
-   - [x] Update getVideoComments call to remove agent_status_id parameter
+1. **Core Error**:
 
-3. [x] Clean up old code:
-
-   - [x] Delete unused runTikTokAgent.ts
-
-4. [ ] Test changes:
-   - [ ] Verify scraping still works
-   - [ ] Confirm no more "Cannot read properties of null" errors
-   - [ ] Check final status updates still work
-
-Note: The final status updates in PilotController (FINISHED, ERROR states) remain unchanged since they work correctly.
-
-### Previous Task: Step 34 - API - create_report - segmentId - one param
-
-Task Description:
-Update the new report API endpoint to only require a single parameter (segmentId) instead of both artistId and segmentName.
-
-#### Progress
-
-1. [x] Review current implementation
-2. [x] Design changes
-3. [x] Create Supabase query functions
-4. [x] Implementation
-5. [x] Fix Email Lookup Logic
-6. [x] Update getArtistSegmentComments
-   - [x] Modify function signature
-   - [x] Update getFansBySegment
-   - [x] Update error handling and logging
-
-#### New Issue: Handle No Comments Case
-
-Problem:
-
-- App crashes when no comments are found for a segment
-- Current behavior stops the entire app process when a report fails
-- Need to handle report failure gracefully without crashing
-
-Root Cause:
-
-1. Unhandled error in async report generation process
-2. Error propagates up and crashes the Node process
-3. No try-catch around async report generation
-
-Design Decision:
-
-- Keep early response for better UX (non-blocking)
-- Let report generation continue asynchronously
-- Handle failures gracefully without crashing app
-
-Action Items:
-
-1. [x] Update error handling in async report generation:
-   - [x] Add try-catch around report generation logic
-   - [x] Log errors appropriately
-   - [x] Allow process to continue even if report fails
-2. [ ] Add test cases:
-   - [ ] Test empty comments scenario
-   - [ ] Verify app continues running after report failure
-
-Next Steps:
-
-1. Add test cases to verify error handling
-2. Test the complete flow
-
-### Current Task: Debug TypeScript Error in AgentService
-
-#### Analysis
-
-1. Error Location:
-
-   - File: `lib/services/AgentService.ts`
-   - Line: 91
-   - Error: Missing required `platform` field in comment object
-
-2. Error Details:
-
-   ```typescript
-   Argument of type '{ text: string; timestamp: string; ownerUsername: string; postUrl: string; }[]'
-   is not assignable to parameter of type 'CommentInput[]'.
-   Property 'platform' is missing in type '{ text: string; timestamp: string; ownerUsername: string; postUrl: string; }'
+   ```
+   Failed to create/update socials: {
+     code: '21000',
+     details: null,
+     hint: 'Ensure that no rows proposed for insertion within the same command have duplicate constrained values.',
+     message: 'ON CONFLICT DO UPDATE command cannot affect row a second time'
+   }
    ```
 
-3. Root Cause:
+2. **Root Cause**:
 
-   - `savePostComments` requires `platform` in `CommentInput` interface
-   - `AgentService.storeComments` is not providing the platform field
-   - Looking at `ScrapedComment` type, we have:
-     - `post_url` which can be used to extract platform
-     - `profile_url` which can also be used to extract platform
-   - We can use either URL to determine the platform
+   - The error code `21000` indicates a PostgreSQL error related to duplicate values in an upsert operation
+   - The hint "Ensure that no rows proposed for insertion within the same command have duplicate constrained values" suggests that we're trying to upsert multiple records with the same `profile_url` value in a single batch
+   - The message "ON CONFLICT DO UPDATE command cannot affect row a second time" confirms that PostgreSQL is detecting that the same row would be updated multiple times in a single upsert operation
 
-4. Solution:
-   - Use `getSocialPlatformByLink` to extract platform from either:
-     - `comment.post_url` (primary)
-     - `comment.profile_url` (fallback)
-   - Add platform field to comment mapping in `storeComments`
-   - Keep backward compatibility by using URL-based platform detection
+3. **Error Flow**:
+   - `enhanceTikTokProfiles` function returns enhanced profiles
+   - These profiles are passed to `createSocials`
+   - The batch of profiles contains duplicate `profile_url` values
+   - When `createSocials` attempts to upsert the batch, PostgreSQL rejects the operation because it would update the same row multiple times
 
-#### Implementation Plan
+#### Solution Plan
 
-1. [ ] Update AgentService.storeComments:
+The smallest set of changes needed to fix this issue:
 
-   - [ ] Import getSocialPlatformByLink
-   - [ ] Extract platform from post_url or profile_url
-   - [ ] Add platform field to comment mapping
-   - [ ] Add error handling for invalid URLs
+1. **Option A: De-duplicate profiles before upserting**
 
-2. [ ] Test Changes:
-   - [ ] Verify TypeScript compilation succeeds
-   - [ ] Test with different platforms
-   - [ ] Ensure backward compatibility
+   - Pros: Simple to implement, doesn't require changing the database operation
+   - Cons: Might lose data if there are legitimate duplicates with different data
 
-Next Action:
+2. **Option B: Split the upsert into individual operations**
 
-1. Update AgentService.storeComments implementation
-2. Add platform extraction logic
+   - Pros: Most reliable, handles all edge cases
+   - Cons: Less efficient, requires more database calls
 
-### Tradeoff Analysis: Single Upsert vs Check-then-Create for Socials
+3. **Option C: Group by profile_url and only keep the latest/most complete record**
+   - Pros: Balance of efficiency and reliability
+   - Cons: More complex implementation
 
-#### Context
+#### Implementation Plan (Option A - simplest)
 
-Comparing two approaches for handling social record creation:
+1. [x] Add logging to understand the duplicate profiles
 
-1. Current: Check existing records first (`getSocialsByUrls`), then create only new ones (`createSocials`)
-2. Proposed: Single upsert operation for all records (`upsertSocials`)
+   - Log the profile_url values before upserting to identify duplicates
+   - Check if the duplicates are identical or have different data
 
-#### Performance Tradeoffs
+2. [x] Update `createSocials.ts` to de-duplicate profiles before upserting
 
-1. Database Operations:
+   - Use a Map with profile_url as the key to ensure uniqueness
+   - Or filter the array to remove duplicates
 
-   - Current Approach:
-     - ✅ One read query for all records
-     - ✅ One write query only for new records
-     - ✅ Minimal write operations
-     - ❌ Always requires a read operation
-     - ❌ Two round trips for new records
-   - Upsert Approach:
-     - ✅ Single database round trip
-     - ✅ Simpler code flow
-     - ❌ Write operation for every record
-     - ❌ Higher database write load
-     - ❌ More index updates
-
-2. Resource Usage:
-
-   - Current Approach:
-     - ✅ Lower write IOPS
-     - ✅ Better for paid databases with write limits
-     - ✅ Less index contention
-     - ❌ More complex application logic
-     - ❌ Higher memory usage for tracking state
-   - Upsert Approach:
-     - ✅ Less application memory usage
-     - ✅ Simpler state management
-     - ❌ Higher write IOPS
-     - ❌ More index locks
-     - ❌ Higher database resource usage
-
-3. Error Handling:
-
-   - Current Approach:
-     - ✅ Clear separation of failures
-     - ✅ Easier to retry only failed operations
-     - ✅ Better error context
-     - ❌ More complex error handling code
-     - ❌ Multiple points of failure
-   - Upsert Approach:
-     - ✅ Single point of failure
-     - ✅ Simpler error handling
-     - ❌ All-or-nothing failures
-     - ❌ Less granular error reporting
-     - ❌ Harder to identify specific failures
-
-4. Scalability:
-
-   - Current Approach:
-     - ✅ Better for read-heavy workloads
-     - ✅ Lower database contention
-     - ✅ More predictable performance
-     - ❌ More network latency
-     - ❌ More complex caching
-   - Upsert Approach:
-     - ✅ Better for write-heavy workloads
-     - ✅ Lower latency for new records
-     - ❌ Higher database load
-     - ❌ More deadlock potential
-     - ❌ Less predictable performance
-
-#### Use Case Analysis
-
-Best for Current Approach:
-
-- High percentage of existing records
-- Read-heavy workloads
-- Paid databases with write limits
-- Need for detailed error tracking
-- Systems with high concurrent access
-
-Best for Upsert Approach:
-
-- High percentage of new records
-- Write-heavy workloads
-- Simple architectures
-- Low concurrency systems
-- Need for minimal latency
-
-#### Recommendation
-
-The choice depends heavily on the usage pattern:
-
-1. If most social records already exist (e.g., returning users):
-
-   - Stick with current check-then-create approach
-   - Lower database load
-   - Better resource utilization
-
-2. If most social records are new (e.g., initial data import):
-   - Consider upsert approach
-   - Lower latency
-   - Simpler code
-
-For this specific application, since we're dealing with social media comments where:
-
-- Many comments come from the same users
-- Database write costs are significant
-- Concurrent access is common
-- Error tracking is important
-
-The current check-then-create approach is likely the better choice, despite being more complex.
-
-#### Monitoring Suggestions
-
-To validate this decision, consider tracking:
-
-1. Ratio of existing vs new socials
-2. Database operation latencies
-3. Error rates and types
-4. Resource utilization
-5. Concurrent access patterns
-
-### Current Task: Create getSocialsByUrl Function
-
-#### Analysis
-
-1. Current State:
-
-   - We have `getSocialsByUsernames` that looks up socials by username
-   - No direct way to look up socials by profile_url
-   - `AuthorInput` type from `createSocials.ts` has both username and profile_url
-
-2. Required Changes:
-
-   - [ ] Create new lib function `lib/supabase/getSocialsByUrl.ts`:
-     - [ ] Accept `AuthorInput[]` parameter
-     - [ ] Return map of profile_urls to social IDs
-     - [ ] Add proper error handling and logging
-     - [ ] Add TypeScript types and JSDoc documentation
-
-3. Implementation Plan:
-
-   1. [ ] Create `getSocialsByUrl.ts`:
-      - [ ] Define return type interface
-      - [ ] Implement Supabase query using profile_url
-      - [ ] Add error handling for failed queries
-      - [ ] Add detailed logging
-   2. [ ] Add TypeScript Types:
-      - [ ] Define response interface
-      - [ ] Reuse AuthorInput type from createSocials
-      - [ ] Add proper JSDoc documentation
-   3. [ ] Add Error Handling:
-      - [ ] Handle empty input array
-      - [ ] Handle database query errors
-      - [ ] Add appropriate error logging
-   4. [ ] Add Tests:
-      - [ ] Test with empty array
-      - [ ] Test with valid profile URLs
-      - [ ] Test with invalid profile URLs
-      - [ ] Test error cases
-
-Next Action:
-
-1. Create the new `getSocialsByUrl.ts` file
-2. Implement the basic function structure with types
-
-### Current Task: Update createOrGetCommentSocials to use getSocialsByUrls
-
-#### Analysis
-
-1. Current State:
-
-   - `createOrGetCommentSocials.ts` uses `getSocialsByUsernames`
-   - We have a new `getSocialsByUrls` function
-   - Both functions exist in parallel
-
-2. Required Changes:
-
-   - [x] Update `createOrGetCommentSocials.ts`:
-     - [x] Replace `getSocialsByUsernames` with `getSocialsByUrls`
-     - [x] Update function call to pass authors directly
-     - [x] Keep error handling consistent
-   - [x] Delete unused `getSocialsByUsernames.ts`
-   - [x] Verify functionality remains the same
-
-3. Implementation Plan:
-   1. [x] Update imports in `createOrGetCommentSocials.ts`
-   2. [x] Modify the function to use `getSocialsByUrls`
-   3. [x] Test the changes
-   4. [x] Remove `getSocialsByUsernames.ts`
-
-Implementation Complete! ✅
-
-Key Changes Made:
-
-1. Updated `createOrGetCommentSocials.ts` to use `getSocialsByUrls`
-2. Added conversion from profile_url map to username map for backward compatibility
-3. Updated author filtering to use profile_url as the key
-4. Removed unused `getSocialsByUsernames.ts`
-
-Next Steps:
-
-1. Consider adding unit tests for the updated functionality
-2. Monitor for any issues in production use
+3. [x] Test the changes
+   - Verify that TikTok profiles can be successfully saved to the database
+   - Confirm that no duplicates are being sent to the database

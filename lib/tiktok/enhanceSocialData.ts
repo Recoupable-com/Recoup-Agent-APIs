@@ -1,11 +1,8 @@
 import getTikTokProfile from "../tiktok/getTikTokProfile";
 import uploadPfpToArweave from "../arweave/uploadPfpToArweave";
+import { Database } from "../../types/database.types";
 
-export interface SocialProfile {
-  username: string;
-  profile_url: string;
-  [key: string]: any;
-}
+type Social = Database["public"]["Tables"]["socials"]["Row"];
 
 /**
  * Add a random delay between min and max milliseconds
@@ -24,10 +21,8 @@ async function randomDelay(min = 2000, max = 4000): Promise<void> {
  * @param profiles - Array of social profiles to enhance
  * @returns Enhanced profiles with additional data where available
  */
-export async function enhanceTikTokProfiles(
-  profiles: SocialProfile[]
-): Promise<{
-  enhancedProfiles: SocialProfile[];
+export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
+  enhancedProfiles: Social[];
   stats: {
     total: number;
     enhanced: number;
@@ -57,7 +52,7 @@ export async function enhanceTikTokProfiles(
     };
   }
 
-  const enhancedProfiles: SocialProfile[] = [];
+  const enhancedProfiles: Social[] = [];
   let enhancedCount = 0;
   let skippedCount = 0;
   let failedCount = 0;

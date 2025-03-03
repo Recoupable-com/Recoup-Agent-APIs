@@ -1,10 +1,8 @@
 import enhanceTikTokProfiles from "../tiktok/enhanceSocialData";
-import { AuthorInput } from "../supabase/createSocials";
+import { Database } from "../../types/database.types";
 
-interface Author {
-  username: string;
-  profile_url: string;
-}
+type Social = Database["public"]["Tables"]["socials"]["Row"];
+
 /**
  * Enhances authors with platform-specific data like avatars
  * Currently supports TikTok avatar enhancement
@@ -12,9 +10,7 @@ interface Author {
  * @param authors Array of authors to enhance
  * @returns Enhanced authors with additional data where available
  */
-async function enhanceAuthorsWithAvatars(
-  authors: Author[]
-): Promise<AuthorInput[]> {
+async function enhanceAuthorsWithAvatars(authors: Social[]): Promise<Social[]> {
   if (!authors.length) {
     return [];
   }
@@ -27,7 +23,7 @@ async function enhanceAuthorsWithAvatars(
     (author) => !author.profile_url.includes("tiktok.com")
   );
 
-  let enhancedTikTokAuthors: AuthorInput[] = [];
+  let enhancedTikTokAuthors: Social[] = [];
   if (tiktokAuthors.length > 0) {
     const { enhancedProfiles, stats } =
       await enhanceTikTokProfiles(tiktokAuthors);

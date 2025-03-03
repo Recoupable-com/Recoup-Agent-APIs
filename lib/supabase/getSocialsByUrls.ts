@@ -1,5 +1,7 @@
 import supabase from "./serverClient";
-import { AuthorInput } from "./createSocials";
+import { Database } from "../../types/database.types";
+
+type Social = Database["public"]["Tables"]["socials"]["Row"];
 
 interface GetSocialsByUrlsResponse {
   socialMap: { [profile_url: string]: string };
@@ -27,7 +29,7 @@ interface GetSocialsByUrlsResponse {
  * ```
  */
 const getSocialsByUrls = async (
-  authors: AuthorInput[]
+  authors: Social[]
 ): Promise<GetSocialsByUrlsResponse> => {
   try {
     if (!authors.length) {

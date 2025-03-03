@@ -1,11 +1,7 @@
+import { Database } from "../../types/database.types";
 import supabase from "./serverClient";
 
-export interface AuthorInput {
-  username: string;
-  profile_url: string;
-  avatar?: string;
-  [key: string]: any;
-}
+type Social = Database["public"]["Tables"]["socials"]["Row"];
 
 interface CreateSocialsResponse {
   socialMap: { [username: string]: string };
@@ -33,7 +29,7 @@ interface CreateSocialsResponse {
  * ```
  */
 const createSocials = async (
-  authors: AuthorInput[]
+  authors: Social[]
 ): Promise<CreateSocialsResponse> => {
   try {
     if (!authors.length) {

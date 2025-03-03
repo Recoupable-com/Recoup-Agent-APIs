@@ -1,4 +1,8 @@
-import { Social, Post, Comment, SocialType } from "../../types/agent";
+import { Database } from "../../types/database.types";
+
+type DbSocial = Database["public"]["Tables"]["socials"]["Row"];
+type DbPost = Database["public"]["Tables"]["posts"]["Row"];
+type DbPostComment = Database["public"]["Tables"]["post_comments"]["Row"];
 
 /**
  * Represents a social profile as scraped from a platform.
@@ -18,7 +22,7 @@ export interface ScrapedProfile {
  */
 export interface ScrapedPost {
   post_url: string;
-  platform: SocialType;
+  platform: Database["public"]["Enums"]["social_type"];
   created_at?: string;
   content?: string;
   media_type?: string;
@@ -59,11 +63,11 @@ export interface SocialScraper {
  * Helper type to convert scraped data to database format
  */
 export interface DatabaseMapper {
-  toDbSocial(profile: ScrapedProfile): Omit<Social, "id" | "updated_at">;
-  toDbPost(post: ScrapedPost): Omit<Post, "id" | "updated_at">;
+  toDbSocial(profile: ScrapedProfile): Omit<DbSocial, "id" | "updated_at">;
+  toDbPost(post: ScrapedPost): Omit<DbPost, "id" | "updated_at">;
   toDbComment(
     comment: ScrapedComment,
     postId: string,
     socialId: string
-  ): Omit<Comment, "id">;
+  ): Omit<DbPostComment, "id">;
 }

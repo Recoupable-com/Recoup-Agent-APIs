@@ -1,4 +1,4 @@
-import enhanceTikTokProfiles from "../tiktok/enhanceSocialData";
+import enhanceTikTokProfiles from "../tiktok/enhanceTikTokProfiles";
 import { Database } from "../../types/database.types";
 
 type Social = Database["public"]["Tables"]["socials"]["Row"];

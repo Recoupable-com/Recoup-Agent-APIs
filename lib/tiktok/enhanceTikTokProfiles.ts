@@ -40,28 +40,27 @@ export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
 
     try {
       // Fetch profile data
-      const { avatar, followerCount, followingCount, bio, error } =
-        await scrapeTikTokProfile(username);
+      const scrapedProfile = await scrapeTikTokProfile(username);
 
       // Track what data was found
       let dataFound = false;
-      const enhancedProfile = { ...profile };
+      const enhancedProfile = { ...profile, ...scrapedProfile };
 
-      if (avatar) {
+      if (scrapedProfile.avatar) {
         // Upload avatar to Arweave to avoid caching issues
         console.log(`Uploading avatar for ${username} to Arweave...`);
-        const arweaveUrl = await uploadPfpToArweave(avatar);
+        const arweaveUrl = await uploadPfpToArweave(scrapedProfile.avatar);
 
         if (arweaveUrl) {
           enhancedProfile.avatar = arweaveUrl;
           console.log(
             `✅ Uploaded avatar to Arweave for TikTok user: ${username}`
           );
-          console.log(`   Original URL: ${avatar}`);
+          console.log(`   Original URL: ${scrapedProfile.avatar}`);
           console.log(`   Arweave URL: ${arweaveUrl}`);
         } else {
           // Fallback to original URL if Arweave upload fails
-          enhancedProfile.avatar = avatar;
+          enhancedProfile.avatar = scrapedProfile.avatar;
           console.log(
             `⚠️ Arweave upload failed for ${username}, using original URL`
           );
@@ -69,39 +68,6 @@ export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
 
         dataFound = true;
         console.log(`✅ Found avatar for TikTok user: ${username}`);
-      }
-
-      if (followerCount !== null) {
-        enhancedProfile.followerCount = followerCount;
-        dataFound = true;
-        console.log(
-          `✅ Found follower count for TikTok user: ${username}: ${followerCount}`
-        );
-      }
-
-      if (followingCount !== null) {
-        enhancedProfile.followingCount = followingCount;
-        dataFound = true;
-        console.log(
-          `✅ Found following count for TikTok user: ${username}: ${followingCount}`
-        );
-      }
-
-      if (bio) {
-        enhancedProfile.bio = bio;
-        dataFound = true;
-        console.log(`✅ Found bio for TikTok user: ${username}`);
-      }
-
-      if (!dataFound) {
-        if (error) {
-          console.warn(
-            `⚠️ Error fetching TikTok profile data for ${username}:`,
-            error.message
-          );
-        } else {
-          console.warn(`⚠️ No profile data found for TikTok user: ${username}`);
-        }
       }
 
       enhancedProfiles.push(enhancedProfile);

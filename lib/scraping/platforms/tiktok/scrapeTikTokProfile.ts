@@ -73,11 +73,11 @@ function formatFollowerCount(countStr: string | null): number | null {
  * @param retryCount - Number of retries attempted (internal use)
  * @returns Promise resolving to profile information or null values if not found
  */
-export async function getTikTokProfile(
+export async function scrapeTikTokProfile(
   username: string,
   retryCount = 0
 ): Promise<TikTokProfileResult> {
-  console.log("getTikTokProfile: Starting fetch for user", { username });
+  console.log("scrapeTikTokProfile: Starting fetch for user", { username });
 
   // Maximum number of retries
   const MAX_RETRIES = 2;
@@ -86,7 +86,7 @@ export async function getTikTokProfile(
     // Add a random delay before making the request (except on first attempt)
     if (retryCount > 0) {
       console.log(
-        `getTikTokProfile: Retry attempt ${retryCount} for ${username}`
+        `scrapeTikTokProfile: Retry attempt ${retryCount} for ${username}`
       );
       // Exponential backoff: longer delays for subsequent retries
       await randomDelay(2000 * retryCount, 5000 * retryCount);
@@ -118,7 +118,7 @@ export async function getTikTokProfile(
       Cookie: "tt_csrf_token=abcd1234-efgh-5678-ijkl-mnopqrstuvwx",
     };
 
-    console.log("getTikTokProfile: Fetching profile page", { profileUrl });
+    console.log("scrapeTikTokProfile: Fetching profile page", { profileUrl });
     const response = await fetch(profileUrl, {
       headers,
       // Add timeout to avoid hanging requests
@@ -128,7 +128,7 @@ export async function getTikTokProfile(
     });
 
     if (!response.ok) {
-      console.error("getTikTokProfile: Failed to fetch profile", {
+      console.error("scrapeTikTokProfile: Failed to fetch profile", {
         status: response.status,
         statusText: response.statusText,
       });
@@ -138,7 +138,7 @@ export async function getTikTokProfile(
         retryCount < MAX_RETRIES &&
         [429, 403, 503].includes(response.status)
       ) {
-        return getTikTokProfile(username, retryCount + 1);
+        return scrapeTikTokProfile(username, retryCount + 1);
       }
 
       return {
@@ -151,23 +151,23 @@ export async function getTikTokProfile(
     }
 
     const html = await response.text();
-    console.log("getTikTokProfile: Got HTML response", {
+    console.log("scrapeTikTokProfile: Got HTML response", {
       length: html.length,
       preview: html.slice(0, 100),
     });
 
     // Check if we got a bot challenge page
     if (isBotChallengePage(html)) {
-      console.warn("getTikTokProfile: Detected bot challenge page for", {
+      console.warn("scrapeTikTokProfile: Detected bot challenge page for", {
         username,
       });
 
       // Retry if we haven't exceeded max retries
       if (retryCount < MAX_RETRIES) {
         console.log(
-          `getTikTokProfile: Will retry (${retryCount + 1}/${MAX_RETRIES})`
+          `scrapeTikTokProfile: Will retry (${retryCount + 1}/${MAX_RETRIES})`
         );
-        return getTikTokProfile(username, retryCount + 1);
+        return scrapeTikTokProfile(username, retryCount + 1);
       } else {
         return {
           avatarUrl: null,
@@ -181,7 +181,7 @@ export async function getTikTokProfile(
 
     // Parse HTML with cheerio
     const $ = cheerio.load(html);
-    console.log("getTikTokProfile: Loaded HTML with cheerio");
+    console.log("scrapeTikTokProfile: Loaded HTML with cheerio");
 
     // Initialize result object
     const result: TikTokProfileResult = {
@@ -210,7 +210,7 @@ export async function getTikTokProfile(
       if (element.length) {
         const avatarUrl = element.attr("src");
         if (avatarUrl) {
-          console.log("getTikTokProfile: Found avatar in HTML", {
+          console.log("scrapeTikTokProfile: Found avatar in HTML", {
             selector,
             avatarUrl,
           });
@@ -236,7 +236,7 @@ export async function getTikTokProfile(
         const followerText = element.text().trim();
         result.followerCount = formatFollowerCount(followerText);
         if (result.followerCount) {
-          console.log("getTikTokProfile: Found follower count in HTML", {
+          console.log("scrapeTikTokProfile: Found follower count in HTML", {
             selector,
             count: result.followerCount,
           });
@@ -260,7 +260,7 @@ export async function getTikTokProfile(
         const followingText = element.text().trim();
         result.followingCount = formatFollowerCount(followingText);
         if (result.followingCount) {
-          console.log("getTikTokProfile: Found following count in HTML", {
+          console.log("scrapeTikTokProfile: Found following count in HTML", {
             selector,
             count: result.followingCount,
           });
@@ -285,7 +285,7 @@ export async function getTikTokProfile(
       if (element.length) {
         const bio = element.text().trim();
         if (bio) {
-          console.log("getTikTokProfile: Found bio in HTML", {
+          console.log("scrapeTikTokProfile: Found bio in HTML", {
             selector,
             bio,
           });
@@ -326,7 +326,7 @@ export async function getTikTokProfile(
               const match = content.match(pattern);
               if (match) {
                 console.log(
-                  "getTikTokProfile: Found avatar in script tag",
+                  "scrapeTikTokProfile: Found avatar in script tag",
                   decodeEscapedUrl(match[1])
                 );
                 result.avatarUrl = decodeEscapedUrl(match[1]);
@@ -349,7 +349,7 @@ export async function getTikTokProfile(
               if (match) {
                 const count = parseInt(match[1], 10);
                 console.log(
-                  "getTikTokProfile: Found follower count in script tag",
+                  "scrapeTikTokProfile: Found follower count in script tag",
                   count
                 );
                 result.followerCount = count;
@@ -372,7 +372,7 @@ export async function getTikTokProfile(
               if (match) {
                 const count = parseInt(match[1], 10);
                 console.log(
-                  "getTikTokProfile: Found following count in script tag",
+                  "scrapeTikTokProfile: Found following count in script tag",
                   count
                 );
                 result.followingCount = count;
@@ -394,7 +394,7 @@ export async function getTikTokProfile(
               const match = content.match(pattern);
               if (match) {
                 console.log(
-                  "getTikTokProfile: Found bio in script tag",
+                  "scrapeTikTokProfile: Found bio in script tag",
                   match[1]
                 );
                 result.description = match[1];
@@ -407,7 +407,7 @@ export async function getTikTokProfile(
     }
 
     // Log what we found
-    console.log("getTikTokProfile: Extracted profile data", {
+    console.log("scrapeTikTokProfile: Extracted profile data", {
       username,
       avatarFound: !!result.avatarUrl,
       followerCountFound: !!result.followerCount,
@@ -417,7 +417,7 @@ export async function getTikTokProfile(
 
     return result;
   } catch (error) {
-    console.error("getTikTokProfile: Error fetching profile", {
+    console.error("scrapeTikTokProfile: Error fetching profile", {
       username,
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
@@ -426,9 +426,9 @@ export async function getTikTokProfile(
     // Retry on network errors
     if (retryCount < MAX_RETRIES) {
       console.log(
-        `getTikTokProfile: Will retry after error (${retryCount + 1}/${MAX_RETRIES})`
+        `scrapeTikTokProfile: Will retry after error (${retryCount + 1}/${MAX_RETRIES})`
       );
-      return getTikTokProfile(username, retryCount + 1);
+      return scrapeTikTokProfile(username, retryCount + 1);
     }
 
     return {
@@ -458,13 +458,13 @@ export async function getTikTokAvatar(
   retryCount = 0
 ): Promise<{ avatarUrl: string | null; error: Error | null }> {
   console.log(
-    "getTikTokAvatar: Using compatibility function, consider upgrading to getTikTokProfile"
+    "getTikTokAvatar: Using compatibility function, consider upgrading to scrapeTikTokProfile"
   );
-  const result = await getTikTokProfile(username, retryCount);
+  const result = await scrapeTikTokProfile(username, retryCount);
   return {
     avatarUrl: result.avatarUrl,
     error: result.error,
   };
 }
 
-export default getTikTokProfile;
+export default scrapeTikTokProfile;

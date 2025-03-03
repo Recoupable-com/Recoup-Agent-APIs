@@ -1,4 +1,4 @@
-import getTikTokProfile from "../tiktok/getTikTokProfile";
+import scrapeTikTokProfile from "../scraping/platforms/tiktok/scrapeTikTokProfile";
 import uploadPfpToArweave from "../arweave/uploadPfpToArweave";
 import { Database } from "../../types/database.types";
 import randomDelay from "../utils/randomDelay";
@@ -41,7 +41,7 @@ export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
     try {
       // Fetch profile data
       const { avatarUrl, followerCount, followingCount, description, error } =
-        await getTikTokProfile(username);
+        await scrapeTikTokProfile(username);
 
       // Track what data was found
       let dataFound = false;

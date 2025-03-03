@@ -8,9 +8,8 @@ import enhanceAuthorsWithAvatars from "../scraping/enhanceAuthorsWithAvatar";
  *
  * This function orchestrates the process of:
  * 1. Extracting unique authors from comments
- * 2. Fetching existing social records
- * 3. Enhancing comment authors with avatars, bio, followers, following, etc.
- * 4. Creating new social records for missing authors
+ * 2. Enhancing comment authors with avatars, bio, followers, following, etc.
+ * 3. Upserting social records for all comment authors
  *
  * @param comments - Array of comments to process
  * @returns Object mapping usernames to social IDs

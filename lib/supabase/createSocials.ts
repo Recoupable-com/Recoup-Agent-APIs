@@ -36,16 +36,6 @@ const createSocials = async (
       return { socialMap: {}, error: null };
     }
 
-    // Log avatar statistics
-    const withAvatars = authors.filter(
-      (author) => "avatar" in author && author.avatar
-    ).length;
-    console.log(
-      `Creating/updating ${authors.length} social records (${withAvatars} with avatars)`
-    );
-
-    // Use upsert instead of insert to handle existing records
-    // Note: Using "profile_url" as the conflict target because it has a unique constraint in the database
     const { data: upsertedSocials, error: upsertError } = await supabase
       .from("socials")
       .upsert(authors, {

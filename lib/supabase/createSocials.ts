@@ -33,23 +33,14 @@ const createSocials = async (
       return { socialMap: {}, error: null };
     }
 
-    // Clean the authors array to remove any error fields
-    const cleanAuthors = authors.map((author) => {
-      // Use destructuring to remove error field if it exists
-      const { error: _error, ...cleanAuthor } = author as any;
-      return cleanAuthor;
-    });
-
     // De-duplicate authors by profile_url to avoid PostgreSQL error:
     // "ON CONFLICT DO UPDATE command cannot affect row a second time"
     const uniqueAuthors = Array.from(
-      new Map(
-        cleanAuthors.map((author) => [author.profile_url, author])
-      ).values()
+      new Map(authors.map((author) => [author.profile_url, author])).values()
     );
 
     console.log(
-      `De-duplicated ${cleanAuthors.length - uniqueAuthors.length} authors`
+      `De-duplicated ${authors.length - uniqueAuthors.length} authors`
     );
 
     const { data: upsertedSocials, error: upsertError } = await supabase

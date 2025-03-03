@@ -1,12 +1,10 @@
-import { Database } from "../../types/database.types";
 import getDataset from "../apify/getDataset";
 import getFormattedAccount from "./getFormattedAccount";
 import getProfileDatasetId from "./getProfileDatasetId";
-
-type Social = Database["public"]["Tables"]["socials"]["Row"];
+import { Social } from "../../types/agent";
 
 const getProfile = async (
-  handle: string,
+  handle: string
 ): Promise<{
   error: any;
   profile: null | Social;

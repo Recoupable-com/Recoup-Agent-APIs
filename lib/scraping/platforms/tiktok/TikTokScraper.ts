@@ -1,8 +1,8 @@
 import { BaseScraper } from "../../BaseScraper";
 import { ScrapedProfile, ScrapedPost, ScrapedComment } from "../../types";
-import { Database } from "../../../../types/database.types";
 import getProfile from "../../../tiktok/getProfile";
 import getVideoComments from "../../../tiktok/getVideoComments";
+import { SocialType } from "../../../../types/agent";
 
 export class TikTokScraper extends BaseScraper {
   async scrapeProfile(handle: string): Promise<ScrapedProfile> {
@@ -35,7 +35,7 @@ export class TikTokScraper extends BaseScraper {
 
       return videoUrls.map((url) => ({
         post_url: url,
-        platform: "tiktok" as Database["public"]["Enums"]["social_type"],
+        platform: "tiktok" as SocialType,
         created_at: new Date().toISOString(),
         media_type: "video",
       }));

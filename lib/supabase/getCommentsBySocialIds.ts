@@ -1,5 +1,4 @@
 import supabase from "./serverClient";
-import { Database } from "../../types/database.types";
 
 interface CommentsBySocialIdsResponse {
   comments: string[];

@@ -4,14 +4,10 @@ import {
   ScrapedPost,
   ScrapedComment,
 } from "./types";
-import { Database } from "../../types/database.types";
-
-type DbSocial = Database["public"]["Tables"]["socials"]["Row"];
-type DbPost = Database["public"]["Tables"]["posts"]["Row"];
-type DbPostComment = Database["public"]["Tables"]["post_comments"]["Row"];
+import { Comment, Post, Social } from "../../types/agent";
 
 export class DefaultDatabaseMapper implements DatabaseMapper {
-  toDbSocial(profile: ScrapedProfile): Omit<DbSocial, "id" | "updated_at"> {
+  toDbSocial(profile: ScrapedProfile): Omit<Social, "id" | "updated_at"> {
     return {
       username: profile.username,
       profile_url: profile.profile_url,
@@ -23,7 +19,7 @@ export class DefaultDatabaseMapper implements DatabaseMapper {
     };
   }
 
-  toDbPost(post: ScrapedPost): Omit<DbPost, "id" | "updated_at"> {
+  toDbPost(post: ScrapedPost): Omit<Post, "id" | "updated_at"> {
     return {
       post_url: post.post_url,
     };
@@ -33,7 +29,7 @@ export class DefaultDatabaseMapper implements DatabaseMapper {
     comment: ScrapedComment,
     postId: string,
     socialId: string
-  ): Omit<DbPostComment, "id"> {
+  ): Omit<Comment, "id"> {
     return {
       comment: comment.comment,
       commented_at: comment.commented_at,

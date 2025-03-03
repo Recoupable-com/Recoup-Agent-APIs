@@ -2,9 +2,7 @@ import { CommentInput } from "../supabase/savePostComments";
 import getSocialPlatformByLink from "../getSocialPlatformByLink";
 import { isValidPlatform } from "./validatePlatform";
 import { getProfileUrl } from "./getProfileUrl";
-import { Database } from "../../types/database.types";
-
-type Social = Database["public"]["Tables"]["socials"]["Row"];
+import { Social } from "../../types/agent";
 
 interface ExtractAuthorsResponse {
   authors: Social[];

@@ -1,11 +1,5 @@
-import { Database } from "../../types/database.types";
+import { Agent, AgentStatus, Post, Social } from "../../types/agent";
 import { ScrapedProfile, ScrapedPost, ScrapedComment } from "../scraping/types";
-
-type DbSocial = Database["public"]["Tables"]["socials"]["Row"];
-type DbPost = Database["public"]["Tables"]["posts"]["Row"];
-type DbPostComment = Database["public"]["Tables"]["post_comments"]["Row"];
-type DbAgent = Database["public"]["Tables"]["agents"]["Row"];
-type DbAgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 
 export interface AgentServiceResult<T> {
   data: T | null;
@@ -13,17 +7,17 @@ export interface AgentServiceResult<T> {
 }
 
 export interface CreateAgentResult {
-  agent: DbAgent | null;
+  agent: Agent | null;
   error: Error | null;
 }
 
 export interface CreateSocialResult {
-  social: DbSocial | null;
+  social: Social | null;
   error: Error | null;
 }
 
 export interface CreateAgentStatusResult {
-  agent_status: DbAgentStatus | null;
+  agent_status: AgentStatus | null;
   error: Error | null;
 }
 
@@ -41,21 +35,21 @@ export interface AgentService {
   updateSocial(
     socialId: string,
     profile: ScrapedProfile
-  ): Promise<AgentServiceResult<DbSocial>>;
+  ): Promise<AgentServiceResult<Social>>;
 
   // Data storage operations
   storeComments(
     comments: ScrapedComment[],
     postId: string,
     socialId: string
-  ): Promise<AgentServiceResult<DbPostComment[]>>;
+  ): Promise<AgentServiceResult<Comment[]>>;
 
   // Composite operations
   storeSocialData(params: StoreSocialDataParams): Promise<
     AgentServiceResult<{
-      social: DbSocial;
-      posts: DbPost[];
-      comments: DbPostComment[];
+      social: Social;
+      posts: Post[];
+      comments: Comment[];
     }>
   >;
 }

@@ -1,6 +1,4 @@
-import { Database } from "../../types/database.types";
-
-type SocialType = Database["public"]["Enums"]["social_type"];
+import { SocialType } from "../../types/agent";
 
 /**
  * Generates a platform-specific profile URL based on the platform type and handle

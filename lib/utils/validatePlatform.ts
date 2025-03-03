@@ -1,6 +1,4 @@
-import { Database } from "../../types/database.types";
-
-type SocialType = Database["public"]["Enums"]["social_type"];
+import { SocialType } from "../../types/agent";
 
 /**
  * Type guard to check if a platform string is a valid SocialType

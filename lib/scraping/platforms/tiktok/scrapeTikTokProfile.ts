@@ -5,9 +5,7 @@ import getRandomUserAgent from "./getRandomUserAgent";
 import isBotChallengePage from "./isBotChallengePage";
 import decodeEscapedUrl from "./decodeEscapedUrl";
 import formatFollowerCount from "./formatFollowerCount";
-import { Database } from "../../../../types/database.types";
-
-type Social = Database["public"]["Tables"]["socials"]["Row"];
+import { Social } from "../../../../types/agent";
 
 /**
  * Fetches profile information for a TikTok user

@@ -1,9 +1,7 @@
 import scrapeTikTokProfile from "../scraping/platforms/tiktok/scrapeTikTokProfile";
 import uploadPfpToArweave from "../arweave/uploadPfpToArweave";
-import { Database } from "../../types/database.types";
 import randomDelay from "../utils/randomDelay";
-
-type Social = Database["public"]["Tables"]["socials"]["Row"];
+import { Social } from "../../types/agent";
 
 /**
  * Enhances TikTok social profiles with additional data like avatars, follower counts, following counts, and bios

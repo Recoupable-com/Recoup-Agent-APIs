@@ -1,7 +1,5 @@
+import { Social } from "../../types/agent";
 import enhanceTikTokProfiles from "../tiktok/enhanceTikTokProfiles";
-import { Database } from "../../types/database.types";
-
-type Social = Database["public"]["Tables"]["socials"]["Row"];
 
 /**
  * Enhances authors with platform-specific data like avatars

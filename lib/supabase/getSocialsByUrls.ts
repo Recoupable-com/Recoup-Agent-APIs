@@ -1,7 +1,5 @@
 import supabase from "./serverClient";
-import { Database } from "../../types/database.types";
-
-type Social = Database["public"]["Tables"]["socials"]["Row"];
+import { Social } from "../../types/agent";
 
 interface GetSocialsByUrlsResponse {
   socialMap: { [profile_url: string]: string };

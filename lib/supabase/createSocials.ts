@@ -1,8 +1,5 @@
-import { Database } from "../../types/database.types";
 import supabase from "./serverClient";
-
-type Social = Database["public"]["Tables"]["socials"]["Row"];
-
+import { Social } from "../../types/agent";
 interface CreateSocialsResponse {
   socialMap: { [username: string]: string };
   error: Error | null;

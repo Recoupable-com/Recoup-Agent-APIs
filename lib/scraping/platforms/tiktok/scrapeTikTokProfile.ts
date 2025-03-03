@@ -1,5 +1,10 @@
 import fetch from "node-fetch";
 import * as cheerio from "cheerio";
+import randomDelay from "../../../utils/randomDelay";
+import getRandomUserAgent from "./getRandomUserAgent";
+import isBotChallengePage from "./isBotChallengePage";
+import decodeEscapedUrl from "./decodeEscapedUrl";
+import formatFollowerCount from "./formatFollowerCount";
 
 interface TikTokProfileResult {
   avatarUrl: string | null;
@@ -7,63 +12,6 @@ interface TikTokProfileResult {
   followingCount: number | null;
   description: string | null;
   error: Error | null;
-}
-
-// List of realistic user agents to rotate through
-const USER_AGENTS = [
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3 Safari/605.1.15",
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
-  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-];
-
-// Get a random user agent
-function getRandomUserAgent(): string {
-  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-}
-
-// Add a random delay between min and max milliseconds
-async function randomDelay(min = 1000, max = 3000): Promise<void> {
-  const delay = Math.floor(Math.random() * (max - min + 1)) + min;
-  await new Promise((resolve) => setTimeout(resolve, delay));
-}
-
-// Check if the response is a bot challenge page
-function isBotChallengePage(html: string): boolean {
-  // TikTok bot challenge pages are typically short and contain specific patterns
-  if (html.length < 2000) {
-    return (
-      html.includes("verify") ||
-      html.includes("challenge") ||
-      html.includes("security check") ||
-      html.includes("captcha") ||
-      html.includes("robot") ||
-      html.includes("suspicious activity")
-    );
-  }
-  return false;
-}
-
-// Format follower count from string to number
-function formatFollowerCount(countStr: string | null): number | null {
-  if (!countStr) return null;
-
-  // Remove non-numeric characters except for K, M, B
-  const cleaned = countStr.replace(/[^0-9.KMB]/gi, "");
-
-  if (!cleaned) return null;
-
-  // Convert K, M, B to actual numbers
-  if (cleaned.includes("K")) {
-    return parseFloat(cleaned.replace("K", "")) * 1000;
-  } else if (cleaned.includes("M")) {
-    return parseFloat(cleaned.replace("M", "")) * 1000000;
-  } else if (cleaned.includes("B")) {
-    return parseFloat(cleaned.replace("B", "")) * 1000000000;
-  }
-
-  return parseInt(cleaned, 10) || null;
 }
 
 /**
@@ -439,32 +387,6 @@ export async function scrapeTikTokProfile(
       error: error instanceof Error ? error : new Error("Unknown error"),
     };
   }
-}
-
-/**
- * Decodes escaped URLs from TikTok's response
- */
-function decodeEscapedUrl(url: string): string {
-  try {
-    return decodeURIComponent(url.replace(/\\u002F/g, "/"));
-  } catch (e) {
-    return url;
-  }
-}
-
-// For backward compatibility
-export async function getTikTokAvatar(
-  username: string,
-  retryCount = 0
-): Promise<{ avatarUrl: string | null; error: Error | null }> {
-  console.log(
-    "getTikTokAvatar: Using compatibility function, consider upgrading to scrapeTikTokProfile"
-  );
-  const result = await scrapeTikTokProfile(username, retryCount);
-  return {
-    avatarUrl: result.avatarUrl,
-    error: result.error,
-  };
 }
 
 export default scrapeTikTokProfile;

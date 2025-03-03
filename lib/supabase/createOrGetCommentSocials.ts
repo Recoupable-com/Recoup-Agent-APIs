@@ -18,7 +18,6 @@ const createOrGetCommentSocials = async (
   comments: CommentInput[]
 ): Promise<{ [username: string]: string }> => {
   try {
-    // Extract unique authors with validated platforms
     const { authors, error: extractError } = extractUniqueAuthors(comments);
     if (extractError) {
       console.error("Failed to extract authors:", extractError);
@@ -29,7 +28,6 @@ const createOrGetCommentSocials = async (
       return {};
     }
 
-    // Convert profile_url map to username map for consistency
     const usernameMap = authors.reduce<{ [username: string]: string }>(
       (acc, author) => {
         acc[author.username] = acc[author.profile_url];
@@ -39,10 +37,8 @@ const createOrGetCommentSocials = async (
     );
 
     if (authors.length > 0) {
-      // Enhance TikTok profiles with avatars before creating social records
       const enhancedAuthors = await enhanceAuthorsWithAvatars(authors);
 
-      // Create new social records
       const { socialMap: newSocials, error: createError } =
         await createSocials(enhancedAuthors);
       if (createError) {
@@ -50,7 +46,6 @@ const createOrGetCommentSocials = async (
         return usernameMap;
       }
 
-      // Merge existing and new social maps
       return { ...usernameMap, ...newSocials };
     }
 

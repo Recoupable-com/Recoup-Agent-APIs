@@ -5,14 +5,9 @@ import getRandomUserAgent from "./getRandomUserAgent";
 import isBotChallengePage from "./isBotChallengePage";
 import decodeEscapedUrl from "./decodeEscapedUrl";
 import formatFollowerCount from "./formatFollowerCount";
+import { Database } from "../../../../types/database.types";
 
-interface TikTokProfileResult {
-  avatarUrl: string | null;
-  followerCount: number | null;
-  followingCount: number | null;
-  description: string | null;
-  error: Error | null;
-}
+type Social = Database["public"]["Tables"]["socials"]["Row"];
 
 /**
  * Fetches profile information for a TikTok user
@@ -24,7 +19,7 @@ interface TikTokProfileResult {
 export async function scrapeTikTokProfile(
   username: string,
   retryCount = 0
-): Promise<TikTokProfileResult> {
+): Promise<Social & { error?: Error }> {
   console.log("scrapeTikTokProfile: Starting fetch for user", { username });
 
   // Maximum number of retries
@@ -90,11 +85,15 @@ export async function scrapeTikTokProfile(
       }
 
       return {
-        avatarUrl: null,
+        avatar: null,
+        bio: null,
         followerCount: null,
         followingCount: null,
-        description: null,
-        error: new Error(`HTTP error! status: ${response.status}`),
+        id: "",
+        profile_url: "",
+        region: null,
+        updated_at: "",
+        username: "",
       };
     }
 
@@ -118,10 +117,15 @@ export async function scrapeTikTokProfile(
         return scrapeTikTokProfile(username, retryCount + 1);
       } else {
         return {
-          avatarUrl: null,
+          avatar: null,
+          bio: null,
           followerCount: null,
           followingCount: null,
-          description: null,
+          id: "",
+          profile_url: "",
+          region: null,
+          updated_at: "",
+          username: "",
           error: new Error("Detected bot challenge page after max retries"),
         };
       }
@@ -132,12 +136,17 @@ export async function scrapeTikTokProfile(
     console.log("scrapeTikTokProfile: Loaded HTML with cheerio");
 
     // Initialize result object
-    const result: TikTokProfileResult = {
-      avatarUrl: null,
+    const result: Social & { error?: Error } = {
+      avatar: null,
+      bio: null,
       followerCount: null,
       followingCount: null,
-      description: null,
-      error: null,
+      id: "",
+      profile_url: "",
+      region: null,
+      updated_at: "",
+      username: "",
+      error: undefined,
     };
 
     // Extract avatar URL
@@ -162,7 +171,7 @@ export async function scrapeTikTokProfile(
             selector,
             avatarUrl,
           });
-          result.avatarUrl = decodeEscapedUrl(avatarUrl);
+          result.avatar = decodeEscapedUrl(avatarUrl);
           break;
         }
       }
@@ -237,7 +246,7 @@ export async function scrapeTikTokProfile(
             selector,
             bio,
           });
-          result.description = bio;
+          result.bio = bio;
           break;
         }
       }
@@ -245,10 +254,10 @@ export async function scrapeTikTokProfile(
 
     // If not found in HTML, try script tags
     if (
-      !result.avatarUrl ||
+      !result.avatar ||
       !result.followerCount ||
       !result.followingCount ||
-      !result.description
+      !result.bio
     ) {
       const scripts = $("script").get();
       for (const script of scripts) {
@@ -261,7 +270,7 @@ export async function scrapeTikTokProfile(
           content.includes("SIGI_STATE")
         ) {
           // Try to extract avatar if not already found
-          if (!result.avatarUrl) {
+          if (!result.avatar) {
             const avatarPatterns = [
               /"avatarLarger":"([^"]+)"/,
               /"avatarMedium":"([^"]+)"/,
@@ -277,7 +286,7 @@ export async function scrapeTikTokProfile(
                   "scrapeTikTokProfile: Found avatar in script tag",
                   decodeEscapedUrl(match[1])
                 );
-                result.avatarUrl = decodeEscapedUrl(match[1]);
+                result.avatar = decodeEscapedUrl(match[1]);
                 break;
               }
             }
@@ -330,7 +339,7 @@ export async function scrapeTikTokProfile(
           }
 
           // Try to extract bio/description if not already found
-          if (!result.description) {
+          if (!result.bio) {
             const bioPatterns = [
               /"signature":"([^"]+)"/,
               /"bio":"([^"]+)"/,
@@ -345,7 +354,7 @@ export async function scrapeTikTokProfile(
                   "scrapeTikTokProfile: Found bio in script tag",
                   match[1]
                 );
-                result.description = match[1];
+                result.bio = match[1];
                 break;
               }
             }
@@ -357,10 +366,10 @@ export async function scrapeTikTokProfile(
     // Log what we found
     console.log("scrapeTikTokProfile: Extracted profile data", {
       username,
-      avatarFound: !!result.avatarUrl,
+      avatarFound: !!result.avatar,
       followerCountFound: !!result.followerCount,
       followingCountFound: !!result.followingCount,
-      descriptionFound: !!result.description,
+      bioFound: !!result.bio,
     });
 
     return result;
@@ -380,10 +389,15 @@ export async function scrapeTikTokProfile(
     }
 
     return {
-      avatarUrl: null,
+      avatar: null,
+      bio: null,
       followerCount: null,
       followingCount: null,
-      description: null,
+      id: "",
+      profile_url: "",
+      region: null,
+      updated_at: "",
+      username: "",
       error: error instanceof Error ? error : new Error("Unknown error"),
     };
   }

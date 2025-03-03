@@ -40,28 +40,28 @@ export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
 
     try {
       // Fetch profile data
-      const { avatarUrl, followerCount, followingCount, description, error } =
+      const { avatar, followerCount, followingCount, bio, error } =
         await scrapeTikTokProfile(username);
 
       // Track what data was found
       let dataFound = false;
       const enhancedProfile = { ...profile };
 
-      if (avatarUrl) {
+      if (avatar) {
         // Upload avatar to Arweave to avoid caching issues
         console.log(`Uploading avatar for ${username} to Arweave...`);
-        const arweaveUrl = await uploadPfpToArweave(avatarUrl);
+        const arweaveUrl = await uploadPfpToArweave(avatar);
 
         if (arweaveUrl) {
           enhancedProfile.avatar = arweaveUrl;
           console.log(
             `✅ Uploaded avatar to Arweave for TikTok user: ${username}`
           );
-          console.log(`   Original URL: ${avatarUrl}`);
+          console.log(`   Original URL: ${avatar}`);
           console.log(`   Arweave URL: ${arweaveUrl}`);
         } else {
           // Fallback to original URL if Arweave upload fails
-          enhancedProfile.avatar = avatarUrl;
+          enhancedProfile.avatar = avatar;
           console.log(
             `⚠️ Arweave upload failed for ${username}, using original URL`
           );
@@ -87,8 +87,8 @@ export async function enhanceTikTokProfiles(profiles: Social[]): Promise<{
         );
       }
 
-      if (description) {
-        enhancedProfile.bio = description;
+      if (bio) {
+        enhancedProfile.bio = bio;
         dataFound = true;
         console.log(`✅ Found bio for TikTok user: ${username}`);
       }

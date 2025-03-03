@@ -1,7 +1,9 @@
+import { Database } from "../../types/database.types";
 import { SocialScraper } from "./types";
 import { InstagramScraper } from "./platforms/InstagramScraper";
 import { TikTokScraper } from "./platforms/tiktok/TikTokScraper";
-import { SocialType } from "../../types/agent";
+
+type SocialType = Database["public"]["Enums"]["social_type"];
 
 export class ScraperFactory {
   private static scrapers: Map<SocialType, SocialScraper> = new Map();

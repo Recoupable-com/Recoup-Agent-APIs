@@ -1,8 +1,8 @@
 import { BaseScraper } from "../BaseScraper";
 import { ScrapedProfile, ScrapedPost, ScrapedComment } from "../types";
+import { Database } from "../../../types/database.types";
 import getProfile from "../../instagram/getProfile";
 import getPostComments from "../../instagram/getPostComments";
-import { SocialType } from "../../../types/agent";
 
 export class InstagramScraper extends BaseScraper {
   async scrapeProfile(handle: string): Promise<ScrapedProfile> {
@@ -37,7 +37,7 @@ export class InstagramScraper extends BaseScraper {
 
       return postUrls.map((url: string) => ({
         post_url: url,
-        platform: "INSTAGRAM" as SocialType,
+        platform: "INSTAGRAM" as Database["public"]["Enums"]["social_type"],
         created_at: new Date().toISOString(), // Instagram API doesn't provide post date in initial fetch
       }));
     } catch (error) {

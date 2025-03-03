@@ -1,4 +1,5 @@
 import { STEP_OF_AGENT } from "../step";
+import { Database } from "../../types/database.types";
 import {
   AgentService as IAgentService,
   AgentServiceResult,
@@ -15,7 +16,12 @@ import createSocial from "../supabase/createSocial";
 import updateSocial from "../supabase/updateSocial";
 import savePostComments from "../supabase/savePostComments";
 import getAgentStatus from "../supabase/getAgentStatus";
-import { Agent, AgentStatus, Comment, Post, Social } from "../../types/agent";
+
+type DbSocial = Database["public"]["Tables"]["socials"]["Row"];
+type DbPost = Database["public"]["Tables"]["posts"]["Row"];
+type DbPostComment = Database["public"]["Tables"]["post_comments"]["Row"];
+type DbAgent = Database["public"]["Tables"]["agents"]["Row"];
+type DbAgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 
 export class AgentService implements IAgentService {
   async createSocial(profile: ScrapedProfile): Promise<CreateSocialResult> {
@@ -44,7 +50,7 @@ export class AgentService implements IAgentService {
   async updateSocial(
     socialId: string,
     profile: ScrapedProfile
-  ): Promise<AgentServiceResult<Social>> {
+  ): Promise<AgentServiceResult<DbSocial>> {
     try {
       const { error: updateError } = await updateSocial(socialId, {
         avatar: profile.avatar || null,
@@ -78,7 +84,7 @@ export class AgentService implements IAgentService {
   async storeComments(
     comments: ScrapedComment[],
     socialId: string
-  ): Promise<AgentServiceResult<Comment[]>> {
+  ): Promise<AgentServiceResult<DbPostComment[]>> {
     try {
       console.log("Storing comments for social", socialId);
       await savePostComments(
@@ -107,9 +113,9 @@ export class AgentService implements IAgentService {
 
   async storeSocialData(params: StoreSocialDataParams): Promise<
     AgentServiceResult<{
-      social: Social;
-      posts: Post[];
-      comments: Comment[];
+      social: DbSocial;
+      posts: DbPost[];
+      comments: DbPostComment[];
     }>
   > {
     const { agentStatusId, profile, posts, comments, artistId } = params;
@@ -158,7 +164,7 @@ export class AgentService implements IAgentService {
 
       // Store comments
       console.log("Storing comments...");
-      const stored_comments: Comment[] = [];
+      const stored_comments: DbPostComment[] = [];
       for (const post of stored_posts) {
         const postComments = comments.filter(
           (c) => c.post_url === post.post_url
@@ -200,8 +206,8 @@ export class AgentService implements IAgentService {
 
   async getAgentStatus(agentId: string): Promise<
     AgentServiceResult<{
-      agent: Agent;
-      statuses: AgentStatus[];
+      agent: DbAgent;
+      statuses: DbAgentStatus[];
     }>
   > {
     try {

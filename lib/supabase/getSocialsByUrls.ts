@@ -1,5 +1,5 @@
 import supabase from "./serverClient";
-import { Social } from "../../types/agent";
+import { AuthorInput } from "./createSocials";
 
 interface GetSocialsByUrlsResponse {
   socialMap: { [profile_url: string]: string };
@@ -27,7 +27,7 @@ interface GetSocialsByUrlsResponse {
  * ```
  */
 const getSocialsByUrls = async (
-  authors: Social[]
+  authors: AuthorInput[]
 ): Promise<GetSocialsByUrlsResponse> => {
   try {
     if (!authors.length) {

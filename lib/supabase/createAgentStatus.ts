@@ -1,10 +1,12 @@
+import { Database } from "../../types/database.types";
 import supabase from "./serverClient";
-import { AgentStatus } from "../../types/agent";
+
+type AgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 
 const createAgentStatus = async (
   agent_id: string,
   social_id: string,
-  status: number
+  status: number,
 ): Promise<{
   agent_status: AgentStatus | null;
   error: Error | null;

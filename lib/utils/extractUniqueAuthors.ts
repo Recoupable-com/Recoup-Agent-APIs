@@ -1,11 +1,11 @@
 import { CommentInput } from "../supabase/savePostComments";
+import { AuthorInput } from "../supabase/createSocials";
 import getSocialPlatformByLink from "../getSocialPlatformByLink";
 import { isValidPlatform } from "./validatePlatform";
 import { getProfileUrl } from "./getProfileUrl";
-import { Social } from "../../types/agent";
 
 interface ExtractAuthorsResponse {
-  authors: Social[];
+  authors: AuthorInput[];
   error: Error | null;
 }
 
@@ -60,7 +60,7 @@ const extractUniqueAuthors = (
           profile_url: getProfileUrl(platform, username),
         };
       })
-      .filter((author): author is Social => author !== null);
+      .filter((author): author is AuthorInput => author !== null);
 
     if (authors.length === 0) {
       console.warn("No valid authors found after platform detection");

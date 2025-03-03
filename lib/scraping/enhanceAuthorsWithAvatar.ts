@@ -24,7 +24,16 @@ async function enhanceAuthorsWithAvatars(authors: Social[]): Promise<Social[]> {
   let enhancedTikTokAuthors: Social[] = [];
   if (tiktokAuthors.length > 0) {
     const { enhancedProfiles } = await enhanceTikTokProfiles(tiktokAuthors);
-    enhancedTikTokAuthors = enhancedProfiles;
+    const mappedTikTokAuthors = enhancedProfiles.map((profile) => ({
+      avatar: profile.avatar,
+      bio: profile.bio,
+      followerCount: profile.followerCount,
+      followingCount: profile.followingCount,
+      profile_url: profile.profile_url,
+      region: profile.region,
+      username: profile.username,
+    }));
+    enhancedTikTokAuthors = mappedTikTokAuthors as Social[];
   }
 
   return [...enhancedTikTokAuthors, ...otherAuthors];

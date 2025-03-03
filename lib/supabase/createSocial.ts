@@ -1,8 +1,10 @@
-import { Social } from "../../types/agent";
+import { Database } from "../../types/database.types";
 import supabase from "./serverClient";
 
+type Social = Database["public"]["Tables"]["socials"]["Row"];
+
 const createSocial = async (
-  socialdata: any
+  socialdata: any,
 ): Promise<{
   social: Social | null;
   error: Error | null;

@@ -1,12 +1,14 @@
 import { AgentServiceResult } from "../types/agent.types";
+import { Database } from "../../types/database.types";
 import supabase from "./serverClient";
-import { Post } from "../../types/agent";
+
+type DbPost = Database["public"]["Tables"]["posts"]["Row"];
 
 const setNewPosts = async (
   postUrls: Array<string>
-): Promise<AgentServiceResult<Post[]>> => {
+): Promise<AgentServiceResult<DbPost[]>> => {
   try {
-    let allPosts: Post[] = [];
+    let allPosts: DbPost[] = [];
     const chunkSize = 100;
     const chunkCount =
       parseInt(Number(postUrls.length / chunkSize).toFixed(0), 10) + 1;

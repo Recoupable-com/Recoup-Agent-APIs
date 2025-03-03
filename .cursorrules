@@ -158,8 +158,186 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
   - Consider using a proxy rotation service for high-volume scraping
 - When using Supabase upsert operations, ensure the onConflict parameter matches an actual unique or exclusion constraint in the database table
 - When uploading images to permanent storage like Arweave, implement proper fallback mechanisms to handle upload failures and maintain the original URL as a backup
+- When working with database operations, ensure that objects being inserted don't contain fields that don't exist in the database schema to avoid errors like "Could not find the 'X' column in the schema cache"
+- When using Supabase upsert operations with ON CONFLICT DO UPDATE, ensure that the data being upserted doesn't contain duplicate values for the conflict column within the same batch, as this will cause the error "ON CONFLICT DO UPDATE command cannot affect row a second time"
 
 # Scratchpad
+
+### Current Task: Fix Duplicate Conflict Error in Socials Table Upsert Operation
+
+#### Error Analysis
+
+1. **Core Error**:
+
+   ```
+   Failed to create/update socials: {
+     code: '21000',
+     details: null,
+     hint: 'Ensure that no rows proposed for insertion within the same command have duplicate constrained values.',
+     message: 'ON CONFLICT DO UPDATE command cannot affect row a second time'
+   }
+   ```
+
+2. **Root Cause**:
+
+   - The error code `21000` indicates a PostgreSQL error related to duplicate values in an upsert operation
+   - The hint "Ensure that no rows proposed for insertion within the same command have duplicate constrained values" suggests that we're trying to upsert multiple records with the same `profile_url` value in a single batch
+   - The message "ON CONFLICT DO UPDATE command cannot affect row a second time" confirms that PostgreSQL is detecting that the same row would be updated multiple times in a single upsert operation
+
+3. **Error Flow**:
+   - `enhanceTikTokProfiles` function returns enhanced profiles
+   - These profiles are passed to `createSocials`
+   - The batch of profiles contains duplicate `profile_url` values
+   - When `createSocials` attempts to upsert the batch, PostgreSQL rejects the operation because it would update the same row multiple times
+
+#### Solution Plan
+
+The smallest set of changes needed to fix this issue:
+
+1. **Option A: De-duplicate profiles before upserting**
+
+   - Pros: Simple to implement, doesn't require changing the database operation
+   - Cons: Might lose data if there are legitimate duplicates with different data
+
+2. **Option B: Split the upsert into individual operations**
+
+   - Pros: Most reliable, handles all edge cases
+   - Cons: Less efficient, requires more database calls
+
+3. **Option C: Group by profile_url and only keep the latest/most complete record**
+   - Pros: Balance of efficiency and reliability
+   - Cons: More complex implementation
+
+#### Implementation Plan (Option A - simplest)
+
+1. [x] Add logging to understand the duplicate profiles
+
+   - Log the profile_url values before upserting to identify duplicates
+   - Check if the duplicates are identical or have different data
+
+2. [x] Update `createSocials.ts` to de-duplicate profiles before upserting
+
+   - Use a Map with profile_url as the key to ensure uniqueness
+   - Or filter the array to remove duplicates
+
+3. [ ] Test the changes
+   - Verify that TikTok profiles can be successfully saved to the database
+   - Confirm that no duplicates are being sent to the database
+
+#### Code Changes
+
+For `createSocials.ts`:
+
+```typescript
+// De-duplicate authors by profile_url to avoid PostgreSQL error:
+// "ON CONFLICT DO UPDATE command cannot affect row a second time"
+const uniqueAuthors = Array.from(
+  new Map(cleanAuthors.map((author) => [author.profile_url, author])).values()
+);
+
+console.log(
+  `De-duplicated ${cleanAuthors.length - uniqueAuthors.length} authors`
+);
+
+// Use uniqueAuthors instead of cleanAuthors in the upsert operation
+```
+
+### Previous Task: Fix Database Error with 'error' Field in Socials Table
+
+#### Error Analysis
+
+1. **Core Error**:
+
+   ```
+   Failed to create/update socials: {
+     code: 'PGRST204',
+     details: null,
+     hint: null,
+     message: "Could not find the 'error' column of 'socials' in the schema cache"
+   }
+   ```
+
+2. **Root Cause**:
+
+   - The enhanced TikTok profiles contain an `error` field that is being passed to the database
+   - The `socials` table does not have an `error` column
+   - When the code attempts to insert/upsert these objects, PostgreSQL rejects them because it can't find the 'error' column
+
+3. **Error Flow**:
+   - `enhanceTikTokProfiles` function returns enhanced profiles that may contain an `error` field
+   - These profiles are passed to `createSocials` or `createSocial`
+   - The database operation fails because the `error` field doesn't exist in the table
+
+#### Solution Plan
+
+The smallest set of changes needed to fix this issue:
+
+1. **Option A: Filter out the `error` field in `enhanceTikTokProfiles`**
+
+   - Pros: Fixes the issue at the source
+   - Cons: Requires modifying the TikTok-specific code
+
+2. **Option B: Filter out the `error` field in `createSocials` and `createSocial`**
+
+   - Pros: More general solution that would work for all sources
+   - Cons: Requires modifying multiple files
+
+3. **Option C: Type the input parameters more strictly**
+   - Pros: Would catch these issues at compile time
+   - Cons: More extensive changes required
+
+#### Implementation Plan (Option B - most targeted)
+
+1. [x] Identify where the `error` field is being added to the profiles
+
+   - Found in `enhanceTikTokProfiles` function
+
+2. [x] Update `createSocials.ts` to filter out the `error` field
+
+   - Remove the `error` field from each author object before passing to Supabase
+   - Use object destructuring to cleanly separate the `error` field from the rest of the data
+
+3. [x] Update `enhanceAuthorsWithAvatar.ts` to fix type errors
+
+   - Add missing `id` and `updated_at` fields to the mapped TikTok authors
+   - Use type assertion to avoid TypeScript errors
+
+4. [x] Test the changes
+   - Verify that TikTok profiles can be successfully saved to the database
+   - Confirm that Arweave uploads work correctly
+
+#### Code Changes
+
+For `createSocials.ts`:
+
+```typescript
+// Clean the authors array to remove any error fields
+const cleanAuthors = authors.map((author) => {
+  // Use destructuring to remove error field if it exists
+  const { error, ...cleanAuthor } = author as any;
+  return cleanAuthor;
+});
+
+// Use cleanAuthors instead of authors in the upsert operation
+```
+
+For `enhanceAuthorsWithAvatar.ts`:
+
+```typescript
+const mappedTikTokAuthors = enhancedProfiles.map((profile, index) => ({
+  // Preserve original id and updated_at fields
+  id: tiktokAuthors[index]?.id,
+  updated_at: tiktokAuthors[index]?.updated_at,
+  // Add enhanced profile data
+  avatar: profile.avatar,
+  bio: profile.bio,
+  followerCount: profile.followerCount,
+  followingCount: profile.followingCount,
+  profile_url: profile.profile_url,
+  region: profile.region,
+  username: profile.username,
+}));
+```
 
 ### Current Task: Implement Arweave Uploads for TikTok Profile Pictures
 
@@ -311,141 +489,3 @@ const { data: upsertedSocials, error: upsertError } = await supabase
 
 5. [x] Update documentation to reflect the correct constraint usage
    - Added comments in the code to explain the constraint usage
-
-#### Previous Task: Integrate TikTok Avatar Fetching for Comment Social Records
-
-1. **Current Flow**:
-
-   - Comments are processed in `lib/tiktok/getFormattedComments.ts`
-   - Social records are created in `lib/supabase/createOrGetCommentSocials.ts`
-   - Avatar URLs are currently missing in the process
-
-2. **Avatar Fetching Tool**:
-
-   - ✅ Successfully built and tested `lib/tiktok/getTikTokAvatar.ts`
-   - ✅ Can fetch high-resolution avatar URLs (1080x1080) directly from TikTok profiles
-   - ✅ Works reliably for test cases (teddyswims, charlidamelio, khaby.lame)
-   - ✅ Handles errors gracefully and includes detailed logging
-
-3. **Integration Points Analysis**:
-   a. Where to Add Avatar Fetching:
-
-   - Option A: During comment formatting in `getFormattedComments.ts`
-     - Pros: Early in the process, could avoid storing records without avatars
-     - Cons: Would need to modify each platform's comment formatting logic
-   - Option B: During social record creation in `createSocials.ts` ⬅ (Implemented)
-     - Pros: Centralized point for all platforms, minimal code changes
-     - Cons: Adds processing time during social record creation
-   - Option C: As a separate batch process for existing records ⬅ (Implemented)
-     - Pros: No changes to existing flow, can run asynchronously
-     - Cons: Records would initially be created without avatars
-
-   b. Performance Considerations:
-
-   - ✅ Added rate limiting (500ms delay between requests) to avoid TikTok blocks
-   - ✅ Implemented staggered requests in both real-time and batch processes
-   - ✅ Added detailed logging for monitoring and debugging
-
-4. **Implementation Summary**:
-
-   1. ✅ Modified `lib/supabase/createSocials.ts` to:
-
-      - Check if the profile is from TikTok (based on profile_url)
-      - For TikTok profiles, extract username and call getTikTokAvatar
-      - Add the avatar URL to the author object before database insertion
-      - Include rate limiting (delay between requests)
-      - Add logging for avatar fetch success/failure
-
-   2. ✅ Created batch update script `tools/update_tiktok_avatars.ts` to:
-      - Query socials table for TikTok profiles without avatars
-      - Fetch and update avatars in batches with rate limiting
-      - Provide dry-run option for testing
-      - Include detailed statistics and progress reporting
-
-5. **Required Changes**:
-   [X] Convert avatar fetching tool to a reusable module
-   [X] Add rate limiting and error handling
-   [X] Integrate with social record creation flow
-   [X] Create batch update process for existing records
-
-6. **TikTok Avatar Fetching Failures Analysis**:
-
-   a. **Observed Issues**:
-
-   - Most avatar fetch attempts are failing with "No avatar found for user"
-   - The HTML response is very short (1155 bytes) for failed requests
-   - Successful fetches show much larger responses (250,000+ bytes)
-   - Only a small percentage of requests succeed (e.g., 1/5 or 0/15 in test batches)
-
-   b. **Root Causes**:
-
-   - TikTok is likely detecting and blocking our scraping attempts
-   - The short HTML responses (1155 bytes) indicate we're getting a bot detection page
-   - Multiple concurrent requests from the same IP are triggering anti-bot measures
-   - Our current headers may not be convincing enough to bypass TikTok's detection
-
-   c. **Steps to Fix**:
-
-   - [x] Reduce concurrency: Process one profile at a time instead of in parallel
-   - [x] Increase delays: Extend the delay between requests from 500ms to 2-3 seconds
-   - [x] Enhance browser simulation: Add more realistic browser headers and cookies
-   - [x] Implement session rotation: Create and maintain multiple TikTok sessions
-   - [x] Add detection for bot-challenge pages: Identify when we're being blocked
-   - [x] Implement exponential backoff: Retry failed requests with increasing delays
-   - [x] Skip likely bot accounts: Filter out usernames that look like spam/bot accounts
-   - [ ] Consider using a headless browser: For more complex scraping scenarios (future enhancement)
-
-7. **Fixes Implemented**:
-
-   a. **In `getTikTokAvatar.ts`**:
-
-   - ✅ Added rotating user agents to prevent pattern detection
-   - ✅ Implemented exponential backoff for failed requests (retry with increasing delays)
-   - ✅ Added detection for bot challenge pages with specific patterns
-   - ✅ Enhanced browser simulation with more realistic headers and cookies
-   - ✅ Added more robust error handling and retry logic
-   - ✅ Expanded avatar detection patterns to find more avatar URLs
-
-   b. **In `createSocials.ts`**:
-
-   - ✅ Changed from parallel to sequential processing for TikTok profiles
-   - ✅ Increased delays between requests (2-4 seconds with randomization)
-   - ✅ Added filtering to skip likely bot accounts
-   - ✅ Separated TikTok profiles from other platforms for specialized handling
-   - ✅ Improved error handling and logging
-
-   c. **In `update_tiktok_avatars.ts`**:
-
-   - ✅ Increased default delay between requests to 3 seconds
-   - ✅ Added randomization to delays to appear more human-like
-   - ✅ Added filtering to skip likely bot accounts
-   - ✅ Improved error handling and reporting
-   - ✅ Added command-line option to customize delay
-
-Progress:
-[X] Built and tested avatar fetching tool
-[X] Verified it works with test accounts
-[X] Converted to reusable module
-[X] Integrated with social record creation
-[X] Added rate limiting
-[X] Created batch update process
-[X] Fixed TikTok anti-bot detection issues
-
-Notes:
-
-- Avatar URLs are high resolution (1080x1080)
-- URLs include authentication tokens that may expire
-- Need to consider token refresh mechanism
-- Should store original URL format to allow future updates
-- Successfully finding avatars in script tags when not in HTML
-- TikTok is actively blocking our scraping attempts with anti-bot measures
-- Implemented more sophisticated scraping techniques to bypass detection
-- Sequential processing with longer delays significantly improves success rate
-- Skipping likely bot accounts reduces unnecessary processing
-
-Next Steps:
-
-1. Test the improved avatar fetching with real TikTok comments
-2. Run the batch update script on production data with the new improvements
-3. Monitor avatar fetch success rates
-4. Consider implementing a proxy rotation system for higher volume processing if needed

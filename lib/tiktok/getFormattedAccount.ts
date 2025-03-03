@@ -1,7 +1,9 @@
-import { Social } from "../../types/agent";
+import { Database } from "../../types/database.types";
+
+type Social = Database["public"]["Tables"]["socials"]["Row"];
 
 const getFormattedAccount = (
-  data: any
+  data: any,
 ): {
   profile: Social | null;
   videoUrls: Array<string> | null;
@@ -11,7 +13,7 @@ const getFormattedAccount = (
     if (data?.length === 0 || data?.error) return null;
     const aggregatedData = data.reduce((acc: any, item: any) => {
       const existingAuthor = acc.find(
-        (author: any) => author.name === item.authorMeta.name
+        (author: any) => author.name === item.authorMeta.name,
       );
 
       videoUrls.push(item.webVideoUrl);

@@ -161,9 +161,143 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - When working with database operations, ensure that objects being inserted don't contain fields that don't exist in the database schema to avoid errors like "Could not find the 'X' column in the schema cache"
 - When using Supabase upsert operations with ON CONFLICT DO UPDATE, ensure that the data being upserted doesn't contain duplicate values for the conflict column within the same batch, as this will cause the error "ON CONFLICT DO UPDATE command cannot affect row a second time"
 - When processing TikTok profile data, ensure that critical fields like profile_url and username are properly populated before attempting database operations, as empty values can cause issues with unique constraints and data integrity
+- When scraping social media profiles, create isolated test scripts to verify scraper functionality without running the entire application
+- When implementing web scrapers, prefer direct HTTP requests over third-party APIs when possible for better control and reliability
+- For social media scraping, implement multiple selectors and patterns to extract data, as the HTML structure can change frequently
+- When enhancing social profiles, implement comprehensive logging to track which fields were successfully extracted
+- Create separate, focused functions for each platform (Instagram, TikTok, etc.) rather than trying to use a single generic function
 
 # Scratchpad
 
-### Current Task: Ready for New Task
+### Current Task: Implement Bio Extraction for Instagram Profiles
 
-Waiting for task details...
+#### Current Status
+
+We've successfully implemented extraction for:
+
+- [x] Avatar URL (from meta tags)
+- [x] Follower Count (from meta description)
+- [x] Following Count (from meta description)
+- [x] Bio (implemented new approach using meta description tag)
+
+We implemented multiple approaches to extract the bio, with the primary method now being extraction from the meta description tag:
+
+```html
+<meta
+  content="1,484 Followers, 114 Following, 309 Posts - @sweetman.eth on Instagram: "🎨 the dev for onchain music 🎹
+📀 helping musicians get paid 📀
+🌜 expanding ethereum 🌛""
+  name="description"
+/>
+```
+
+The bio is extracted from the portion after "on Instagram:" and enclosed in quotes. This approach is more reliable than trying to extract from the HTML body, which was failing with our previous implementation.
+
+#### Issue Fixed
+
+During testing, we discovered that our initial regex pattern was too strict and wasn't correctly matching the bio in the meta description. We've fixed this by:
+
+1. Adding the `s` flag to the regex to make it match across multiple lines
+2. Creating more flexible patterns as fallbacks
+3. Adding a very general pattern that extracts everything after "on Instagram:"
+4. Improving the cleanup of extracted text to handle quotes and whitespace properly
+
+#### Implementation Details
+
+We've implemented a multi-layered approach to extract Instagram bios:
+
+1. **Primary Method (New)**: Extract from meta description tag
+
+   - Targets the `<meta name="description">` tag in the HTML head
+   - Uses regex to extract the bio portion after "on Instagram:" and between quotes
+   - Handles HTML entities like &quot; and &amp;
+   - Preserves line breaks in the bio text
+   - Now includes multiple fallback patterns with increasing flexibility
+
+2. **Secondary Method**: Extract from og:description meta tag
+
+   - Similar approach to the primary method but using the og:description meta tag
+   - Used as a fallback if the primary method fails
+
+3. **Tertiary Methods (Fallbacks)**: Previous HTML-based approaches
+
+   - CSS selector targeting specific classes
+   - More general CSS selector approach
+   - Regex-based extraction
+   - Final fallback for content with line breaks
+
+4. **Error Handling**:
+   - Each approach is wrapped in try-catch blocks
+   - Detailed logging at each step
+   - Graceful degradation through multiple fallback methods
+
+#### Implementation Plan (Completed)
+
+1. [x] **Add CSS Selector-Based Bio Extraction**:
+
+   - [x] Target the specific span elements with classes `_ap3a _aaco _aacu _aacx _aad7 _aade`
+   - [x] Extract the text content from these elements
+   - [x] Handle nested spans and divs properly
+   - [x] Process line breaks (`<br>`) to maintain formatting
+
+2. [x] **Add Regex-Based Fallback**:
+
+   - [x] Create a regex pattern that matches the bio HTML structure
+   - [x] Extract the text content between the span tags
+   - [x] Handle special characters and HTML entities
+   - [x] Process line breaks to maintain formatting
+
+3. [x] **Add Comprehensive Logging**:
+
+   - [x] Log all potential bio elements found
+   - [x] Log the extracted bio content
+   - [x] Log any errors or issues encountered during extraction
+   - [x] Add debug information to help troubleshoot extraction issues
+
+4. [x] **Extract Bio from Meta Description Tag**:
+
+   - [x] Target the meta tag with name="description"
+   - [x] Extract the content attribute
+   - [x] Parse the bio portion after "on Instagram:" and between quotes
+   - [x] Handle HTML entities and special characters
+   - [x] Preserve line breaks in the bio
+
+5. [x] **Implement Error Handling and Fallbacks**:
+
+   - [x] Handle cases where the bio element is not found
+   - [x] Provide fallbacks for different HTML structures
+   - [x] Handle cases where the bio is empty
+   - [x] Ensure the scraper doesn't fail if bio extraction fails
+
+6. [x] **Test and Fix Issues**:
+   - [x] Test with the 'sweetman.eth' profile
+   - [x] Identify and fix issues with regex patterns
+   - [x] Add more flexible fallback patterns
+   - [x] Improve text cleanup for better results
+
+#### Next Steps
+
+1. [ ] **Test with Additional Profiles**:
+
+   - [ ] Test with profiles that have different bio formats
+   - [ ] Test with profiles that have special characters or emojis in bios
+   - [ ] Test with profiles that have links in bios
+   - [ ] Test with profiles that have very long bios
+
+2. [ ] **Refine Based on Test Results**:
+
+   - [ ] Adjust regex patterns if needed
+   - [ ] Optimize the extraction logic based on performance
+   - [ ] Consider removing approaches that consistently fail
+
+3. [ ] **Document the Implementation**:
+
+   - [ ] Add comments explaining the extraction strategy
+   - [ ] Document the structure of Instagram meta descriptions
+   - [ ] Note any limitations or edge cases
+
+4. [ ] **Consider Edge Cases**:
+   - [ ] Profiles without bios
+   - [ ] Profiles with special characters or emojis in bios
+   - [ ] Profiles with links in bios
+   - [ ] Profiles with very long bios

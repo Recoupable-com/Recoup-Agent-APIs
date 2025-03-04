@@ -161,178 +161,85 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - When working with database operations, ensure that objects being inserted don't contain fields that don't exist in the database schema to avoid errors like "Could not find the 'X' column in the schema cache"
 - When using Supabase upsert operations with ON CONFLICT DO UPDATE, ensure that the data being upserted doesn't contain duplicate values for the conflict column within the same batch, as this will cause the error "ON CONFLICT DO UPDATE command cannot affect row a second time"
 - When processing TikTok profile data, ensure that critical fields like profile_url and username are properly populated before attempting database operations, as empty values can cause issues with unique constraints and data integrity
+- When scraping social media profiles, create isolated test scripts to verify scraper functionality without running the entire application
+- When implementing web scrapers, prefer direct HTTP requests over third-party APIs when possible for better control and reliability
+- For social media scraping, implement multiple selectors and patterns to extract data, as the HTML structure can change frequently
+- When enhancing social profiles, implement comprehensive logging to track which fields were successfully extracted
+- Create separate, focused functions for each platform (Instagram, TikTok, etc.) rather than trying to use a single generic function
 
 # Scratchpad
 
-### Current Task: Fix Missing Data in TikTok Profile Objects
+### Current Task: Upload Instagram Profile Pictures to Arweave (Step 42)
 
-#### Error Analysis
+#### Task Description
 
-1. **Core Issue**:
+According to the ROADMAP.md file (step 42), we need to update the Instagram profile scraper to upload profile pictures to Arweave:
 
-   - The log output shows that the `authors` array contains objects with empty `profile_url` and `username` fields
-   - These fields are critical for database operations, especially since `profile_url` is used as the unique constraint for upsert operations
-   - Empty `profile_url` values will cause issues with the de-duplication logic and database constraints
-
-2. **Log Analysis**:
-
-   ```
-   uniqueAuthors [
-     {
-       avatar: 'https://arweave.net/CuC8bvLgKkTajVX2IJXiS_D_2McPfOxx2lnQXUplzHY',
-       bio: 'Everything is weird until it makes sense',
-       followerCount: 153,
-       followingCount: 52,
-       profile_url: '',  // Empty profile_url
-       region: null,
-       username: ''      // Empty username
-     }
-   ]
-   authors [
-     {
-       avatar: 'https://arweave.net/53_iYMxx9--6-CRRT0rIGRZyjdU06ZZvXUVbIK1NlFk',
-       bio: 'TRILL MUSIC. \\nFitness',
-       followerCount: 1286,
-       followingCount: 521,
-       profile_url: '',  // Empty profile_url
-       region: null,
-       username: ''      // Empty username
-     },
-     // ... more objects with empty profile_url and username
-   ]
-   ```
-
-3. **Potential Root Causes**:
-   - The TikTok profile scraping process is successfully retrieving avatar, bio, and follower counts, but failing to capture profile URLs and usernames
-   - The data transformation in `enhanceTikTokProfiles` or `enhanceAuthorsWithAvatar.ts` might be losing this information
-   - There could be an issue with how the original author data is being passed to the enhancement functions
-
-#### Solution Plan
-
-1. **Option A: Fix data mapping in `enhanceAuthorsWithAvatar.ts`**
-
-   - Pros: Addresses the issue at the source of the data transformation
-   - Cons: Requires understanding how the original author data is structured
-
-2. **Option B: Add validation and filtering in `createSocials.ts`**
-
-   - Pros: More defensive approach that prevents invalid data from reaching the database
-   - Cons: Doesn't fix the root cause, just prevents symptoms
-
-3. **Option C: Combine approaches - fix mapping and add validation**
-   - Pros: Most comprehensive solution that addresses both the root cause and prevents future issues
-   - Cons: Requires more changes across multiple files
-
-#### Implementation Plan (Option C - most comprehensive)
-
-1. [x] Examine the data flow in `enhanceAuthorsWithAvatar.ts`
-
-   - Understand how the original `tiktokAuthors` array is structured
-   - Identify where `profile_url` and `username` should be coming from
-   - Determine if these fields are being lost during mapping
-
-2. [x] Update `enhanceAuthorsWithAvatar.ts` to preserve `profile_url` and `username`
-
-   - Modify the mapping function to ensure these fields are properly included
-   - Add logging to verify the fields are present before and after transformation
-
-3. [x] Add validation in `createSocials.ts` to filter out invalid records
-
-   - Add a filter step to remove any authors with empty `profile_url` or `username`
-   - Log how many records were filtered out for debugging purposes
-
-4. [ ] Test the changes
-   - Verify that TikTok profiles are correctly enhanced with all required fields
-   - Confirm that no empty `profile_url` or `username` values reach the database
-   - Check that the upsert operation succeeds without errors
-
-#### Code Investigation
-
-First, we need to examine how the TikTok authors are being processed in `enhanceAuthorsWithAvatar.ts`:
-
-```typescript
-// Current implementation (problematic)
-const mappedTikTokAuthors = enhancedProfiles.map((profile) => ({
-  avatar: profile.avatar,
-  bio: profile.bio,
-  followerCount: profile.followerCount,
-  followingCount: profile.followingCount,
-  profile_url: profile.profile_url, // This is empty in the logs
-  region: profile.region,
-  username: profile.username, // This is empty in the logs
-}));
+```
+42. [] P1: scrapeInstagramProfile - Arweave - profile pic
+    actual: url being saved for socials.avatar is a direct link to the profile picture on instagram cnd with cache token.
+    required: pfp is uploaded to arweave with uploadPfpToArweave and the arweave url is saved to the socials.avatar field
 ```
 
-We need to check:
+#### Current Status
 
-1. What data is in the original `tiktokAuthors` array
-2. What data is in the `enhancedProfiles` array
-3. Where the `profile_url` and `username` should be coming from
+Currently, the `scrapeInstagramProfile` function extracts the avatar URL from Instagram's CDN and saves it directly to the `socials.avatar` field. This approach has several limitations:
+
+- Instagram CDN URLs may expire or change
+- The URLs contain cache tokens that can become invalid
+- There's no permanent storage of the profile pictures
+
+We need to modify the process to:
+
+1. Extract the avatar URL as currently done
+2. Upload the image to Arweave for permanent storage
+3. Save the Arweave URL to the `socials.avatar` field
+
+#### Implementation Plan
+
+1. [x] **Understand the Current Implementation**:
+
+   - [x] Examine how `scrapeInstagramProfile` currently extracts avatar URLs
+   - [x] Identify where the avatar URL is saved to the database
+   - [x] Understand the flow from scraping to database storage
+
+2. [x] **Locate the `uploadPfpToArweave` Function**:
+
+   - [x] Find the existing `uploadPfpToArweave` function in `lib/arweave/uploadPfpToArweave.ts`
+   - [x] Understand its parameters, return values, and behavior
+   - [x] Check if it's already being used elsewhere in the codebase (it is used in TikTok profile enhancement)
+
+3. [x] **Modify `enhanceInstagramProfiles` to Use Arweave**:
+
+   - [x] Update the function to call `uploadPfpToArweave` with the extracted avatar URL
+   - [x] Handle errors and edge cases (e.g., failed uploads, missing avatars)
+   - [x] Ensure the Arweave URL is saved to the result object
+   - [x] Add fallback to original URL if Arweave upload fails
+
+4. [ ] **Test the Implementation**:
+   - [ ] Test with various Instagram profiles
+   - [ ] Verify that profile pictures are successfully uploaded to Arweave
+   - [ ] Confirm that the Arweave URLs are correctly saved to the database
+
+#### Implementation Details
+
+The implementation follows these steps:
+
+1. Check if the avatar URL is already an Arweave URL (starts with "arweave.net")
+2. If not, upload the avatar to Arweave using the `uploadPfpToArweave` function
+3. If the upload is successful, save the Arweave URL to the `avatar` field
+4. If the upload fails, fall back to the original URL and log a warning
+
+This approach ensures that:
+
+- We don't re-upload images that are already on Arweave
+- We have a fallback mechanism if the Arweave upload fails
+- We maintain backward compatibility with existing code
 
 #### Next Steps
 
-1. Add logging in `enhanceAuthorsWithAvatar.ts` to print the original `tiktokAuthors` array
-2. Check if `profile_url` and `username` exist in the original data
-3. Determine if we should be preserving these fields from `tiktokAuthors` rather than using the values from `enhancedProfiles`
-4. Update the mapping function to use the correct source for these fields
-
-### Previous Task: Fix Duplicate Conflict Error in Socials Table Upsert Operation
-
-#### Error Analysis
-
-1. **Core Error**:
-
-   ```
-   Failed to create/update socials: {
-     code: '21000',
-     details: null,
-     hint: 'Ensure that no rows proposed for insertion within the same command have duplicate constrained values.',
-     message: 'ON CONFLICT DO UPDATE command cannot affect row a second time'
-   }
-   ```
-
-2. **Root Cause**:
-
-   - The error code `21000` indicates a PostgreSQL error related to duplicate values in an upsert operation
-   - The hint "Ensure that no rows proposed for insertion within the same command have duplicate constrained values" suggests that we're trying to upsert multiple records with the same `profile_url` value in a single batch
-   - The message "ON CONFLICT DO UPDATE command cannot affect row a second time" confirms that PostgreSQL is detecting that the same row would be updated multiple times in a single upsert operation
-
-3. **Error Flow**:
-   - `enhanceTikTokProfiles` function returns enhanced profiles
-   - These profiles are passed to `createSocials`
-   - The batch of profiles contains duplicate `profile_url` values
-   - When `createSocials` attempts to upsert the batch, PostgreSQL rejects the operation because it would update the same row multiple times
-
-#### Solution Plan
-
-The smallest set of changes needed to fix this issue:
-
-1. **Option A: De-duplicate profiles before upserting**
-
-   - Pros: Simple to implement, doesn't require changing the database operation
-   - Cons: Might lose data if there are legitimate duplicates with different data
-
-2. **Option B: Split the upsert into individual operations**
-
-   - Pros: Most reliable, handles all edge cases
-   - Cons: Less efficient, requires more database calls
-
-3. **Option C: Group by profile_url and only keep the latest/most complete record**
-   - Pros: Balance of efficiency and reliability
-   - Cons: More complex implementation
-
-#### Implementation Plan (Option A - simplest)
-
-1. [x] Add logging to understand the duplicate profiles
-
-   - Log the profile_url values before upserting to identify duplicates
-   - Check if the duplicates are identical or have different data
-
-2. [x] Update `createSocials.ts` to de-duplicate profiles before upserting
-
-   - Use a Map with profile_url as the key to ensure uniqueness
-   - Or filter the array to remove duplicates
-
-3. [x] Test the changes
-   - Verify that TikTok profiles can be successfully saved to the database
-   - Confirm that no duplicates are being sent to the database
+1. [x] Implement the changes to `enhanceInstagramProfiles`
+2. [ ] Test the implementation with various Instagram profiles
+3. [ ] Verify that profile pictures are successfully uploaded to Arweave
+4. [ ] Confirm that the Arweave URLs are correctly saved to the database
+5. [ ] Mark the task as completed in the ROADMAP.md file

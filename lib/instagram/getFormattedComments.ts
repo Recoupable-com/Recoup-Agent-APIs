@@ -11,7 +11,7 @@ const getFormattedComments = (data: any, posts: Post[]) => {
           comment: text,
           username: ownerUsername,
           commented_at: new Date(timestamp).toISOString(),
-          post_id: post.id,
+          post_url: post.id,
           profile_url: `https://instagram.com/${ownerUsername}`,
         };
 

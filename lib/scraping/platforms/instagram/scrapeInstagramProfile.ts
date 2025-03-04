@@ -100,16 +100,6 @@ export async function scrapeInstagramProfile(
         preview: html.slice(0, 100),
       });
 
-      // Save HTML for debugging
-      const fs = require("fs");
-      const debugDir = "./debug";
-      if (!fs.existsSync(debugDir)) {
-        fs.mkdirSync(debugDir);
-      }
-      const debugFilePath = `${debugDir}/debug-${cleanUsername}.html`;
-      fs.writeFileSync(debugFilePath, html);
-      console.log(`Saved HTML response to ${debugFilePath} for debugging`);
-
       // Parse HTML with cheerio
       const $ = cheerio.load(html);
       console.log("scrapeInstagramProfile: Loaded HTML with cheerio");

@@ -69,17 +69,34 @@ export async function enhanceInstagramProfiles(
 
       // Add avatar if available
       if (scrapedProfile.avatar) {
-        enhancedProfile.avatar = scrapedProfile.avatar;
         dataFound = true;
         console.log(`✅ Found avatar for Instagram user: ${username}`);
 
-        // Log avatar URL details
+        // Check if avatar is already on Arweave
         if (scrapedProfile.avatar.includes("arweave.net")) {
+          enhancedProfile.avatar = scrapedProfile.avatar;
           console.log(
             `   Avatar is already on Arweave: ${scrapedProfile.avatar}`
           );
         } else {
-          console.log(`   Original avatar URL: ${scrapedProfile.avatar}`);
+          // Upload avatar to Arweave to avoid caching issues
+          console.log(`Uploading avatar for ${username} to Arweave...`);
+          const arweaveUrl = await uploadPfpToArweave(scrapedProfile.avatar);
+
+          if (arweaveUrl) {
+            enhancedProfile.avatar = arweaveUrl;
+            console.log(
+              `✅ Uploaded avatar to Arweave for Instagram user: ${username}`
+            );
+            console.log(`   Original URL: ${scrapedProfile.avatar}`);
+            console.log(`   Arweave URL: ${arweaveUrl}`);
+          } else {
+            // Fallback to original URL if Arweave upload fails
+            enhancedProfile.avatar = scrapedProfile.avatar;
+            console.log(
+              `⚠️ Arweave upload failed for ${username}, using original URL`
+            );
+          }
         }
       }
 

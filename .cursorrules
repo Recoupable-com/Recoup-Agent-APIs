@@ -169,135 +169,77 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Implement Bio Extraction for Instagram Profiles
+### Current Task: Upload Instagram Profile Pictures to Arweave (Step 42)
+
+#### Task Description
+
+According to the ROADMAP.md file (step 42), we need to update the Instagram profile scraper to upload profile pictures to Arweave:
+
+```
+42. [] P1: scrapeInstagramProfile - Arweave - profile pic
+    actual: url being saved for socials.avatar is a direct link to the profile picture on instagram cnd with cache token.
+    required: pfp is uploaded to arweave with uploadPfpToArweave and the arweave url is saved to the socials.avatar field
+```
 
 #### Current Status
 
-We've successfully implemented extraction for:
+Currently, the `scrapeInstagramProfile` function extracts the avatar URL from Instagram's CDN and saves it directly to the `socials.avatar` field. This approach has several limitations:
 
-- [x] Avatar URL (from meta tags)
-- [x] Follower Count (from meta description)
-- [x] Following Count (from meta description)
-- [x] Bio (implemented new approach using meta description tag)
+- Instagram CDN URLs may expire or change
+- The URLs contain cache tokens that can become invalid
+- There's no permanent storage of the profile pictures
 
-We implemented multiple approaches to extract the bio, with the primary method now being extraction from the meta description tag:
+We need to modify the process to:
 
-```html
-<meta
-  content="1,484 Followers, 114 Following, 309 Posts - @sweetman.eth on Instagram: "🎨 the dev for onchain music 🎹
-📀 helping musicians get paid 📀
-🌜 expanding ethereum 🌛""
-  name="description"
-/>
-```
+1. Extract the avatar URL as currently done
+2. Upload the image to Arweave for permanent storage
+3. Save the Arweave URL to the `socials.avatar` field
 
-The bio is extracted from the portion after "on Instagram:" and enclosed in quotes. This approach is more reliable than trying to extract from the HTML body, which was failing with our previous implementation.
+#### Implementation Plan
 
-#### Issue Fixed
+1. [x] **Understand the Current Implementation**:
 
-During testing, we discovered that our initial regex pattern was too strict and wasn't correctly matching the bio in the meta description. We've fixed this by:
+   - [x] Examine how `scrapeInstagramProfile` currently extracts avatar URLs
+   - [x] Identify where the avatar URL is saved to the database
+   - [x] Understand the flow from scraping to database storage
 
-1. Adding the `s` flag to the regex to make it match across multiple lines
-2. Creating more flexible patterns as fallbacks
-3. Adding a very general pattern that extracts everything after "on Instagram:"
-4. Improving the cleanup of extracted text to handle quotes and whitespace properly
+2. [x] **Locate the `uploadPfpToArweave` Function**:
+
+   - [x] Find the existing `uploadPfpToArweave` function in `lib/arweave/uploadPfpToArweave.ts`
+   - [x] Understand its parameters, return values, and behavior
+   - [x] Check if it's already being used elsewhere in the codebase (it is used in TikTok profile enhancement)
+
+3. [x] **Modify `enhanceInstagramProfiles` to Use Arweave**:
+
+   - [x] Update the function to call `uploadPfpToArweave` with the extracted avatar URL
+   - [x] Handle errors and edge cases (e.g., failed uploads, missing avatars)
+   - [x] Ensure the Arweave URL is saved to the result object
+   - [x] Add fallback to original URL if Arweave upload fails
+
+4. [ ] **Test the Implementation**:
+   - [ ] Test with various Instagram profiles
+   - [ ] Verify that profile pictures are successfully uploaded to Arweave
+   - [ ] Confirm that the Arweave URLs are correctly saved to the database
 
 #### Implementation Details
 
-We've implemented a multi-layered approach to extract Instagram bios:
+The implementation follows these steps:
 
-1. **Primary Method (New)**: Extract from meta description tag
+1. Check if the avatar URL is already an Arweave URL (starts with "arweave.net")
+2. If not, upload the avatar to Arweave using the `uploadPfpToArweave` function
+3. If the upload is successful, save the Arweave URL to the `avatar` field
+4. If the upload fails, fall back to the original URL and log a warning
 
-   - Targets the `<meta name="description">` tag in the HTML head
-   - Uses regex to extract the bio portion after "on Instagram:" and between quotes
-   - Handles HTML entities like &quot; and &amp;
-   - Preserves line breaks in the bio text
-   - Now includes multiple fallback patterns with increasing flexibility
+This approach ensures that:
 
-2. **Secondary Method**: Extract from og:description meta tag
-
-   - Similar approach to the primary method but using the og:description meta tag
-   - Used as a fallback if the primary method fails
-
-3. **Tertiary Methods (Fallbacks)**: Previous HTML-based approaches
-
-   - CSS selector targeting specific classes
-   - More general CSS selector approach
-   - Regex-based extraction
-   - Final fallback for content with line breaks
-
-4. **Error Handling**:
-   - Each approach is wrapped in try-catch blocks
-   - Detailed logging at each step
-   - Graceful degradation through multiple fallback methods
-
-#### Implementation Plan (Completed)
-
-1. [x] **Add CSS Selector-Based Bio Extraction**:
-
-   - [x] Target the specific span elements with classes `_ap3a _aaco _aacu _aacx _aad7 _aade`
-   - [x] Extract the text content from these elements
-   - [x] Handle nested spans and divs properly
-   - [x] Process line breaks (`<br>`) to maintain formatting
-
-2. [x] **Add Regex-Based Fallback**:
-
-   - [x] Create a regex pattern that matches the bio HTML structure
-   - [x] Extract the text content between the span tags
-   - [x] Handle special characters and HTML entities
-   - [x] Process line breaks to maintain formatting
-
-3. [x] **Add Comprehensive Logging**:
-
-   - [x] Log all potential bio elements found
-   - [x] Log the extracted bio content
-   - [x] Log any errors or issues encountered during extraction
-   - [x] Add debug information to help troubleshoot extraction issues
-
-4. [x] **Extract Bio from Meta Description Tag**:
-
-   - [x] Target the meta tag with name="description"
-   - [x] Extract the content attribute
-   - [x] Parse the bio portion after "on Instagram:" and between quotes
-   - [x] Handle HTML entities and special characters
-   - [x] Preserve line breaks in the bio
-
-5. [x] **Implement Error Handling and Fallbacks**:
-
-   - [x] Handle cases where the bio element is not found
-   - [x] Provide fallbacks for different HTML structures
-   - [x] Handle cases where the bio is empty
-   - [x] Ensure the scraper doesn't fail if bio extraction fails
-
-6. [x] **Test and Fix Issues**:
-   - [x] Test with the 'sweetman.eth' profile
-   - [x] Identify and fix issues with regex patterns
-   - [x] Add more flexible fallback patterns
-   - [x] Improve text cleanup for better results
+- We don't re-upload images that are already on Arweave
+- We have a fallback mechanism if the Arweave upload fails
+- We maintain backward compatibility with existing code
 
 #### Next Steps
 
-1. [ ] **Test with Additional Profiles**:
-
-   - [ ] Test with profiles that have different bio formats
-   - [ ] Test with profiles that have special characters or emojis in bios
-   - [ ] Test with profiles that have links in bios
-   - [ ] Test with profiles that have very long bios
-
-2. [ ] **Refine Based on Test Results**:
-
-   - [ ] Adjust regex patterns if needed
-   - [ ] Optimize the extraction logic based on performance
-   - [ ] Consider removing approaches that consistently fail
-
-3. [ ] **Document the Implementation**:
-
-   - [ ] Add comments explaining the extraction strategy
-   - [ ] Document the structure of Instagram meta descriptions
-   - [ ] Note any limitations or edge cases
-
-4. [ ] **Consider Edge Cases**:
-   - [ ] Profiles without bios
-   - [ ] Profiles with special characters or emojis in bios
-   - [ ] Profiles with links in bios
-   - [ ] Profiles with very long bios
+1. [x] Implement the changes to `enhanceInstagramProfiles`
+2. [ ] Test the implementation with various Instagram profiles
+3. [ ] Verify that profile pictures are successfully uploaded to Arweave
+4. [ ] Confirm that the Arweave URLs are correctly saved to the database
+5. [ ] Mark the task as completed in the ROADMAP.md file

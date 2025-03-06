@@ -1,8 +1,8 @@
 import getAccountSocials from "./getAccountSocials";
 import getSocialPostsByIds from "./getSocialPostsByIds";
-import getPostsByIds, { Post } from "./getPostsByIds";
+import getPostsByIds from "./getPostsByIds";
 import enrichPostsWithPlatform from "./enrichPostsWithPlatform";
-import { SocialPost } from "../../types/agent";
+import { Post, SocialPost } from "../../types/agent";
 
 interface GetArtistPostsResponse {
   status: string;

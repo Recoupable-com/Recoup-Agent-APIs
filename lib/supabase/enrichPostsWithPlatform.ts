@@ -1,5 +1,4 @@
-import type { Social, SocialPost } from "../../types/agent";
-import { Post } from "./getPostsByIds";
+import type { Social, SocialPost, Post } from "../../types/agent";
 
 /**
  * Enriches posts with platform information based on social account data

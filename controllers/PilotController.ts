@@ -223,7 +223,7 @@ export class PilotController {
       tasks.push(processPlatform("INSTAGRAM", handles.instagram));
     }
     if (handles.twitter?.trim()) {
-      tasks.push(runTwitterAgent(agentId, handles.twitter, artistId || ""));
+      tasks.push(processPlatform("TWITTER", handles.twitter));
     }
     if (handles.tiktok?.trim()) {
       tasks.push(processPlatform("TIKTOK", handles.tiktok));

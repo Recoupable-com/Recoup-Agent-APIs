@@ -8,7 +8,6 @@ import { createAgent } from "../lib/supabase/createAgent";
 import updateAgentStatus from "../lib/supabase/updateAgentStatus";
 import createAgentStatus from "../lib/supabase/createAgentStatus";
 import runSpotifyAgent from "../agents/runSpotifyAgent";
-import runTwitterAgent from "../agents/runTwitterAgent";
 import { generateSegmentsForAccount } from "../lib/services/segmentService";
 import { getProfileUrl } from "../lib/utils/getProfileUrl";
 

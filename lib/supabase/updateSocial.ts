@@ -1,8 +1,11 @@
 import supabase from "./serverClient";
+import { Database } from "../../types/database.types";
+
+type Social = Database["public"]["Tables"]["socials"]["Row"];
 
 const updateSocial = async (
   social_id: string,
-  socialdata: any,
+  socialdata: Social
 ): Promise<{
   error: Error | null;
 }> => {

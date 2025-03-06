@@ -19,6 +19,7 @@ export class InstagramScraper extends BaseScraper {
         profile_url: `https://instagram.com/${handle}`,
         avatar: profile.avatar,
         followerCount: profile.followerCount,
+        followingCount: profile.followingCount,
         description: profile.bio,
       };
     } catch (error) {
@@ -27,7 +28,6 @@ export class InstagramScraper extends BaseScraper {
   }
 
   async scrapePosts(handle: string): Promise<ScrapedPost[]> {
-    console.log("InstagramScraper.scrapePosts: Scraping posts", { handle });
     try {
       const { postUrls } = await getProfile(handle);
 
@@ -46,9 +46,6 @@ export class InstagramScraper extends BaseScraper {
   }
 
   async scrapeComments(postUrls: string[]): Promise<ScrapedComment[]> {
-    console.log("InstagramScraper.scrapeComments: Scraping comments", {
-      postUrls,
-    });
     try {
       // Validate input
       if (!Array.isArray(postUrls) || !postUrls.length) {
@@ -62,11 +59,6 @@ export class InstagramScraper extends BaseScraper {
         id: url, // Use URL as temporary ID for matching
         updated_at: new Date().toISOString(),
       }));
-
-      // Get comments using the proper flow
-      console.debug("InstagramScraper.scrapeComments: Fetching comments", {
-        postCount: posts.length,
-      });
 
       const comments = await getPostComments(posts);
 

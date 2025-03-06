@@ -18,6 +18,7 @@ export class TikTokScraper extends BaseScraper {
         profile_url: `https://tiktok.com/@${handle}`,
         avatar: profile.avatar || undefined,
         followerCount: profile.followerCount || undefined,
+        followingCount: profile.followingCount || undefined,
         description: profile.bio || undefined,
       };
     } catch (error) {

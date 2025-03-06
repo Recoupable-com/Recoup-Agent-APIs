@@ -55,7 +55,13 @@ export class AgentService implements IAgentService {
       const { error: updateError } = await updateSocial(socialId, {
         avatar: profile.avatar || null,
         followerCount: profile.followerCount || null,
+        followingCount: profile.followingCount || null,
         bio: profile.description || null,
+        id: socialId,
+        profile_url: profile.profile_url,
+        region: profile.region || null,
+        updated_at: new Date().toISOString(),
+        username: profile.username,
       });
 
       if (updateError) {

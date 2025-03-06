@@ -4,3 +4,5 @@ package-lock.json
 dist/
 instructions.md
 ROADMAP.md
+# Cookie files
+**/*cookies.json

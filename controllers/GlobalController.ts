@@ -251,39 +251,23 @@ export const get_segments = async (req: Request, res: Response) => {
 };
 
 export const get_account_socials = async (req: Request, res: Response) => {
-  const { accountId } = req.query;
-  if (!accountId || typeof accountId !== "string") {
-    return res.status(400).json({ error: "Invalid account ID" });
-  }
-
   try {
+    const { accountId } = req.query;
+
+    if (!accountId || typeof accountId !== "string") {
+      return res.status(400).json({
+        status: "error",
+        message: "accountId is required and must be a string",
+      });
+    }
+
     const result = await getAccountSocials(accountId);
-    return res.status(200).json(result);
+    res.json(result);
   } catch (error) {
-    console.error("Error in get_account_socials:", error);
-    return res.status(500).json({
-      error:
-        error instanceof Error
-          ? error.message
-          : "Unknown error in get_account_socials",
-    });
-  }
-};
-
-export const get_fans = async (req: Request, res: Response) => {
-  const { artist_account_id } = req.query;
-  if (!artist_account_id || typeof artist_account_id !== "string") {
-    return res.status(400).json({ error: "Invalid artist_account_id" });
-  }
-
-  try {
-    const result = await getArtistFans(artist_account_id);
-    return res.status(200).json(result);
-  } catch (error) {
-    console.error("Error in get_fans:", error);
-    return res.status(500).json({
-      error:
-        error instanceof Error ? error.message : "Unknown error in get_fans",
+    console.error("[ERROR] Error in get_account_socials:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
     });
   }
 };
@@ -317,6 +301,24 @@ export const get_posts = async (req: Request, res: Response) => {
     return res.status(500).json({
       status: "error",
       message: "An unexpected error occurred",
+    });
+  }
+};
+
+export const get_fans = async (req: Request, res: Response) => {
+  const { artist_account_id } = req.query;
+  if (!artist_account_id || typeof artist_account_id !== "string") {
+    return res.status(400).json({ error: "Invalid artist_account_id" });
+  }
+
+  try {
+    const result = await getArtistFans(artist_account_id);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in get_fans:", error);
+    return res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "Unknown error in get_fans",
     });
   }
 };

@@ -19,6 +19,7 @@ export class InstagramScraper extends BaseScraper {
         profile_url: `https://instagram.com/${handle}`,
         avatar: profile.avatar,
         followerCount: profile.followerCount,
+        followingCount: profile.followingCount,
         description: profile.bio,
       };
     } catch (error) {

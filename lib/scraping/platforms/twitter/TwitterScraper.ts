@@ -2,7 +2,6 @@ import { BaseScraper } from "../../BaseScraper";
 import { ScrapedProfile, ScrapedPost, ScrapedComment } from "../../types";
 import { Database } from "../../../../types/database.types";
 import getProfile from "../../../twitter/getProfile";
-import getVideoComments from "../../../tiktok/getVideoComments";
 import { Scraper, Tweet } from "agent-twitter-client";
 import { getAllTweets } from "../../../twitter/getAllTweets";
 
@@ -22,6 +21,7 @@ export class TwitterScraper extends BaseScraper {
         profile_url: `https://twitter.com/${handle}`,
         avatar: profile.avatar || undefined,
         followerCount: profile.followerCount || undefined,
+        followingCount: profile.followingCount || undefined,
         description: profile.bio || undefined,
       };
     } catch (error) {

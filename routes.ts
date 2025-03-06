@@ -34,5 +34,6 @@ routes.get("/get_twitter_profile", GlobalController.get_twitter_profile as any);
 routes.post("/get_segments", GlobalController.get_segments as any);
 routes.get("/account/socials", GlobalController.get_account_socials as any);
 routes.get("/posts", GlobalController.get_posts as any);
+routes.get("/fans", GlobalController.get_fans as any);
 
 export default routes;

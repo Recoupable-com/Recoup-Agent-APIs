@@ -1,27 +1,14 @@
+import { Social } from "../../types/agent";
 import supabase from "./serverClient";
-
-interface SocialAccount {
-  id: string;
-  username: string;
-  avatar: string | null;
-  profile_url: string;
-  region: string | null;
-  bio: string | null;
-  followerCount: number | null;
-  followingCount: number | null;
-  updated_at: string;
-}
 
 interface AccountSocialsResponse {
   status: string;
-  socials: SocialAccount[];
+  socials: Social[];
 }
 
 export const getAccountSocials = async (
   accountId: string
 ): Promise<AccountSocialsResponse> => {
-  console.log("[DEBUG] Fetching account socials for accountId:", accountId);
-
   try {
     const { data: accountSocials, error: accountSocialsError } = await supabase
       .from("account_socials")
@@ -63,7 +50,6 @@ export const getAccountSocials = async (
       };
     }
 
-    console.log("[DEBUG] Found socials:", socials?.length || 0);
     return {
       status: "success",
       socials: socials || [],

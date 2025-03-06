@@ -16,6 +16,7 @@ import isAgentRunning from "../lib/isAgentRunning";
 import connectFansSegmentsToArtist from "../lib/supabase/connectFansSegmentsToArtist";
 import { AgentService } from "../lib/services/AgentService";
 import { getAccountSocials } from "../lib/supabase/getAccountSocials";
+import getArtistPosts from "../lib/supabase/getArtistPosts";
 
 const agentService = new AgentService();
 
@@ -266,6 +267,39 @@ export const get_account_socials = async (req: Request, res: Response) => {
     res.status(500).json({
       status: "error",
       message: "Internal server error",
+    });
+  }
+};
+
+export const get_posts = async (req: Request, res: Response) => {
+  const { artist_account_id } = req.query;
+
+  if (!artist_account_id) {
+    return res.status(400).json({
+      status: "error",
+      message: "Missing required parameter: artist_account_id",
+    });
+  }
+
+  try {
+    const { status, posts } = await getArtistPosts(artist_account_id as string);
+
+    if (status === "error") {
+      return res.status(500).json({
+        status: "error",
+        message: "Failed to fetch posts",
+      });
+    }
+
+    return res.status(200).json({
+      status: "success",
+      posts,
+    });
+  } catch (error) {
+    console.error("[ERROR] Error in get_posts:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "An unexpected error occurred",
     });
   }
 };

@@ -18,7 +18,7 @@ const scraper = new Scraper();
 const runTwitterAgent = async (
   agent_id: string,
   handle: string,
-  artist_id: string,
+  artist_id: string
 ) => {
   try {
     const { social } = await createSocial({
@@ -30,7 +30,7 @@ const runTwitterAgent = async (
     const { agent_status } = await createAgentStatus(
       agent_id,
       social.id,
-      STEP_OF_AGENT.PROFILE,
+      STEP_OF_AGENT.PROFILE
     );
     if (!agent_status?.id) return;
 
@@ -41,8 +41,19 @@ const runTwitterAgent = async (
     }
 
     await updateAgentStatus(agent_status.id, STEP_OF_AGENT.SETTING_UP_ARTIST);
-    await setArtistImage(artist_id, profile.avatar);
-    await updateSocial(social.id, profile);
+    await setArtistImage(artist_id, profile.avatar || null);
+    await updateSocial(social.id, {
+      ...profile,
+      id: social.id,
+      region: profile?.region || null,
+      updated_at: new Date().toISOString(),
+      bio: profile?.description || null,
+      avatar: profile?.avatar || null,
+      followerCount: profile?.followerCount || null,
+      followingCount: profile?.followingCount || null,
+      username: profile?.username || "",
+      profile_url: profile?.profile_url || "",
+    });
     await connectSocialToArtist(artist_id, social);
 
     await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);

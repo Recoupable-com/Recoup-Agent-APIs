@@ -16,14 +16,7 @@ export class TwitterScraper extends BaseScraper {
         throw new Error("Profile not found");
       }
 
-      return {
-        username: handle,
-        profile_url: `https://twitter.com/${handle}`,
-        avatar: profile.avatar || undefined,
-        followerCount: profile.followerCount || undefined,
-        followingCount: profile.followingCount || undefined,
-        description: profile.bio || undefined,
-      };
+      return profile;
     } catch (error) {
       return this.handleError(error, "TikTokScraper.scrapeProfile");
     }
@@ -32,7 +25,6 @@ export class TwitterScraper extends BaseScraper {
   async scrapePosts(handle: string): Promise<ScrapedPost[]> {
     try {
       const allTweets = await getAllTweets(scraper, handle);
-      console.log("allTweets", allTweets[0]);
       if (!allTweets?.length) {
         return [];
       }

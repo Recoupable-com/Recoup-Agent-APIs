@@ -1,6 +1,10 @@
 import extracMails from "../extracMails";
+import { ScrapedProfile } from "../scraping/types";
 
-const getProfile = async (scraper: any, handle: string) => {
+const getProfile = async (
+  scraper: any,
+  handle: string
+): Promise<{ profile: ScrapedProfile | null; email: string | null }> => {
   try {
     const profile: any = await scraper.getProfile(handle);
     const avatar = profile.avatar;
@@ -12,7 +16,7 @@ const getProfile = async (scraper: any, handle: string) => {
     return {
       profile: {
         avatar,
-        bio,
+        description: bio,
         followerCount,
         followingCount,
         profile_url: `https://x.com/${handle}`,

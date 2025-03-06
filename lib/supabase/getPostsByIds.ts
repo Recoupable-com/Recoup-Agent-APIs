@@ -1,15 +1,5 @@
 import supabase from "./serverClient";
-
-export interface Post {
-  id: string;
-  post_url: string;
-  updated_at: string;
-  platform?: string;
-  content?: string;
-  media_url?: string;
-  created_at?: string;
-  media_type?: string;
-}
+import type { Post } from "../../types/agent";
 
 /**
  * Fetches posts by IDs in chunks to avoid URL length limits

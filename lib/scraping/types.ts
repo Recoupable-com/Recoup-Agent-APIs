@@ -13,7 +13,9 @@ export interface ScrapedProfile {
   profile_url: string;
   avatar?: string;
   followerCount?: number;
+  followingCount?: number;
   description?: string;
+  region?: string;
 }
 
 /**

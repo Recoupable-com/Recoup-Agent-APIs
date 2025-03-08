@@ -273,7 +273,7 @@ export const get_account_socials = async (req: Request, res: Response) => {
 };
 
 export const get_posts = async (req: Request, res: Response) => {
-  const { artist_account_id } = req.query;
+  const { artist_account_id, limit = 20, page = 1 } = req.query;
 
   if (!artist_account_id) {
     return res.status(400).json({
@@ -282,10 +282,16 @@ export const get_posts = async (req: Request, res: Response) => {
     });
   }
 
-  try {
-    const { status, posts } = await getArtistPosts(artist_account_id as string);
+  const parsedLimit = Math.min(Number(limit) || 20, 100);
+  const parsedPage = Math.max(Number(page) || 1, 1);
 
-    if (status === "error") {
+  try {
+    const result = await getArtistPosts(artist_account_id as string, {
+      limit: parsedLimit,
+      page: parsedPage,
+    });
+
+    if (result.status === "error") {
       return res.status(500).json({
         status: "error",
         message: "Failed to fetch posts",
@@ -294,7 +300,14 @@ export const get_posts = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       status: "success",
-      posts,
+      posts: result.posts,
+      pagination: {
+        total_count: result.pagination.total,
+        page: result.pagination.page,
+        limit: result.pagination.limit,
+        total_pages:
+          Math.ceil(result.pagination.total / result.pagination.limit) || 1,
+      },
     });
   } catch (error) {
     console.error("[ERROR] Error in get_posts:", error);

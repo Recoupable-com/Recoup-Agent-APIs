@@ -311,9 +311,8 @@ export const get_fans = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid artist_account_id" });
   }
 
-  // Validate and parse pagination parameters
-  const parsedLimit = Math.min(Number(limit) || 20, 100); // Max limit of 100
-  const parsedPage = Math.max(Number(page) || 1, 1); // Minimum page of 1
+  const parsedLimit = Math.min(Number(limit) || 20, 100);
+  const parsedPage = Math.max(Number(page) || 1, 1);
 
   try {
     const result = await getArtistFans(artist_account_id, {
@@ -321,7 +320,6 @@ export const get_fans = async (req: Request, res: Response) => {
       page: parsedPage,
     });
 
-    // Transform response to match documentation format
     return res.status(200).json({
       status: result.status,
       fans: result.socials,

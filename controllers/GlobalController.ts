@@ -306,14 +306,31 @@ export const get_posts = async (req: Request, res: Response) => {
 };
 
 export const get_fans = async (req: Request, res: Response) => {
-  const { artist_account_id } = req.query;
+  const { artist_account_id, limit = 20, page = 1 } = req.query;
   if (!artist_account_id || typeof artist_account_id !== "string") {
     return res.status(400).json({ error: "Invalid artist_account_id" });
   }
 
+  const parsedLimit = Math.min(Number(limit) || 20, 100);
+  const parsedPage = Math.max(Number(page) || 1, 1);
+
   try {
-    const result = await getArtistFans(artist_account_id);
-    return res.status(200).json(result);
+    const result = await getArtistFans(artist_account_id, {
+      limit: parsedLimit,
+      page: parsedPage,
+    });
+
+    return res.status(200).json({
+      status: result.status,
+      fans: result.socials,
+      pagination: {
+        total_count: result.pagination.total,
+        page: result.pagination.page,
+        limit: result.pagination.limit,
+        total_pages:
+          Math.ceil(result.pagination.total / result.pagination.limit) || 1,
+      },
+    });
   } catch (error) {
     console.error("Error in get_fans:", error);
     return res.status(500).json({

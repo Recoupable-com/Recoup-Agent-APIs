@@ -1,0 +1,84 @@
+---
+description: Documenting your thinking process, research and implementation plans
+globs: 
+alwaysApply: true
+---
+During your interaction with the user, if you find anything reusable in this project (e.g. version of a library, model name), especially about a fix to a mistake you made or a correction you received, you should take note in the `Lessons` section in the [scratchpad.mdc](mdc:.cursor/rules/scratchpad.mdc) file so you will not make the same mistake again.
+
+# Lessons
+
+## User Specified Lessons
+
+- You have an env in ./.env Use it.
+- Read the file before you try to edit it.
+- Keep all files under 100 lines of code to maintain readability and follow single responsibility principle
+- Split hooks/components when they grow too large or handle multiple concerns
+    
+## Cursor learned
+
+- For search results, ensure proper handling of different character encodings (UTF-8) for international queries
+- Add debug information to stderr while keeping the main output clean in stdout for better pipeline integration
+- When using seaborn styles in matplotlib, use 'seaborn-v0_8' instead of 'seaborn' as the style name due to recent seaborn version changes
+- Use 'gpt-4o' as the model name for OpenAI's GPT-4 with vision capabilities
+- When using TurboFactory from @ardrive/turbo-sdk, the fileStreamFactory must return a Web API compatible ReadableStream from node:stream/web, not Node.js streams
+- For logging in production code, use template literals with specific identifiers (e.g. handle, artistId) to make debugging easier
+- When handling image uploads, implement proper fallback mechanisms and clear error messages
+- When using LLM for batch processing, use smaller batch sizes (100 instead of 500) to avoid token limits and truncation issues
+- Add validation for LLM response structure before parsing JSON to catch malformed responses early
+- When processing large datasets with LLMs, reduce concurrency (3 vs 5) to maintain stability
+- Include detailed context in error logs for JSON parsing failures (position, nearby content)
+- Validate response structure before cleaning/parsing to catch malformed responses early
+- Use chunked processing for database queries to handle large datasets efficiently
+- Test system changes with varying dataset sizes to ensure scalability
+- Log sample data and statistics when processing batches to aid debugging
+- Implement progressive validation (structure, content, parsing) to fail fast and provide clear error context
+- Always prefix API endpoints with /api for consistency and clarity
+- Keep API routes organized by resource type (e.g. /api/agentkit/run, /api/generate)
+- Separate data fetching from data processing in API endpoints for better maintainability
+- Use appropriate HTTP methods (GET for retrieval, POST for actions/mutations)
+- Include request validation middleware for API endpoints
+- Add rate limiting for scraping endpoints to prevent abuse
+- Only use await with async functions - check if a function is actually async before awaiting it
+- When handling agent status updates, make progress parameters optional and handle null agent_status_id gracefully to prevent TypeError exceptions
+- Keep agent status tracking separate from data processing functions to maintain better separation of concerns
+- Use proper error handling and logging in asynchronous operations to catch and report issues early
+- When implementing in-memory caches, always set a reasonable upper bound and implement an eviction strategy (e.g. FIFO) to prevent memory leaks in long-running processes
+- When setting up Jest with TypeScript:
+  - Place mocks in **mocks** directory adjacent to the mocked module
+  - Keep imports clean without .js extensions in TypeScript files
+  - Use simpler Jest configurations and remove unnecessary module mappers
+  - Be explicit about ESM vs CommonJS choice in the configuration
+  - Start with "happy path" tests before adding edge cases
+  - Mock external dependencies at the correct level (as close to the source as possible)
+- When implementing error status mapping:
+  - Use specific error states for different types of failures (e.g. separate setup errors from processing errors)
+  - Don't reuse error states across different failure modes
+  - Add proper logging context to identify where the error originated
+  - Consider the full error flow from origin to final status
+  - Handle null/undefined values gracefully in setup phases
+  - Add appropriate error states to enum/constants file
+  - Document error state transitions and their meanings
+- When scraping TikTok profiles, implement anti-bot detection measures including:
+  - Add randomized delays between requests to avoid rate limiting
+  - Use rotating user agents to prevent pattern detection
+  - Implement exponential backoff for failed requests
+  - Add proper error handling for TikTok's anti-scraping responses
+  - Consider using a proxy rotation service for high-volume scraping
+- When using Supabase upsert operations, ensure the onConflict parameter matches an actual unique or exclusion constraint in the database table
+- When uploading images to permanent storage like Arweave, implement proper fallback mechanisms to handle upload failures and maintain the original URL as a backup
+- When working with database operations, ensure that objects being inserted don't contain fields that don't exist in the database schema to avoid errors like "Could not find the 'X' column in the schema cache"
+- When using Supabase upsert operations with ON CONFLICT DO UPDATE, ensure that the data being upserted doesn't contain duplicate values for the conflict column within the same batch, as this will cause the error "ON CONFLICT DO UPDATE command cannot affect row a second time"
+- When processing TikTok profile data, ensure that critical fields like profile_url and username are properly populated before attempting database operations, as empty values can cause issues with unique constraints and data integrity
+- When scraping social media profiles, create isolated test scripts to verify scraper functionality without running the entire application
+- When implementing web scrapers, prefer direct HTTP requests over third-party APIs when possible for better control and reliability
+- For social media scraping, implement multiple selectors and patterns to extract data, as the HTML structure can change frequently
+- When enhancing social profiles, implement comprehensive logging to track which fields were successfully extracted
+- Create separate, focused functions for each platform (Instagram, TikTok, etc.) rather than trying to use a single generic function
+
+You should use the [scratchpad.md](mdc:scratchpad.md) file as a Scratchpad to organize your thoughts. Especially when you receive a new task, you should first review the content of the Scratchpad, clear old different task if necessary, first explain the task, and plan the steps you need to take to complete the task. You can use todo markers to indicate the progress, e.g.
+[X] Task 1
+[ ] Task 2
+
+Also update the progress of the task in the Scratchpad when you finish a subtask.
+Especially when you finished a milestone, it will help to improve your depth of task accomplishment to use the Scratchpad to reflect and plan.
+The goal is to help you maintain a big picture as well as the progress of the task. Always refer to the Scratchpad when you plan the next step.

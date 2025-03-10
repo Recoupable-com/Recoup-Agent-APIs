@@ -1,6 +1,6 @@
 import { APIFY_TOKEN } from "../consts";
 
-const runTikTokActor = async (input: any, actorId: string) => {
+const runApifyActor = async (input: any, actorId: string) => {
   try {
     const response = await fetch(
       `https://api.apify.com/v2/acts/${actorId}/runs?token=${APIFY_TOKEN}`,
@@ -15,13 +15,14 @@ const runTikTokActor = async (input: any, actorId: string) => {
 
     const data: any = await response.json();
     const error = data?.error;
+    console.log("runTikTokActor: Data", { data });
     const defaultDatasetId = data?.data?.defaultDatasetId;
     if (error?.message) return { error: error?.message };
-    return defaultDatasetId;
+    return { datasetId: defaultDatasetId, runId: data?.data?.id };
   } catch (error) {
     console.error(error);
     return null;
   }
 };
 
-export default runTikTokActor;
+export default runApifyActor;

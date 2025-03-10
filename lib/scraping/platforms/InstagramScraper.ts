@@ -17,10 +17,10 @@ export class InstagramScraper extends BaseScraper {
       return {
         username: handle,
         profile_url: `https://instagram.com/${handle}`,
-        avatar: profile.avatar,
-        followerCount: profile.followerCount,
-        followingCount: profile.followingCount,
-        description: profile.bio,
+        avatar: profile.avatar || undefined,
+        followerCount: profile.followerCount || undefined,
+        followingCount: profile.followingCount || undefined,
+        description: profile.bio || undefined,
       };
     } catch (error) {
       return this.handleError(error, "InstagramScraper.scrapeProfile");

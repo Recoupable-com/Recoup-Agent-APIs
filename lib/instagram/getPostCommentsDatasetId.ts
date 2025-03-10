@@ -1,4 +1,4 @@
-import runTikTokActor from "../apify/runTikTokActor";
+import runApifyActor from "../apify/runApifyActor";
 
 const getPostCommentsDatasetId = async (directUrls: Array<string>) => {
   const input = {
@@ -7,11 +7,11 @@ const getPostCommentsDatasetId = async (directUrls: Array<string>) => {
   };
 
   try {
-    const defaultDatasetId = await runTikTokActor(
+    const response = await runApifyActor(
       input,
-      "apify~instagram-comment-scraper",
+      "apify~instagram-comment-scraper"
     );
-    return defaultDatasetId;
+    return response;
   } catch (error) {
     console.error(error);
     throw new Error(error as string);

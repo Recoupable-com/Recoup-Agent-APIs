@@ -1,6 +1,7 @@
 import { Post } from "../../types/agent";
 import getActorStatus from "../apify/getActorStatus";
 import getDataset from "../apify/getDataset";
+import getRun from "../apify/getRun";
 import getFormattedComments from "./getFormattedComments";
 import getPostCommentsDatasetId from "./getPostCommentsDatasetId";
 
@@ -9,7 +10,9 @@ const getPostComments = async (scraping_posts: Post[]) => {
     (scraping_post) => scraping_post.post_url
   );
   try {
-    const datasetId = await getPostCommentsDatasetId(postUrls);
+    const response = await getPostCommentsDatasetId(postUrls);
+    const datasetId = response?.datasetId;
+    const runId = response?.runId;
     let attempts = 0;
     const maxAttempts = 30;
     let progress = 0;
@@ -19,7 +22,7 @@ const getPostComments = async (scraping_posts: Post[]) => {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       const data = await getDataset(datasetId);
       const formattedData = getFormattedComments(data, scraping_posts);
-      const status = await getActorStatus(datasetId);
+      const status = await getRun(runId);
       if (status === "SUCCEEDED" || progress > 95) return formattedData;
     }
     return [];

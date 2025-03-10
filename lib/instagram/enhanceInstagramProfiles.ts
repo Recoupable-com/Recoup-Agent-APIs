@@ -1,7 +1,6 @@
 import { AuthorInput, Social } from "../../types/agent";
 import uploadPfpToArweave from "../arweave/uploadPfpToArweave";
-import randomDelay from "../utils/randomDelay";
-import scrapeInstagramProfile from "../scraping/platforms/instagram/scrapeInstagramProfile";
+import { getProfiles } from "./getProfiles";
 
 /**
  * Enhances Instagram social profiles with additional data like avatars, follower counts, following counts, and bios
@@ -20,31 +19,42 @@ export async function enhanceInstagramProfiles(
     };
   }
 
-  const enhancedProfiles: Social[] = [];
-
   console.log(`Enhancing ${profiles.length} Instagram profiles`);
 
-  // Process profiles sequentially to avoid triggering anti-bot measures
-  for (let i = 0; i < profiles.length; i++) {
-    const profile = profiles[i];
-    const username = profile.username.replace(/^@/, "");
+  // Extract usernames from profiles
+  const handles = profiles.map((profile) => profile.username.replace(/^@/, ""));
 
-    console.log(
-      `[${i + 1}/${profiles.length}] Processing Instagram profile: ${username}`
-    );
+  // Fetch all profiles at once using Apify
+  const { profiles: scrapedProfiles, errors } = await getProfiles(handles);
 
-    // Add delay between requests (except for the first one)
-    if (i > 0) {
-      await randomDelay();
-    }
+  const enhancedProfiles: Social[] = [];
+
+  // Process each profile
+  for (const originalProfile of profiles) {
+    const username = originalProfile.username.replace(/^@/, "");
+    console.log(`Processing Instagram profile: ${username}`);
 
     try {
-      // Fetch profile data using the direct scraper
-      const scrapedProfile = await scrapeInstagramProfile(username);
+      // Find matching scraped profile
+      const scrapedProfile = scrapedProfiles.find(
+        (profile) => profile.username.toLowerCase() === username.toLowerCase()
+      );
+
+      if (!scrapedProfile) {
+        console.log(`No scraped data found for Instagram user: ${username}`);
+        if (errors[username]) {
+          console.error(
+            `Error fetching profile for ${username}:`,
+            errors[username]
+          );
+        }
+        enhancedProfiles.push(originalProfile as Social);
+        continue;
+      }
 
       // Track what data was found
       let dataFound = false;
-      const enhancedProfile = { ...profile } as Social;
+      const enhancedProfile = { ...originalProfile } as Social;
 
       // Add bio if available
       if (scrapedProfile.bio) {
@@ -100,13 +110,6 @@ export async function enhanceInstagramProfiles(
         }
       }
 
-      // Add region if available
-      if (scrapedProfile.region) {
-        enhancedProfile.region = scrapedProfile.region;
-        dataFound = true;
-        console.log(`✅ Found region for Instagram user: ${username}`);
-      }
-
       if (!dataFound) {
         console.log(
           `⚠️ No additional data found for Instagram user: ${username}`
@@ -115,8 +118,8 @@ export async function enhanceInstagramProfiles(
 
       enhancedProfiles.push(enhancedProfile);
     } catch (profileError) {
-      console.error("Failed to fetch Instagram profile data:", profileError);
-      enhancedProfiles.push(profile as Social);
+      console.error("Failed to process Instagram profile data:", profileError);
+      enhancedProfiles.push(originalProfile as Social);
     }
   }
 

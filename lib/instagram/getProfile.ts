@@ -1,7 +1,7 @@
 import getDataset from "../apify/getDataset";
 import getActorStatus from "../apify/getActorStatus";
 import getFormattedAccount from "./getFormattedAccount";
-import startProfileScraping from "./getProfileDatasetId";
+import startProfileScraping from "./startProfileScraping";
 
 interface ProfileResult {
   error: Error | null;

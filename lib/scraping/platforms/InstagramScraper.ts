@@ -1,18 +1,24 @@
 import { BaseScraper } from "../BaseScraper";
 import { ScrapedProfile, ScrapedPost, ScrapedComment } from "../types";
 import { Database } from "../../../types/database.types";
-import getProfile from "../../instagram/getProfile";
+import { getProfiles } from "../../instagram/getProfiles";
 import getPostComments from "../../instagram/getPostComments";
 
 export class InstagramScraper extends BaseScraper {
   async scrapeProfile(handle: string): Promise<ScrapedProfile> {
     console.log("InstagramScraper.scrapeProfile: Scraping profile", { handle });
     try {
-      const { profile } = await getProfile(handle);
+      const { profiles, errors } = await getProfiles([handle]);
 
-      if (!profile) {
-        throw new Error("Profile not found");
+      if (errors[handle]) {
+        throw errors[handle];
       }
+
+      if (!profiles.length) {
+        throw new Error(`Profile not found for handle: ${handle}`);
+      }
+
+      const profile = profiles[0];
 
       return {
         username: handle,
@@ -29,9 +35,20 @@ export class InstagramScraper extends BaseScraper {
 
   async scrapePosts(handle: string): Promise<ScrapedPost[]> {
     try {
-      const { postUrls } = await getProfile(handle);
+      const { profiles, errors } = await getProfiles([handle]);
 
-      if (!postUrls?.length) {
+      if (errors[handle]) {
+        throw errors[handle];
+      }
+
+      if (!profiles.length) {
+        throw new Error(`Profile not found for handle: ${handle}`);
+      }
+
+      const profile = profiles[0];
+      const postUrls = profile.postUrls || [];
+
+      if (!postUrls.length) {
         return [];
       }
 
@@ -47,13 +64,11 @@ export class InstagramScraper extends BaseScraper {
 
   async scrapeComments(postUrls: string[]): Promise<ScrapedComment[]> {
     try {
-      // Validate input
       if (!Array.isArray(postUrls) || !postUrls.length) {
         console.warn("InstagramScraper.scrapeComments: No post URLs provided");
         return [];
       }
 
-      // Create post objects for formatting
       const posts = postUrls.map((url) => ({
         post_url: url,
         id: url, // Use URL as temporary ID for matching
@@ -63,7 +78,6 @@ export class InstagramScraper extends BaseScraper {
       const comments = await getPostComments(posts);
 
       if (!comments?.length) {
-        console.debug("InstagramScraper.scrapeComments: No comments found");
         return [];
       }
 

@@ -8,10 +8,10 @@ import getActorStatus from "../apify/getActorStatus";
  * Fetches profile information for multiple Instagram users using Apify's Instagram Profile Scraper
  *
  * @param handles - Array of Instagram usernames without @ symbol
- * @returns Promise resolving to an array of profile information
+ * @returns Promise resolving to profile information with post URLs
  */
 export async function getProfiles(handles: string[]): Promise<{
-  profiles: Social[];
+  profiles: (Social & { postUrls?: string[] })[];
   errors: Record<string, Error>;
 }> {
   const cleanHandles = handles.map((handle) => handle.replace(/^@/, ""));
@@ -38,11 +38,11 @@ export async function getProfiles(handles: string[]): Promise<{
 
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
-=      const datasetItems = await getDataset(datasetId);
+      const datasetItems = await getDataset(datasetId);
 
       const { status } = await getActorStatus(runId);
 
-      const profiles: Social[] = [];
+      const profiles: (Social & { postUrls?: string[] })[] = [];
       const errors: Record<string, Error> = {};
 
       for (const item of datasetItems) {
@@ -55,7 +55,10 @@ export async function getProfiles(handles: string[]): Promise<{
 
         const formattedAccount = getFormattedAccount([item]);
         if (formattedAccount?.profile) {
-          profiles.push(formattedAccount.profile);
+          profiles.push({
+            ...formattedAccount.profile,
+            postUrls: formattedAccount.postUrls || [],
+          });
         } else {
           errors[handle] = new Error("Failed to format profile data");
         }

@@ -1,7 +1,7 @@
 import { Social } from "../../types/agent";
 import getDataset from "../apify/getDataset";
 import getFormattedAccount from "./getFormattedAccount";
-import runTikTokActor from "../apify/runTikTokActor";
+import runApifyActor from "../apify/runApifyActor";
 import { OUTSTANDING_ERROR } from "../twitter/errors";
 import getActorStatus from "../apify/getActorStatus";
 
@@ -22,14 +22,16 @@ export async function getProfiles(handles: string[]): Promise<{
 
   try {
     // Run Apify actor for all handles at once
-    const datasetId = await runTikTokActor(
+    const runInfo = await runApifyActor(
       { usernames: cleanHandles },
       "apify~instagram-profile-scraper"
     );
 
-    if (!datasetId) {
+    if (!runInfo) {
       throw new Error("Failed to start Apify actor");
     }
+
+    const { runId, datasetId } = runInfo;
 
     // Initialize polling variables
     let attempts = 0;
@@ -48,7 +50,7 @@ export async function getProfiles(handles: string[]): Promise<{
       const datasetItems = await getDataset(datasetId);
 
       // Check actor status
-      const status = await getActorStatus(datasetId);
+      const { status } = await getActorStatus(runId);
       console.log("getProfiles: Actor status", { status });
 
       // Initialize results
@@ -83,7 +85,7 @@ export async function getProfiles(handles: string[]): Promise<{
       });
 
       // Return results if actor succeeded or we've reached max attempts
-      if (status === "SUCCEEDED" || progress > 95) {
+      if (status === "SUCCEEDED" || attempts >= maxAttempts) {
         console.log("getProfiles: Completed fetch", {
           totalHandles: handles.length,
           successfulProfiles: profiles.length,

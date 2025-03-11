@@ -1,7 +1,15 @@
 import runTikTokActor from "../apify/runTikTokActor.js";
 import { OUTSTANDING_ERROR } from "../twitter/errors.js";
 
-const getProfileDatasetId = async (handle: string) => {
+interface ApifyRunInfo {
+  runId: string;
+  datasetId: string;
+  error?: string;
+}
+
+const startProfileScraping = async (
+  handle: string
+): Promise<ApifyRunInfo | null> => {
   const profiles = [handle];
   const input = {
     resultsPerPage: 10,
@@ -12,13 +20,24 @@ const getProfileDatasetId = async (handle: string) => {
   try {
     const response = await runTikTokActor(input, "clockworks~tiktok-scraper");
 
-    const error = response?.error;
-    if (error) throw new Error(OUTSTANDING_ERROR);
-    return response;
+    if (!response) {
+      console.error(
+        "Failed to start TikTok profile scraping for handle:",
+        handle
+      );
+      return null;
+    }
+
+    const { error, runId, datasetId } = response;
+    if (error) {
+      throw new Error(OUTSTANDING_ERROR);
+    }
+
+    return { runId, datasetId };
   } catch (error) {
-    console.error(error);
-    throw new Error(error as string);
+    console.error("Error in startProfileScraping:", error);
+    throw error;
   }
 };
 
-export default getProfileDatasetId;
+export default startProfileScraping;

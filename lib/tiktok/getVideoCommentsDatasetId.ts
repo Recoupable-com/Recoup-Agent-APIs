@@ -1,6 +1,14 @@
 import runTikTokActor from "../apify/runTikTokActor.js";
 
-const getVideoCommentsDatasetId = async (postURLs: any) => {
+interface ApifyRunInfo {
+  runId: string;
+  datasetId: string;
+  error?: string;
+}
+
+const startCommentsScraping = async (
+  postURLs: string[]
+): Promise<ApifyRunInfo | null> => {
   const input = {
     postURLs,
     commentsPerPost: 100,
@@ -8,15 +16,26 @@ const getVideoCommentsDatasetId = async (postURLs: any) => {
   };
 
   try {
-    const defaultDatasetId = await runTikTokActor(
+    const response = await runTikTokActor(
       input,
-      "clockworks~tiktok-comments-scraper",
+      "clockworks~tiktok-comments-scraper"
     );
-    return defaultDatasetId;
+
+    if (!response) {
+      console.error("Failed to start TikTok comments scraping");
+      return null;
+    }
+
+    const { error, runId, datasetId } = response;
+    if (error) {
+      throw new Error(error);
+    }
+
+    return { runId, datasetId };
   } catch (error) {
-    console.error(error);
-    throw new Error(error as string);
+    console.error("Error in startCommentsScraping:", error);
+    throw error;
   }
 };
 
-export default getVideoCommentsDatasetId;
+export default startCommentsScraping;

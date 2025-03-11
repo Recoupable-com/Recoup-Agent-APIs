@@ -1,39 +1,66 @@
 import { Database } from "../../types/database.types";
 import getDataset from "../apify/getDataset";
+import getActorStatus from "../apify/getActorStatus";
 import getFormattedAccount from "./getFormattedAccount";
-import getProfileDatasetId from "./getProfileDatasetId";
+import startProfileScraping from "./getProfileDatasetId";
 
 type Social = Database["public"]["Tables"]["socials"]["Row"];
 
-const getProfile = async (
-  handle: string,
-): Promise<{
-  error: any;
-  profile: null | Social;
-  videoUrls: null | string[];
-}> => {
+interface ProfileResult {
+  error: Error | null;
+  profile: Social | null;
+  videoUrls: string[] | null;
+}
+
+const MAX_ATTEMPTS = 30;
+const POLLING_INTERVAL = 3000; // 3 seconds
+
+const getProfile = async (handle: string): Promise<ProfileResult> => {
   try {
-    const profileDatasetId = await getProfileDatasetId(handle);
-    while (1) {
-      const datasetItems: any = await getDataset(profileDatasetId);
-      const error = datasetItems?.[0]?.error;
-      if (error)
-        return {
-          error,
-          profile: null,
-          videoUrls: null,
-        };
-      const formattedAccount = getFormattedAccount(datasetItems);
-      if (formattedAccount?.profile)
-        return {
-          error: null,
-          profile: formattedAccount.profile,
-          videoUrls: formattedAccount.videoUrls,
-        };
+    const runInfo = await startProfileScraping(handle);
+    if (!runInfo) {
+      throw new Error("Failed to start profile scraping");
     }
-    throw new Error();
+
+    const { runId, datasetId } = runInfo;
+    let attempts = 0;
+
+    while (attempts < MAX_ATTEMPTS) {
+      attempts++;
+      await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
+
+      const { status } = await getActorStatus(runId);
+
+      if (status === "FAILED") {
+        throw new Error("Profile scraping failed");
+      }
+
+      if (status === "SUCCEEDED" || attempts === MAX_ATTEMPTS) {
+        const datasetItems: any = await getDataset(datasetId);
+        const error = datasetItems?.[0]?.error;
+
+        if (error) {
+          return {
+            error: new Error(error),
+            profile: null,
+            videoUrls: null,
+          };
+        }
+
+        const formattedAccount = getFormattedAccount(datasetItems);
+        if (formattedAccount?.profile) {
+          return {
+            error: null,
+            profile: formattedAccount.profile,
+            videoUrls: formattedAccount.videoUrls,
+          };
+        }
+      }
+    }
+
+    throw new Error("Profile scraping timed out");
   } catch (error) {
-    console.error(error);
+    console.error("Error in getProfile:", error);
     return {
       profile: null,
       videoUrls: null,

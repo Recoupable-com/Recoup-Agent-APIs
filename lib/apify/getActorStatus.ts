@@ -3,26 +3,40 @@ import { APIFY_TOKEN } from "../consts";
 
 dotenv.config();
 
-const getActorStatus = async (datasetId: string) => {
+interface ActorRunStatus {
+  status: string;
+  datasetId: string;
+}
+
+const getActorStatus = async (runId: string): Promise<ActorRunStatus> => {
   try {
+    console.log("getActorStatus: Run ID", { runId });
     const response = await fetch(
-      `https://api.apify.com/v2/actor-runs?token=${APIFY_TOKEN}`,
+      `https://api.apify.com/v2/actor-runs/${runId}?token=${APIFY_TOKEN}`,
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-      },
+      }
     );
 
     const data: any = await response.json();
 
-    const actorStatus = data.data.items.find(
-      (item: any) => item.defaultDatasetId === datasetId,
-    );
-    return actorStatus.status;
+    if (!data?.data?.status) {
+      console.error("Invalid response from Apify:", data);
+      return { status: "UNKNOWN", datasetId: "" };
+    }
+
+    console.log("getActorStatus: Data", { data: data.data });
+
+    return {
+      status: data.data.status,
+      datasetId: data.data.defaultDatasetId || "",
+    };
   } catch (error) {
-    return "RUNNING";
+    console.error("Error fetching actor status:", error);
+    return { status: "RUNNING", datasetId: "" };
   }
 };
 

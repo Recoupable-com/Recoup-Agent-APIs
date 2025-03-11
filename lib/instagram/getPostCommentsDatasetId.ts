@@ -1,21 +1,40 @@
 import runTikTokActor from "../apify/runTikTokActor";
 
-const getPostCommentsDatasetId = async (directUrls: Array<string>) => {
+interface ApifyRunInfo {
+  runId: string;
+  datasetId: string;
+  error?: string;
+}
+
+const startCommentsScraping = async (
+  directUrls: Array<string>
+): Promise<ApifyRunInfo | null> => {
   const input = {
     directUrls,
     resultsLimit: 100,
   };
 
   try {
-    const defaultDatasetId = await runTikTokActor(
+    const response = await runTikTokActor(
       input,
-      "apify~instagram-comment-scraper",
+      "apify~instagram-comment-scraper"
     );
-    return defaultDatasetId;
+
+    if (!response) {
+      console.error("Failed to start Instagram comments scraping");
+      return null;
+    }
+
+    const { error, runId, datasetId } = response;
+    if (error) {
+      throw new Error(error);
+    }
+
+    return { runId, datasetId };
   } catch (error) {
-    console.error(error);
-    throw new Error(error as string);
+    console.error("Error in startCommentsScraping:", error);
+    throw error;
   }
 };
 
-export default getPostCommentsDatasetId;
+export default startCommentsScraping;

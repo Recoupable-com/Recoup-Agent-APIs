@@ -10,8 +10,6 @@ interface ActorRunStatus {
 
 const getActorStatus = async (runId: string): Promise<ActorRunStatus> => {
   try {
-    console.log("getActorStatus: run ID", { runId });
-
     const response = await fetch(
       `https://api.apify.com/v2/actor-runs/${runId}?token=${APIFY_TOKEN}`,
       {

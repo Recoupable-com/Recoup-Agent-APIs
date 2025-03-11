@@ -3,39 +3,54 @@ import { ScrapedComment } from "../scraping/types";
 import getActorStatus from "../apify/getActorStatus";
 import getDataset from "../apify/getDataset";
 import getFormattedComments from "./getFormattedComments";
-import getVideoCommentsDatasetId from "./getVideoCommentsDatasetId";
+import startCommentsScraping from "./startCommentsScraping";
 
-const getVideoComments = async (scraping_posts: Post[]) => {
+const MAX_ATTEMPTS = 30;
+const POLLING_INTERVAL = 3000; // 3 seconds
+
+const getVideoComments = async (
+  scraping_posts: Post[]
+): Promise<ScrapedComment[]> => {
   const postUrls = scraping_posts.map(
     (scraping_post) => scraping_post.post_url
   );
+
   try {
-    const datasetId = await getVideoCommentsDatasetId(postUrls);
+    const runInfo = await startCommentsScraping(postUrls);
+    if (!runInfo) {
+      console.error("Failed to start video comments scraping");
+      return [];
+    }
+
+    const { runId, datasetId } = runInfo;
     let attempts = 0;
-    const maxAttempts = 30;
 
-    while (attempts < maxAttempts) {
+    while (attempts < MAX_ATTEMPTS) {
       attempts++;
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
 
-      const data = await getDataset(datasetId);
-      if (!data?.length) {
-        continue;
+      const { status } = await getActorStatus(runId);
+
+      if (status === "FAILED") {
+        console.error("Video comments scraping failed");
+        return [];
       }
 
-      const formattedData = getFormattedComments(data, scraping_posts);
-      const status = await getActorStatus(datasetId);
+      if (status === "SUCCEEDED" || attempts === MAX_ATTEMPTS) {
+        const data = await getDataset(datasetId);
+        if (!data?.length) {
+          console.error("No data returned from dataset");
+          return [];
+        }
 
-      const isFinalAttempt = attempts === maxAttempts - 1;
-
-      if (status === "SUCCEEDED" || isFinalAttempt) {
-        return formattedData;
+        return getFormattedComments(data, scraping_posts);
       }
     }
 
+    console.error("Video comments scraping timed out");
     return [];
   } catch (error) {
-    console.error("[ERROR] Failed to get video comments:", error);
+    console.error("Error in getVideoComments:", error);
     return [];
   }
 };

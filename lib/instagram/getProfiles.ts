@@ -2,7 +2,6 @@ import { Social } from "../../types/agent";
 import getDataset from "../apify/getDataset";
 import getFormattedAccount from "./getFormattedAccount";
 import runApifyActor from "../apify/runApifyActor";
-import { OUTSTANDING_ERROR } from "../twitter/errors";
 import getActorStatus from "../apify/getActorStatus";
 
 /**
@@ -15,13 +14,9 @@ export async function getProfiles(handles: string[]): Promise<{
   profiles: Social[];
   errors: Record<string, Error>;
 }> {
-  console.log("getProfiles: Starting fetch for users", { handles });
-
-  // Clean handles (remove @ if present)
   const cleanHandles = handles.map((handle) => handle.replace(/^@/, ""));
 
   try {
-    // Run Apify actor for all handles at once
     const runInfo = await runApifyActor(
       { usernames: cleanHandles },
       "apify~instagram-profile-scraper"
@@ -33,31 +28,23 @@ export async function getProfiles(handles: string[]): Promise<{
 
     const { runId, datasetId } = runInfo;
 
-    // Initialize polling variables
     let attempts = 0;
     const maxAttempts = 30;
     let progress = 0;
 
-    // Poll until we get results or timeout
     while (true) {
       attempts++;
       progress = (attempts / maxAttempts) * 100;
 
-      // Wait 3 seconds between attempts
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
-      // Get current dataset results
-      const datasetItems = await getDataset(datasetId);
+=      const datasetItems = await getDataset(datasetId);
 
-      // Check actor status
       const { status } = await getActorStatus(runId);
-      console.log("getProfiles: Actor status", { status });
 
-      // Initialize results
       const profiles: Social[] = [];
       const errors: Record<string, Error> = {};
 
-      // Process available results
       for (const item of datasetItems) {
         const handle = item.username || item.input?.username;
 
@@ -74,25 +61,7 @@ export async function getProfiles(handles: string[]): Promise<{
         }
       }
 
-      // Log current progress
-      console.log("getProfiles: Polling status", {
-        attempt: attempts,
-        maxAttempts,
-        progress: `${progress.toFixed(1)}%`,
-        status,
-        profilesFound: profiles.length,
-        errorsFound: Object.keys(errors).length,
-      });
-
-      // Return results if actor succeeded or we've reached max attempts
       if (status === "SUCCEEDED" || attempts >= maxAttempts) {
-        console.log("getProfiles: Completed fetch", {
-          totalHandles: handles.length,
-          successfulProfiles: profiles.length,
-          failedProfiles: Object.keys(errors).length,
-          finalStatus: status,
-        });
-
         return { profiles, errors };
       }
     }
@@ -102,7 +71,6 @@ export async function getProfiles(handles: string[]): Promise<{
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    // Return error for all handles
     const errors = handles.reduce(
       (acc, handle) => {
         acc[handle] =

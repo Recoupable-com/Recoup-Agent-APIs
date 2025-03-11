@@ -168,33 +168,40 @@ export class AgentService implements IAgentService {
         posts.map((post) => post.post_url)
       );
 
-      // Store comments
+      // Store comments - Optimized to use a single database call
       console.log("Storing comments...");
-      const stored_comments: DbPostComment[] = [];
-      for (const post of stored_posts) {
-        const postComments = comments.filter(
-          (c) => c.post_url === post.post_url
-        );
-        if (postComments.length) {
-          const { data: comments_result, error: commentsError } =
-            await this.storeComments(postComments, social.id);
-          if (commentsError || !comments_result) {
-            console.error(
-              `Failed to store comments for post ${post.post_url}:`,
-              commentsError
-            );
-            continue;
-          }
-          stored_comments.push(...comments_result);
+      const validPostUrls = new Set(stored_posts.map((post) => post.post_url));
+      const validComments = comments.filter((comment) =>
+        validPostUrls.has(comment.post_url)
+      );
+
+      if (validComments.length > 0) {
+        const { data: comments_result, error: commentsError } =
+          await this.storeComments(validComments, social.id);
+
+        if (commentsError) {
+          console.error("Failed to store comments:", commentsError);
+          // Continue execution even if comments storage fails
         }
+
+        console.log("Data stored successfully.");
+        return {
+          data: {
+            social,
+            posts: stored_posts,
+            comments: comments_result || [],
+          },
+          error: null,
+        };
       }
 
-      console.log("Data stored successfully.");
+      // Return success even if there were no comments to store
+      console.log("Data stored successfully (no comments).");
       return {
         data: {
           social,
           posts: stored_posts,
-          comments: stored_comments,
+          comments: [],
         },
         error: null,
       };

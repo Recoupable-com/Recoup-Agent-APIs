@@ -1,4 +1,4 @@
-import runTikTokActor from "../apify/runTikTokActor";
+import runApifyActor from "../apify/runApifyActor";
 import { OUTSTANDING_ERROR } from "../twitter/errors";
 
 interface ApifyRunInfo {
@@ -15,7 +15,7 @@ const startProfileScraping = async (
   };
 
   try {
-    const response = await runTikTokActor(
+    const response = await runApifyActor(
       input,
       "apify~instagram-profile-scraper"
     );

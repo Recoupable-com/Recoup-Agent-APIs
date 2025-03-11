@@ -1,4 +1,4 @@
-import runTikTokActor from "../apify/runTikTokActor.js";
+import runApifyActor from "../apify/runApifyActor.js";
 import { OUTSTANDING_ERROR } from "../twitter/errors.js";
 
 interface ApifyRunInfo {
@@ -18,7 +18,7 @@ const startProfileScraping = async (
   };
 
   try {
-    const response = await runTikTokActor(input, "clockworks~tiktok-scraper");
+    const response = await runApifyActor(input, "clockworks~tiktok-scraper");
 
     if (!response) {
       console.error(

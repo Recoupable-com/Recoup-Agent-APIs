@@ -1,4 +1,4 @@
-import runTikTokActor from "../apify/runTikTokActor";
+import runApifyActor from "../apify/runApifyActor";
 
 interface ApifyRunInfo {
   runId: string;
@@ -15,7 +15,7 @@ const startCommentsScraping = async (
   };
 
   try {
-    const response = await runTikTokActor(
+    const response = await runApifyActor(
       input,
       "apify~instagram-comment-scraper"
     );

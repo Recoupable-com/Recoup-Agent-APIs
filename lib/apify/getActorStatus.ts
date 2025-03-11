@@ -10,7 +10,6 @@ interface ActorRunStatus {
 
 const getActorStatus = async (runId: string): Promise<ActorRunStatus> => {
   try {
-    console.log("getActorStatus: Run ID", { runId });
     const response = await fetch(
       `https://api.apify.com/v2/actor-runs/${runId}?token=${APIFY_TOKEN}`,
       {
@@ -27,8 +26,6 @@ const getActorStatus = async (runId: string): Promise<ActorRunStatus> => {
       console.error("Invalid response from Apify:", data);
       return { status: "UNKNOWN", datasetId: "" };
     }
-
-    console.log("getActorStatus: Data", { data: data.data });
 
     return {
       status: data.data.status,

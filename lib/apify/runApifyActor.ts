@@ -6,7 +6,7 @@ interface ApifyRunResponse {
   error?: string;
 }
 
-const runTikTokActor = async (
+const runApifyActor = async (
   input: any,
   actorId: string
 ): Promise<ApifyRunResponse | null> => {
@@ -42,4 +42,4 @@ const runTikTokActor = async (
   }
 };
 
-export default runTikTokActor;
+export default runApifyActor;

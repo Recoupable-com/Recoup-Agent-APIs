@@ -3,7 +3,7 @@ import { ScrapedComment } from "../scraping/types";
 import getActorStatus from "../apify/getActorStatus";
 import getDataset from "../apify/getDataset";
 import getFormattedComments from "./getFormattedComments";
-import startCommentsScraping from "./getVideoCommentsDatasetId";
+import startCommentsScraping from "./startCommentsScraping";
 
 const MAX_ATTEMPTS = 30;
 const POLLING_INTERVAL = 3000; // 3 seconds

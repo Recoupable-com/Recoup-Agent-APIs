@@ -21,20 +21,17 @@ export const processSegmentResults = (
 ): Record<string, string[]> => {
   const { usernameToIdMap, validFanSocialIds, batchIndex } = options;
 
-  // Initialize segment groups
   const segmentGroups: Record<string, string[]> = {};
   segmentNames.forEach((name) => {
     segmentGroups[name] = [];
   });
 
-  // Process each result
   batchResults.forEach((result) => {
     if (
       result.segment_name &&
       Array.isArray(result.fan_social_ids) &&
       segmentGroups[result.segment_name] !== undefined
     ) {
-      // Validate and recover fan_social_ids
       const { validatedIds, recoveredIds } = validateFanSocialIds(
         result.fan_social_ids,
         {
@@ -45,7 +42,6 @@ export const processSegmentResults = (
         }
       );
 
-      // Add validated and recovered IDs to segment group
       segmentGroups[result.segment_name] = [
         ...segmentGroups[result.segment_name],
         ...validatedIds,

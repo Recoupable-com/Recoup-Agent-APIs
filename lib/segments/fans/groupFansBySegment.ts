@@ -1,4 +1,4 @@
-import { Comment } from "../types/segment.types.js";
+import { Comment } from "../../types/segment.types.js";
 import validateComments from "./validateComments.js";
 import batchComments from "./batchComments.js";
 import processBatchesInParallel from "./processBatchesInParallel.js";

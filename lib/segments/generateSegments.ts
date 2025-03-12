@@ -1,9 +1,9 @@
-import { generateSegmentNames } from "./segments/generateSegmentNames.js";
-import { groupFansBySegment } from "./segments/groupFansBySegment.js";
-import createSegments from "./supabase/createSegments.js";
-import updateArtistSegments from "./supabase/updateArtistSegments.js";
-import createFanSegments from "./supabase/createFanSegments.js";
-import { Comment } from "./types/segment.types.js";
+import { generateSegmentNames } from "./generateSegmentNames.js";
+import { groupFansBySegment } from "./fans/groupFansBySegment.js";
+import createSegments from "../supabase/createSegments.js";
+import updateArtistSegments from "../supabase/updateArtistSegments.js";
+import createFanSegments from "../supabase/createFanSegments.js";
+import { Comment } from "../types/segment.types.js";
 
 interface GenerateSegmentsResult {
   segmentIds: string[];

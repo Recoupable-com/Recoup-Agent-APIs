@@ -1,4 +1,4 @@
-import generateSegments from "../generateSegments.js";
+import generateSegments from "../segments/generateSegments.js";
 import getAccountSocials from "../supabase/getAccountSocials.js";
 import getPostComments from "../supabase/getPostComments.js";
 import getSocialPosts from "../supabase/getSocialPosts.js";

@@ -1,5 +1,5 @@
 import { Comment } from "../types/segment.types.js";
-import { getLLMResponse } from "./getLLMResponse.js";
+import { getLLMResponse } from "./fans/getLLMResponse.js";
 import { parseAndValidateResponse } from "./parseAndValidateResponse.js";
 import { processSegmentResults } from "./processSegmentResults.js";
 

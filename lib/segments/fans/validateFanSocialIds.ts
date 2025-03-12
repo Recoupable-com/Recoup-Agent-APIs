@@ -27,23 +27,19 @@ export const validateFanSocialIds = (
     options;
   const recoveredIds: string[] = [];
 
-  // Validate and filter fan_social_ids
   const validatedIds = ids.filter((id) => {
-    // Check if id is a valid UUID and exists in our valid IDs set
     const isValid =
       typeof id === "string" &&
       UUID_REGEX.test(id) &&
       validFanSocialIds.has(id);
 
     if (!isValid && typeof id === "string") {
-      // Check if this might be a username instead of an ID
       if (usernameToIdMap.has(id)) {
         const correctId = usernameToIdMap.get(id);
         console.warn(
           `[WARN] Recovered username "${id}" to correct fan_social_id "${correctId}" in batch ${batchIndex + 1} for segment "${segmentName}"`
         );
 
-        // Add the correct ID to the recovered list
         if (correctId && validFanSocialIds.has(correctId)) {
           recoveredIds.push(correctId);
         }

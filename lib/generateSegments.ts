@@ -16,11 +16,6 @@ export const generateSegments = async (
   artistAccountId: string
 ): Promise<GenerateSegmentsResult> => {
   try {
-    console.log(`Starting segment generation with ${comments.length} comments`);
-    console.log(
-      `Comments with social data: ${comments.filter((c) => c.social_data && Object.keys(c.social_data).length > 0).length}`
-    );
-
     const batchSize = 500;
     const commentBatches: Comment[][] = [];
 
@@ -54,7 +49,6 @@ export const generateSegments = async (
     }
 
     const uniqueSegmentNames = Array.from(allSegmentNames);
-    console.log(`Generated ${uniqueSegmentNames.length} unique segment names`);
 
     const { segmentIds, error: createError } = await createSegments({
       segmentNames: uniqueSegmentNames,

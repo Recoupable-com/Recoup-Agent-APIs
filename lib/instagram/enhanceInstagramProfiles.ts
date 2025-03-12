@@ -1,6 +1,7 @@
 import { AuthorInput, Social } from "../../types/agent";
-import uploadPfpToArweave from "../arweave/uploadPfpToArweave";
+import { batchUploadToArweave } from "../arweave/batchUploadToArweave";
 import { getProfiles } from "./getProfiles";
+import { UploadTask } from "../arweave/types";
 
 /**
  * Enhances Instagram social profiles with additional data like avatars, follower counts, following counts, and bios
@@ -20,6 +21,7 @@ export async function enhanceInstagramProfiles(
   }
 
   console.log(`Enhancing ${profiles.length} Instagram profiles`);
+  const startTime = Date.now();
 
   // Extract usernames from profiles
   const handles = profiles.map((profile) => profile.username.replace(/^@/, ""));
@@ -27,9 +29,12 @@ export async function enhanceInstagramProfiles(
   // Fetch all profiles at once using Apify
   const { profiles: scrapedProfiles, errors } = await getProfiles(handles);
 
+  // Prepare arrays for enhanced profiles and upload tasks
   const enhancedProfiles: Social[] = [];
+  const uploadTasks: UploadTask[] = [];
+  const profileMap = new Map<string, Social>();
 
-  // Process each profile
+  // First pass: Process all profiles and collect avatar upload tasks
   for (const originalProfile of profiles) {
     const username = originalProfile.username.replace(/^@/, "");
     console.log(`Processing Instagram profile: ${username}`);
@@ -52,78 +57,83 @@ export async function enhanceInstagramProfiles(
         continue;
       }
 
-      // Track what data was found
-      let dataFound = false;
       const enhancedProfile = { ...originalProfile } as Social;
 
       // Add bio if available
       if (scrapedProfile.bio) {
         enhancedProfile.bio = scrapedProfile.bio;
-        dataFound = true;
         console.log(`✅ Found bio for Instagram user: ${username}`);
       }
 
       // Add follower count if available
       if (scrapedProfile.followerCount) {
         enhancedProfile.followerCount = scrapedProfile.followerCount;
-        dataFound = true;
         console.log(`✅ Found follower count for Instagram user: ${username}`);
       }
 
       // Add following count if available
       if (scrapedProfile.followingCount) {
         enhancedProfile.followingCount = scrapedProfile.followingCount;
-        dataFound = true;
         console.log(`✅ Found following count for Instagram user: ${username}`);
       }
 
       // Add avatar if available
       if (scrapedProfile.avatar) {
-        dataFound = true;
         console.log(`✅ Found avatar for Instagram user: ${username}`);
 
-        // Check if avatar is already on Arweave
-        if (scrapedProfile.avatar.includes("arweave.net")) {
-          enhancedProfile.avatar = scrapedProfile.avatar;
-          console.log(
-            `   Avatar is already on Arweave: ${scrapedProfile.avatar}`
-          );
-        } else {
-          // Upload avatar to Arweave to avoid caching issues
-          console.log(`Uploading avatar for ${username} to Arweave...`);
-          const arweaveUrl = await uploadPfpToArweave(scrapedProfile.avatar);
+        uploadTasks.push({
+          id: username,
+          imageUrl: scrapedProfile.avatar,
+          metadata: { profile: enhancedProfile },
+        });
 
-          if (arweaveUrl) {
-            enhancedProfile.avatar = arweaveUrl;
-            console.log(
-              `✅ Uploaded avatar to Arweave for Instagram user: ${username}`
-            );
-            console.log(`   Original URL: ${scrapedProfile.avatar}`);
-            console.log(`   Arweave URL: ${arweaveUrl}`);
-          } else {
-            // Fallback to original URL if Arweave upload fails
-            enhancedProfile.avatar = scrapedProfile.avatar;
-            console.log(
-              `⚠️ Arweave upload failed for ${username}, using original URL`
-            );
-          }
-        }
+        profileMap.set(username, enhancedProfile);
+      } else {
+        enhancedProfiles.push(enhancedProfile);
       }
-
-      if (!dataFound) {
-        console.log(
-          `⚠️ No additional data found for Instagram user: ${username}`
-        );
-      }
-
-      enhancedProfiles.push(enhancedProfile);
     } catch (profileError) {
       console.error("Failed to process Instagram profile data:", profileError);
       enhancedProfiles.push(originalProfile as Social);
     }
   }
 
-  console.log("enhancedProfiles", enhancedProfiles);
+  // Second pass: Process avatar uploads in parallel using the batch upload library
+  if (uploadTasks.length > 0) {
+    console.log(
+      `Uploading ${uploadTasks.length} avatars to Arweave in parallel`
+    );
+
+    const uploadResults = await batchUploadToArweave(uploadTasks);
+
+    // Process results and add to enhanced profiles
+    for (const result of uploadResults) {
+      const profile =
+        (result.metadata?.profile as Social) || profileMap.get(result.id);
+
+      if (profile) {
+        if (result.success && result.arweaveUrl) {
+          profile.avatar = result.arweaveUrl;
+        } else {
+          // Fallback to original URL if Arweave upload fails
+          profile.avatar = result.imageUrl;
+          console.log(
+            `⚠️ Using original avatar URL for ${result.id} due to upload failure`
+          );
+        }
+        enhancedProfiles.push(profile);
+      } else {
+        console.error(`Could not find profile for ${result.id}`);
+      }
+    }
+  }
+
+  const totalDuration = Date.now() - startTime;
+  console.log(
+    `Enhanced ${enhancedProfiles.length} Instagram profiles in ${totalDuration}ms`
+  );
+  console.log(
+    `${uploadTasks.length} avatars were processed for Arweave upload`
+  );
 
   return {
     enhancedProfiles,

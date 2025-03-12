@@ -18,7 +18,6 @@ export interface ValidationResult {
  * @returns Object containing valid comments and username-to-ID mapping
  */
 export const validateComments = (comments: Comment[]): ValidationResult => {
-  // Filter comments with valid fan_social_ids
   const validComments = comments.filter((comment) => {
     const isValid =
       comment.fan_social_id &&
@@ -40,7 +39,6 @@ export const validateComments = (comments: Comment[]): ValidationResult => {
     `[DEBUG] Pre-validation: ${validComments.length}/${comments.length} comments have valid fan_social_ids`
   );
 
-  // Create a mapping from username to fan_social_id for error recovery
   const usernameToIdMap = new Map<string, string>();
   validComments.forEach((comment) => {
     if (comment.social_data?.username && comment.fan_social_id) {

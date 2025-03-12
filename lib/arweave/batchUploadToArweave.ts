@@ -1,34 +1,5 @@
+import { UploadResult, UploadTask, UPLOAD_CONFIG } from "./types";
 import uploadPfpToArweave from "./uploadPfpToArweave";
-
-/**
- * Configuration for parallel uploads
- */
-export const UPLOAD_CONFIG = {
-  BATCH_SIZE: 5, // Number of concurrent uploads
-  RETRY_ATTEMPTS: 2, // Number of retry attempts for failed uploads
-  RETRY_DELAY: 1000, // Delay between retries in milliseconds
-};
-
-/**
- * Interface for upload task
- */
-export interface UploadTask {
-  id: string; // Unique identifier for the task (e.g., username)
-  imageUrl: string; // URL of the image to upload
-  metadata?: Record<string, unknown>; // Optional metadata to associate with the task
-}
-
-/**
- * Interface for upload result
- */
-export interface UploadResult {
-  id: string; // Unique identifier matching the task
-  imageUrl: string; // Original image URL
-  success: boolean; // Whether the upload was successful
-  arweaveUrl?: string; // Arweave URL if successful
-  error?: Error; // Error if unsuccessful
-  metadata?: Record<string, unknown>; // Optional metadata from the task
-}
 
 /**
  * Uploads multiple images to Arweave in parallel batches
@@ -41,7 +12,6 @@ export async function batchUploadToArweave(
   tasks: UploadTask[],
   options: Partial<typeof UPLOAD_CONFIG> = {}
 ): Promise<UploadResult[]> {
-  // Merge default config with provided options
   const config = { ...UPLOAD_CONFIG, ...options };
 
   if (tasks.length === 0) {
@@ -55,7 +25,6 @@ export async function batchUploadToArweave(
     `Starting batch upload of ${tasks.length} images to Arweave with batch size ${config.BATCH_SIZE}`
   );
 
-  // Process uploads in batches
   for (let i = 0; i < tasks.length; i += config.BATCH_SIZE) {
     const batchStartTime = Date.now();
     const batch = tasks.slice(i, i + config.BATCH_SIZE);
@@ -66,13 +35,11 @@ export async function batchUploadToArweave(
       `Processing batch ${batchNumber}/${totalBatches} (${batch.length} uploads)`
     );
 
-    // Process batch in parallel
     const batchResults = await Promise.all(
       batch.map(async (task) => {
         try {
           console.log(`Starting Arweave upload for ${task.id}...`);
 
-          // Try to upload with retries
           let arweaveUrl: string | null = null;
           let attempts = 0;
 

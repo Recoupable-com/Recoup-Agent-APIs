@@ -1,9 +1,7 @@
 import { AuthorInput, Social } from "../../types/agent";
-import {
-  batchUploadToArweave,
-  UploadTask,
-} from "../arweave/batchUploadToArweave";
+import { batchUploadToArweave } from "../arweave/batchUploadToArweave";
 import { getProfiles } from "./getProfiles";
+import { UploadTask } from "../arweave/types";
 
 /**
  * Enhances Instagram social profiles with additional data like avatars, follower counts, following counts, and bios

@@ -1,9 +1,14 @@
 import getChatCompletions from "../getChatCompletions.js";
 import { instructions } from "../instructions.js";
+import { Comment } from "../types/segment.types.js";
+import formatCommentsWithSocialData from "./formatCommentsWithSocialData.js";
 
 export const generateSegmentNames = async (
-  comments: string[]
+  comments: string[] | Comment[]
 ): Promise<string[]> => {
+  // Format comments to include social data if available
+  const formattedComments = formatCommentsWithSocialData(comments);
+  console.log("formatCommentsWithSocialData", formattedComments);
   const response = await getChatCompletions([
     {
       role: "system",
@@ -11,7 +16,10 @@ export const generateSegmentNames = async (
     },
     {
       role: "user",
-      content: `Comments: ${JSON.stringify(comments)}`,
+      content:
+        typeof formattedComments[0] === "string"
+          ? `Comments: ${JSON.stringify(formattedComments)}`
+          : `Comments with social data: ${JSON.stringify(formattedComments)}`,
     },
   ]);
 

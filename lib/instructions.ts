@@ -112,30 +112,40 @@ export const instructions = {
           Propose at least three concrete content collaboration ideas that leverage the segment's interests and brand partnerships.
         9. Closing
           Summarize the key findings and recommendations. Include a call to action.`,
-  generate_segments: `Analyze the provided comments to identify distinct fan segments based on the specific content and context of the comments. Generate insightful and sophisticated segment names that:
+  generate_segments: `Analyze the provided comments to identify distinct fan segments based on the specific content and context of the comments. When available, use the social data (username, bio, follower count, following count) to enhance your understanding of the fan segments.
 
         1. Reference specific themes, topics, or sentiments found in the comments
         2. Capture the underlying motivations and engagement patterns
         3. Use concrete examples from the comments to inform segment names
         4. Reflect the actual language and terminology used by fans
+        5. When social data is available, incorporate insights from:
+           - User bios that may reveal interests, occupations, or identities
+           - Follower/following ratios that might indicate influencer status
+           - Username patterns that could suggest demographic information
 
         For example, if comments mention:
         - "Your guitar solo in the bridge was incredible!" → "Guitar Technique Enthusiasts"
         - "The lyrics about anxiety really helped me" → "Mental Health Advocates"
         - "Can't wait to see you at the festival!" → "Live Performance Fans"
 
-        The segment names should be concise (2-3 words) yet evocative, employing professional and descriptive language that directly connects to the comment content.
+        And if social data shows:
+        - Bio mentions "Producer/DJ" → "Music Industry Professionals"
+        - High follower count with music-related username → "Music Influencers"
+        - Bio mentions "fashion" and comment discusses style → "Fashion-Forward Music Fans"
+
+        The segment names should be concise (2-3 words) yet evocative, employing professional and descriptive language that directly connects to the comment content and social context.
 
         Response format must be a JSON array of strings containing ONLY the segment names.
         Example based on actual comments:
-        ["Guitar Technique Enthusiasts", "Mental Health Advocates", "Live Performance Fans"]
+        ["Guitar Technique Enthusiasts", "Mental Health Advocates", "Live Performance Fans", "Music Industry Professionals", "Music Influencers"]
 
         Important:
-        - Each segment name must be derived from actual comment content
+        - Each segment name must be derived from actual comment content or social data
         - Avoid generic segments like "Superfans" unless specifically evidenced in comments
         - Use terminology that appears in the comments when appropriate
-        - Focus on the subject matter of comments rather than generic engagement patterns`,
-  group_segments: `Analyze each comment and assign it to the most appropriate segment from the provided list. 
+        - Focus on the subject matter of comments rather than generic engagement patterns
+        - When social data is available, use it to create more nuanced and accurate segments`,
+  group_segments: `Analyze each comment and assign it to the most appropriate segment from the provided list. When available, use the social data (username, bio, follower count, following count) to make more accurate segment assignments.
 
     IMPORTANT: Your response must be a valid JSON array of objects with EXACTLY this structure:
     {
@@ -143,23 +153,44 @@ export const instructions = {
       "fan_social_ids": string[] (array of fan_social_ids, MUST use the exact fan_social_id from the input comments, DO NOT use comment text)
     }
 
-    CRITICAL REQUIREMENTS:
+    ⚠️ CRITICAL REQUIREMENTS - READ CAREFULLY ⚠️:
     1. ONLY use the exact fan_social_id values from the input comments
-    2. DO NOT use comment text as fan_social_ids
-    3. Each fan_social_id must be a valid UUID string
+    2. DO NOT use usernames, text, or any other field as fan_social_ids
+    3. Each fan_social_id must be a valid UUID string (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
     4. DO NOT modify or transform the fan_social_ids in any way
+    5. ALWAYS use the fan_social_id field, NEVER use the username from social_data
+    6. When social data is available, consider:
+       - Bio information that aligns with specific segments
+       - Follower/following counts that might indicate user influence
+       - Username patterns that could suggest segment affiliation
 
     Example input:
     {
-      "comment": "Great song!",
-      "fan_social_id": "123e4567-e89b-12d3-a456-426614174000"
+      "fan_social_id": "123e4567-e89b-12d3-a456-426614174000",
+      "id_for_grouping": "123e4567-e89b-12d3-a456-426614174000",
+      "text": "Great song!",
+      "social_data": {
+        "username": "music_producer_jane",
+        "bio": "Music producer and DJ based in LA",
+        "followerCount": 5000,
+        "followingCount": 500
+      },
+      "_use_this_id_for_grouping": true
     }
 
     Example response:
     [
       {
-        "segment_name": "Superfans",
+        "segment_name": "Music Industry Professionals",
         "fan_social_ids": ["123e4567-e89b-12d3-a456-426614174000"]
+      }
+    ]
+
+    INCORRECT response (DO NOT DO THIS):
+    [
+      {
+        "segment_name": "Music Industry Professionals",
+        "fan_social_ids": ["music_producer_jane"]
       }
     ]
 

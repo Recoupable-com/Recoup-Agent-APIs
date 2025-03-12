@@ -7,26 +7,68 @@ export interface SegmentGroup {
   fan_social_ids: string[];
 }
 
+// UUID validation regex
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const groupFansBySegment = async (
   segmentNames: string[],
   comments: Comment[]
 ): Promise<SegmentGroup[]> => {
   try {
+    // Pre-validate comments to ensure all have valid fan_social_ids
+    const validComments = comments.filter((comment) => {
+      const isValid =
+        comment.fan_social_id &&
+        typeof comment.fan_social_id === "string" &&
+        UUID_REGEX.test(comment.fan_social_id);
+
+      if (!isValid) {
+        console.warn(
+          `[WARN] Filtering out comment with invalid fan_social_id: ${
+            comment.fan_social_id || "undefined"
+          }`
+        );
+      }
+
+      return isValid;
+    });
+
+    console.log(
+      `[DEBUG] Pre-validation: ${validComments.length}/${comments.length} comments have valid fan_social_ids`
+    );
+
+    // Create a mapping from username to fan_social_id for error recovery
+    const usernameToIdMap = new Map<string, string>();
+    validComments.forEach((comment) => {
+      if (comment.social_data?.username && comment.fan_social_id) {
+        usernameToIdMap.set(
+          comment.social_data.username,
+          comment.fan_social_id
+        );
+      }
+    });
+
+    console.log(
+      `[DEBUG] Created username to ID map with ${usernameToIdMap.size} entries for error recovery`
+    );
+
     // Process comments in smaller batches to avoid LLM token limits
     const batchSize = 50; // Reduced from 100 to 50 for better handling
     const commentBatches: Comment[][] = [];
-    for (let i = 0; i < comments.length; i += batchSize) {
-      commentBatches.push(comments.slice(i, i + batchSize));
+
+    for (let i = 0; i < validComments.length; i += batchSize) {
+      commentBatches.push(validComments.slice(i, i + batchSize));
     }
 
     console.log(
-      `[DEBUG] Split ${comments.length} comments into ${commentBatches.length} batches for processing`
+      `[DEBUG] Split ${validComments.length} comments into ${commentBatches.length} batches for processing`
     );
 
     // Log sample comments with more details about special characters
     console.log("[DEBUG] Sample comments:", {
-      total: comments.length,
-      sample: comments.slice(0, 3).map((c) => ({
+      total: validComments.length,
+      sample: validComments.slice(0, 3).map((c) => ({
         ...c,
         commentLength: c.comment_text.length,
         hasSpecialChars: /[^\x20-\x7E]/.test(c.comment_text),
@@ -56,6 +98,11 @@ export const groupFansBySegment = async (
           );
 
           try {
+            // Create a map of valid fan_social_ids for this batch
+            const validFanSocialIds = new Set(
+              batch.map((c) => c.fan_social_id)
+            );
+
             const response = await getChatCompletions(
               [
                 {
@@ -115,15 +162,6 @@ Comments with IDs: ${JSON.stringify(batch)}`,
                 return;
               }
 
-              console.log(
-                `[DEBUG] Successfully parsed JSON for batch ${batchIndex + 1}:`,
-                {
-                  resultCount: batchResults.length,
-                  sampleResult: batchResults[0],
-                  allSegmentNames: batchResults.map((r) => r.segment_name),
-                }
-              );
-
               // Update segment groups with batch results
               batchResults.forEach((result) => {
                 if (
@@ -131,7 +169,39 @@ Comments with IDs: ${JSON.stringify(batch)}`,
                   Array.isArray(result.fan_social_ids) &&
                   segmentGroups[result.segment_name]
                 ) {
-                  result.fan_social_ids.forEach((id: string) =>
+                  // Validate and filter fan_social_ids
+                  const validatedIds = result.fan_social_ids.filter(
+                    (id: string) => {
+                      // Check if id is a valid UUID and exists in our valid IDs set
+                      const isValid =
+                        typeof id === "string" &&
+                        UUID_REGEX.test(id) &&
+                        validFanSocialIds.has(id);
+
+                      if (!isValid && typeof id === "string") {
+                        // Check if this might be a username instead of an ID
+                        if (usernameToIdMap.has(id)) {
+                          const correctId = usernameToIdMap.get(id);
+                          console.warn(
+                            `[WARN] Recovered username "${id}" to correct fan_social_id "${correctId}" in batch ${batchIndex + 1}`
+                          );
+                          // Add the correct ID to the segment group
+                          if (correctId && validFanSocialIds.has(correctId)) {
+                            segmentGroups[result.segment_name].add(correctId);
+                          }
+                        } else {
+                          console.warn(
+                            `[WARN] Invalid fan_social_id in batch ${batchIndex + 1}: "${id}"`
+                          );
+                        }
+                      }
+
+                      return isValid;
+                    }
+                  );
+
+                  // Add validated IDs to segment group
+                  validatedIds.forEach((id: string) =>
                     segmentGroups[result.segment_name].add(id)
                   );
                 }

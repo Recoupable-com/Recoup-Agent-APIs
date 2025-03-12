@@ -5,4 +5,10 @@ export interface Comment {
   comment_text: string;
   fan_social_id: string;
   artist_social_id: string;
+  social_data?: {
+    username?: string;
+    bio?: string;
+    followerCount?: number;
+    followingCount?: number;
+  };
 }

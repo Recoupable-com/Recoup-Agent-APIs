@@ -16,11 +16,16 @@ export const generateSegments = async (
   artistAccountId: string
 ): Promise<GenerateSegmentsResult> => {
   try {
+    console.log(`Starting segment generation with ${comments.length} comments`);
+    console.log(
+      `Comments with social data: ${comments.filter((c) => c.social_data && Object.keys(c.social_data).length > 0).length}`
+    );
+
     const batchSize = 500;
-    const commentBatches: string[][] = [];
+    const commentBatches: Comment[][] = [];
 
     for (let i = 0; i < comments.length; i += batchSize) {
-      const batch = comments.slice(i, i + batchSize).map((c) => c.comment_text);
+      const batch = comments.slice(i, i + batchSize);
       commentBatches.push(batch);
     }
 
@@ -49,6 +54,7 @@ export const generateSegments = async (
     }
 
     const uniqueSegmentNames = Array.from(allSegmentNames);
+    console.log(`Generated ${uniqueSegmentNames.length} unique segment names`);
 
     const { segmentIds, error: createError } = await createSegments({
       segmentNames: uniqueSegmentNames,

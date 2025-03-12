@@ -145,7 +145,7 @@ export const instructions = {
         - Use terminology that appears in the comments when appropriate
         - Focus on the subject matter of comments rather than generic engagement patterns
         - When social data is available, use it to create more nuanced and accurate segments`,
-  group_segments: `Analyze each comment and assign it to the most appropriate segment from the provided list. When available, use the social data (username, bio, follower count, following count) to make more accurate segment assignments.
+  group_segments: `Analyze each comment and assign it to the most appropriate segment from the provided list. 
 
     IMPORTANT: Your response must be a valid JSON array of objects with EXACTLY this structure:
     {
@@ -153,44 +153,23 @@ export const instructions = {
       "fan_social_ids": string[] (array of fan_social_ids, MUST use the exact fan_social_id from the input comments, DO NOT use comment text)
     }
 
-    ⚠️ CRITICAL REQUIREMENTS - READ CAREFULLY ⚠️:
+    CRITICAL REQUIREMENTS:
     1. ONLY use the exact fan_social_id values from the input comments
-    2. DO NOT use usernames, text, or any other field as fan_social_ids
-    3. Each fan_social_id must be a valid UUID string (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+    2. DO NOT use comment text as fan_social_ids
+    3. Each fan_social_id must be a valid UUID string
     4. DO NOT modify or transform the fan_social_ids in any way
-    5. ALWAYS use the fan_social_id field, NEVER use the username from social_data
-    6. When social data is available, consider:
-       - Bio information that aligns with specific segments
-       - Follower/following counts that might indicate user influence
-       - Username patterns that could suggest segment affiliation
 
     Example input:
     {
-      "fan_social_id": "123e4567-e89b-12d3-a456-426614174000",
-      "id_for_grouping": "123e4567-e89b-12d3-a456-426614174000",
-      "text": "Great song!",
-      "social_data": {
-        "username": "music_producer_jane",
-        "bio": "Music producer and DJ based in LA",
-        "followerCount": 5000,
-        "followingCount": 500
-      },
-      "_use_this_id_for_grouping": true
+      "comment": "Great song!",
+      "fan_social_id": "123e4567-e89b-12d3-a456-426614174000"
     }
 
     Example response:
     [
       {
-        "segment_name": "Music Industry Professionals",
+        "segment_name": "Superfans",
         "fan_social_ids": ["123e4567-e89b-12d3-a456-426614174000"]
-      }
-    ]
-
-    INCORRECT response (DO NOT DO THIS):
-    [
-      {
-        "segment_name": "Music Industry Professionals",
-        "fan_social_ids": ["music_producer_jane"]
       }
     ]
 

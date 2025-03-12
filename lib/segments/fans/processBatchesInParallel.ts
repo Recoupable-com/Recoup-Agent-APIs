@@ -1,4 +1,4 @@
-import { Comment } from "../types/segment.types.js";
+import { Comment } from "../../types/segment.types.js";
 import processCommentBatch from "./processCommentBatch.js";
 
 export interface ParallelProcessingResult {

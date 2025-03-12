@@ -5,6 +5,11 @@ import { Comment } from "../types/segment.types.js";
 export const generateSegmentNames = async (
   comments: string[] | Comment[]
 ): Promise<string[]> => {
+  const promptWithContext =
+    typeof comments[0] === "string"
+      ? `Comments: ${JSON.stringify(comments)}`
+      : `Comments with social data: ${JSON.stringify(comments)}`;
+
   const response = await getChatCompletions([
     {
       role: "system",
@@ -12,10 +17,7 @@ export const generateSegmentNames = async (
     },
     {
       role: "user",
-      content:
-        typeof comments[0] === "string"
-          ? `Comments: ${JSON.stringify(comments)}`
-          : `Comments with social data: ${JSON.stringify(comments)}`,
+      content: promptWithContext,
     },
   ]);
 

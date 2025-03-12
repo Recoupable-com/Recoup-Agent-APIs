@@ -1,6 +1,6 @@
-import getChatCompletions from "../getChatCompletions.js";
-import { instructions } from "../instructions.js";
-import { Comment } from "../types/segment.types.js";
+import getChatCompletions from "../../getChatCompletions.js";
+import { instructions } from "../../instructions.js";
+import { Comment } from "../../types/segment.types.js";
 
 /**
  * Gets a response from the LLM for a batch of comments and segment names

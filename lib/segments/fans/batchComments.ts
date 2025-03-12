@@ -1,4 +1,4 @@
-import { Comment } from "../types/segment.types.js";
+import { Comment } from "../../types/segment.types.js";
 
 export interface BatchingResult {
   batches: Comment[][];

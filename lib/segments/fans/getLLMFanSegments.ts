@@ -9,7 +9,7 @@ import { Comment } from "../../types/segment.types.js";
  * @param segmentNames - Array of segment names to assign comments to
  * @returns The LLM response or null if there was an error
  */
-export const getLLMResponse = async (
+export const getLLMFanSegments = async (
   batch: Comment[],
   segmentNames: string[]
 ): Promise<string | null> => {
@@ -33,4 +33,4 @@ Comments with IDs: ${JSON.stringify(batch)}`,
   }
 };
 
-export default getLLMResponse;
+export default getLLMFanSegments;

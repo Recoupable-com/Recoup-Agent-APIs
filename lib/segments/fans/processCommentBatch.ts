@@ -1,5 +1,5 @@
 import { Comment } from "../../types/segment.types.js";
-import { getLLMResponse } from "./getLLMResponse.js";
+import { getLLMFanSegments } from "./getLLMFanSegments.js";
 import { parseAndValidateResponse } from "./parseAndValidateResponse.js";
 import { processSegmentResults } from "./processSegmentResults.js";
 
@@ -35,7 +35,7 @@ export const processCommentBatch = async (
     const validFanSocialIds = new Set(batch.map((c) => c.fan_social_id));
 
     // Get response from LLM
-    const response = await getLLMResponse(batch, segmentNames);
+    const response = await getLLMFanSegments(batch, segmentNames);
 
     if (!response) {
       console.error(`[ERROR] No response for batch ${batchIndex + 1}`);

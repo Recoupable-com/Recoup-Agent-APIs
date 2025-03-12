@@ -23,27 +23,6 @@ export const batchComments = (
     commentBatches.push(comments.slice(i, i + batchSize));
   }
 
-  console.log(
-    `[DEBUG] Split ${comments.length} comments into ${commentBatches.length} batches for processing`
-  );
-
-  // Log sample comments with more details about special characters
-  if (comments.length > 0) {
-    console.log("[DEBUG] Sample comments:", {
-      total: comments.length,
-      sample: comments.slice(0, 3).map((c) => ({
-        ...c,
-        commentLength: c.comment_text.length,
-        hasSpecialChars: /[^\x20-\x7E]/.test(c.comment_text),
-        specialChars: c.comment_text.match(/[^\x20-\x7E]/g) || [],
-        truncated:
-          c.comment_text.length > 50
-            ? `${c.comment_text.slice(0, 50)}...`
-            : c.comment_text,
-      })),
-    });
-  }
-
   return {
     batches: commentBatches,
     batchCount: commentBatches.length,

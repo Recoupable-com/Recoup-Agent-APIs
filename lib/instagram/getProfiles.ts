@@ -16,12 +16,7 @@ export async function getProfiles(handles: string[]): Promise<{
 }> {
   const cleanHandles = handles.map((handle) => handle.replace(/^@/, ""));
 
-  const BASE_POLLING_INTERVAL = 5000; // 5 seconds
-
-  const pollingInterval = Math.min(
-    Math.max(BASE_POLLING_INTERVAL, cleanHandles.length * 200),
-    15000
-  );
+  const pollingInterval = 5000;
 
   console.log(
     `Fetching profiles for ${cleanHandles.length} handles with polling interval ${pollingInterval}ms`

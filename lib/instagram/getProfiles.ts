@@ -16,13 +16,11 @@ export async function getProfiles(handles: string[]): Promise<{
 }> {
   const cleanHandles = handles.map((handle) => handle.replace(/^@/, ""));
 
-  // Set constants for polling
   const BASE_POLLING_INTERVAL = 5000; // 5 seconds
 
-  // Adjust polling interval based on batch size
   const pollingInterval = Math.min(
-    Math.max(BASE_POLLING_INTERVAL, cleanHandles.length * 200), // Increase interval for larger batches
-    15000 // But cap at 15 seconds
+    Math.max(BASE_POLLING_INTERVAL, cleanHandles.length * 200),
+    15000
   );
 
   console.log(
@@ -49,37 +47,28 @@ export async function getProfiles(handles: string[]): Promise<{
     while (true) {
       await new Promise((resolve) => setTimeout(resolve, pollingInterval));
 
-      // Get current status
       const { status } = await getActorStatus(runId);
       console.log(`Apify run ${runId} status: ${status}`);
 
-      // If the run has failed, break out of the loop
       if (status === "FAILED") {
         console.error(`Apify run ${runId} failed`);
         break;
       }
 
-      // If the run has succeeded, break out of the loop
       if (status === "SUCCEEDED") {
         console.log(`Apify run ${runId} completed successfully`);
         break;
       }
 
-      // Continue polling if the run is still in progress
       console.log(
         `Waiting for Apify run ${runId} to complete. Elapsed time: ${Math.round((Date.now() - startTime) / 1000)}s`
       );
     }
 
-    // Retrieve the dataset items regardless of how we exited the loop
-    console.log(`Retrieving dataset items for datasetId: ${datasetId}`);
     const datasetItems = await getDataset(datasetId);
-    console.log(`Retrieved ${datasetItems.length} dataset items`);
-
     const profiles: (Social & { postUrls?: string[] })[] = [];
     const errors: Record<string, Error> = {};
 
-    // Process the dataset items
     for (const item of datasetItems) {
       const handle = item.username || item.input?.username;
 
@@ -106,7 +95,6 @@ export async function getProfiles(handles: string[]): Promise<{
       }
     }
 
-    // Check for missing profiles and add them to errors
     for (const handle of cleanHandles) {
       if (
         !profiles.some(

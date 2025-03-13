@@ -16,7 +16,7 @@ export const generateSegments = async (
   artistAccountId: string
 ): Promise<GenerateSegmentsResult> => {
   try {
-    const batchSize = 500;
+    const batchSize = 1000;
     const commentBatches: Comment[][] = [];
 
     for (let i = 0; i < comments.length; i += batchSize) {

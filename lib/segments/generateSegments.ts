@@ -1,9 +1,9 @@
-import { generateSegmentNames } from "./segments/generateSegmentNames.js";
-import { groupFansBySegment } from "./segments/groupFansBySegment.js";
-import createSegments from "./supabase/createSegments.js";
-import updateArtistSegments from "./supabase/updateArtistSegments.js";
-import createFanSegments from "./supabase/createFanSegments.js";
-import { Comment } from "./types/segment.types.js";
+import { generateSegmentNames } from "./generateSegmentNames.js";
+import { groupFansBySegment } from "./fans/groupFansBySegment.js";
+import createSegments from "../supabase/createSegments.js";
+import updateArtistSegments from "../supabase/updateArtistSegments.js";
+import createFanSegments from "../supabase/createFanSegments.js";
+import { Comment } from "../types/segment.types.js";
 
 interface GenerateSegmentsResult {
   segmentIds: string[];
@@ -17,10 +17,10 @@ export const generateSegments = async (
 ): Promise<GenerateSegmentsResult> => {
   try {
     const batchSize = 500;
-    const commentBatches: string[][] = [];
+    const commentBatches: Comment[][] = [];
 
     for (let i = 0; i < comments.length; i += batchSize) {
-      const batch = comments.slice(i, i + batchSize).map((c) => c.comment_text);
+      const batch = comments.slice(i, i + batchSize);
       commentBatches.push(batch);
     }
 

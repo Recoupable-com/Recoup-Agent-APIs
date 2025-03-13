@@ -1,4 +1,4 @@
-import connectFansSegmentsToArtist from "../supabase/connectFansSegmentsToArtist.js";
+import connectFansSegmentsToArtist from "../../supabase/connectFansSegmentsToArtist.js";
 import { SegmentGroup } from "./groupFansBySegment.js";
 
 export const createFanSegments = async (

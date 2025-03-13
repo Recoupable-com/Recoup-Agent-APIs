@@ -1,7 +1,8 @@
-import generateSegments from "../generateSegments.js";
+import generateSegments from "../segments/generateSegments.js";
 import getAccountSocials from "../supabase/getAccountSocials.js";
 import getPostComments from "../supabase/getPostComments.js";
 import getSocialPosts from "../supabase/getSocialPosts.js";
+import getSocialDataForComments from "../supabase/getSocialDataForComments.js";
 import { Comment } from "../types/segment.types.js";
 
 export const generateSegmentsForAccount = async (accountId: string) => {
@@ -106,25 +107,32 @@ export const generateSegmentsForAccount = async (accountId: string) => {
     };
   }
 
-  // Step 5: Generate segments
-  console.log("Starting segment generation with deduped comments:", {
+  // Step 5: Enhance comments with social data
+  console.log("Enhancing comments with social data...");
+  const enhancedComments = await getSocialDataForComments(dedupedComments);
+
+  // Step 6: Generate segments
+  console.log("Starting segment generation with enhanced comments:", {
     totalRawComments: totalProcessedComments,
-    totalDedupedComments: dedupedComments.length,
+    totalDedupedComments: enhancedComments.length,
     deduplicationRate: `${(
-      (1 - dedupedComments.length / totalProcessedComments) *
+      (1 - enhancedComments.length / totalProcessedComments) *
       100
     ).toFixed(2)}%`,
-    sampleComment: dedupedComments[0],
+    sampleComment: enhancedComments[0],
     uniqueArtistSocialIds: [
-      ...new Set(dedupedComments.map((c) => c.artist_social_id)),
+      ...new Set(enhancedComments.map((c) => c.artist_social_id)),
     ].length,
     uniqueFanSocialIds: [
-      ...new Set(dedupedComments.map((c) => c.fan_social_id)),
+      ...new Set(enhancedComments.map((c) => c.fan_social_id)),
     ].length,
+    withSocialData: enhancedComments.filter(
+      (c) => c.social_data && Object.keys(c.social_data).length > 0
+    ).length,
   });
 
   const { segmentIds, fanSegmentCount, error } = await generateSegments(
-    dedupedComments,
+    enhancedComments,
     accountId
   );
 
@@ -140,13 +148,13 @@ export const generateSegmentsForAccount = async (accountId: string) => {
 
   return {
     segmentIds,
-    totalComments: dedupedComments.length,
+    totalComments: enhancedComments.length,
     stats: {
       uniqueArtistSocialIds: [
-        ...new Set(dedupedComments.map((c) => c.artist_social_id)),
+        ...new Set(enhancedComments.map((c) => c.artist_social_id)),
       ].length,
       uniqueFanSocialIds: [
-        ...new Set(dedupedComments.map((c) => c.fan_social_id)),
+        ...new Set(enhancedComments.map((c) => c.fan_social_id)),
       ].length,
       uniqueSegmentIds: segmentIds.length,
       fanSegmentCount,

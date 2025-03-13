@@ -112,29 +112,39 @@ export const instructions = {
           Propose at least three concrete content collaboration ideas that leverage the segment's interests and brand partnerships.
         9. Closing
           Summarize the key findings and recommendations. Include a call to action.`,
-  generate_segments: `Analyze the provided comments to identify distinct fan segments based on the specific content and context of the comments. Generate insightful and sophisticated segment names that:
+  generate_segments: `Analyze the provided comments to identify distinct fan segments based on the specific content and context of the comments. When available, use the social data (username, bio, follower count, following count) to enhance your understanding of the fan segments.
 
         1. Reference specific themes, topics, or sentiments found in the comments
         2. Capture the underlying motivations and engagement patterns
         3. Use concrete examples from the comments to inform segment names
         4. Reflect the actual language and terminology used by fans
+        5. When social data is available, incorporate insights from:
+           - User bios that may reveal interests, occupations, or identities
+           - Follower/following ratios that might indicate influencer status
+           - Username patterns that could suggest demographic information
 
         For example, if comments mention:
         - "Your guitar solo in the bridge was incredible!" → "Guitar Technique Enthusiasts"
         - "The lyrics about anxiety really helped me" → "Mental Health Advocates"
         - "Can't wait to see you at the festival!" → "Live Performance Fans"
 
-        The segment names should be concise (2-3 words) yet evocative, employing professional and descriptive language that directly connects to the comment content.
+        And if social data shows:
+        - Bio mentions "Producer/DJ" → "Music Industry Professionals"
+        - High follower count with music-related username → "Music Influencers"
+        - Bio mentions "fashion" and comment discusses style → "Fashion-Forward Music Fans"
+
+        The segment names should be concise (2-3 words) yet evocative, employing professional and descriptive language that directly connects to the comment content and social context.
 
         Response format must be a JSON array of strings containing ONLY the segment names.
         Example based on actual comments:
-        ["Guitar Technique Enthusiasts", "Mental Health Advocates", "Live Performance Fans"]
+        ["Guitar Technique Enthusiasts", "Mental Health Advocates", "Live Performance Fans", "Music Industry Professionals", "Music Influencers"]
 
         Important:
-        - Each segment name must be derived from actual comment content
+        - Each segment name must be derived from actual comment content or social data
         - Avoid generic segments like "Superfans" unless specifically evidenced in comments
         - Use terminology that appears in the comments when appropriate
-        - Focus on the subject matter of comments rather than generic engagement patterns`,
+        - Focus on the subject matter of comments rather than generic engagement patterns
+        - When social data is available, use it to create more nuanced and accurate segments`,
   group_segments: `Analyze each comment and assign it to the most appropriate segment from the provided list. 
 
     IMPORTANT: Your response must be a valid JSON array of objects with EXACTLY this structure:

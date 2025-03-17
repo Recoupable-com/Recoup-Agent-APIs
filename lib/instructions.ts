@@ -112,39 +112,59 @@ export const instructions = {
           Propose at least three concrete content collaboration ideas that leverage the segment's interests and brand partnerships.
         9. Closing
           Summarize the key findings and recommendations. Include a call to action.`,
-  generate_segments: `Analyze the provided comments to identify distinct fan segments based on the specific content and context of the comments. When available, use the social data (username, bio, follower count, following count) to enhance your understanding of the fan segments.
+  generate_segments: `You are an expert in identifying ultra-niche fan communities from social media comments. Your task is to generate segment names that are:
 
-        1. Reference specific themes, topics, or sentiments found in the comments
-        2. Capture the underlying motivations and engagement patterns
-        3. Use concrete examples from the comments to inform segment names
-        4. Reflect the actual language and terminology used by fans
-        5. When social data is available, incorporate insights from:
-           - User bios that may reveal interests, occupations, or identities
-           - Follower/following ratios that might indicate influencer status
-           - Username patterns that could suggest demographic information
+1. ULTRA-SPECIFIC - Identify very specific communities (e.g., "Chess Streamers" not "Game Players")
+2. ACTIONABLE - Each segment should suggest a clear opportunity for musicians
+3. SURPRISING - Reveal insights musicians wouldn't discover through conventional research
 
-        For example, if comments mention:
-        - "Your guitar solo in the bridge was incredible!" → "Guitar Technique Enthusiasts"
-        - "The lyrics about anxiety really helped me" → "Mental Health Advocates"
-        - "Can't wait to see you at the festival!" → "Live Performance Fans"
+Analyze the provided comments and social data (username, bio, follower count, following count) to identify ultra-niche communities. Look for specific interests, behaviors, and patterns that reveal unique fan segments.
 
-        And if social data shows:
-        - Bio mentions "Producer/DJ" → "Music Industry Professionals"
-        - High follower count with music-related username → "Music Influencers"
-        - Bio mentions "fashion" and comment discusses style → "Fashion-Forward Music Fans"
+For each segment, think about an opportunity sentence with this structure:
+[Specific Action] + [Specific Partner] + [Quantified Audience]
 
-        The segment names should be concise (2-3 words) yet evocative, employing professional and descriptive language that directly connects to the comment content and social context.
+Example: "Feature your tracks in GM Hikaru's chess tournaments to reach 500K+ chess players."
 
-        Response format must be a JSON array of strings containing ONLY the segment names.
-        Example based on actual comments:
-        ["Guitar Technique Enthusiasts", "Mental Health Advocates", "Live Performance Fans", "Music Industry Professionals", "Music Influencers"]
+GOOD SEGMENT EXAMPLES:
+- Chess Streamers: Feature your tracks in GM Hikaru's chess tournaments to reach 500K+ chess players.
+- Night Shift Medical Staff: Create "Night Shift" playlists with hospital networks reaching 600K healthcare workers.
+- Pro Esports Fans: Provide walkout music for Team Liquid tournaments reaching 1.2M esports fans.
 
-        Important:
-        - Each segment name must be derived from actual comment content or social data
-        - Avoid generic segments like "Superfans" unless specifically evidenced in comments
-        - Use terminology that appears in the comments when appropriate
-        - Focus on the subject matter of comments rather than generic engagement patterns
-        - When social data is available, use it to create more nuanced and accurate segments`,
+BAD SEGMENT EXAMPLES:
+- Music Lovers: License tracks for a popular music platform. (Too obvious, not specific)
+- Gamers: Promote music in a gaming event. (Too broad, not actionable)
+- App Users: Create a playlist for a well-known app. (Not specific enough)
+
+Your segments must be:
+1. Surprising & valuable ("I wouldn't have thought of that!")
+2. Focused on overlooked communities and unexpected partnerships
+3. Quantifiable with specific audience sizes and characteristics
+4. Immediately actionable for targeted streaming growth
+
+When analyzing comments, look for:
+1. Specific references to niche activities, communities, or interests
+2. Unique behavioral patterns or lifestyle indicators
+3. Specialized terminology or jargon that indicates membership in a community
+4. References to specific events, platforms, or influencers
+5. Timing patterns (when they engage) that might indicate specific lifestyles
+
+When social data is available, use it to enhance your understanding:
+- User bios that reveal specific interests, occupations, or identities
+- Follower/following ratios that might indicate influencer status or community roles
+- Username patterns that could suggest demographic or interest information
+
+The segment names should be ultra-specific (2-4 words) yet evocative, employing professional and descriptive language that directly connects to the comment content and social context.
+
+Response format must be a JSON array of strings containing ONLY the segment names.
+Example based on actual comments:
+["Chess Streamers", "Night Shift Medical Staff", "Pro Esports Fans", "Plant-Based Recipe Creators", "Indie Game Developers"]
+
+Important:
+- Each segment name must be derived from actual comment content or social data
+- Avoid generic segments like "Superfans" or "Music Lovers" - be ultra-specific
+- Focus on identifying surprising, overlooked communities
+- Create segments that suggest immediate, actionable opportunities for musicians
+- When social data is available, use it to create more nuanced and accurate segments`,
   group_segments: `Analyze each comment and assign it to the most appropriate segment from the provided list. 
 
     IMPORTANT: Your response must be a valid JSON array of objects with EXACTLY this structure:

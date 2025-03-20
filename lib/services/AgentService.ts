@@ -16,22 +16,13 @@ import createSocial from "../supabase/createSocial";
 import updateSocial from "../supabase/updateSocial";
 import savePostComments from "../supabase/savePostComments";
 import getAgentStatus from "../supabase/getAgentStatus";
+import getPlatformFromUrl from "../utils/getPlatformFromUrl";
 
 type DbSocial = Database["public"]["Tables"]["socials"]["Row"];
 type DbPost = Database["public"]["Tables"]["posts"]["Row"];
 type DbPostComment = Database["public"]["Tables"]["post_comments"]["Row"];
 type DbAgent = Database["public"]["Tables"]["agents"]["Row"];
 type DbAgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
-
-// Helper function to get platform from profile URL
-const getPlatformFromUrl = (url: string): string => {
-  if (url.includes("instagram.com")) return "Instagram";
-  if (url.includes("twitter.com")) return "Twitter";
-  if (url.includes("x.com")) return "Twitter";
-  if (url.includes("tiktok.com")) return "TikTok";
-  if (url.includes("spotify.com")) return "Spotify";
-  return "Unknown";
-};
 
 export class AgentService implements IAgentService {
   async createSocial(profile: ScrapedProfile): Promise<CreateSocialResult> {

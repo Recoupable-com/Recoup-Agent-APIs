@@ -38,7 +38,7 @@ export class AgentService implements IAgentService {
     const platform = getPlatformFromUrl(profile.profile_url);
     console.log("[DEBUG] Creating social record:", {
       platform,
-      username: profile.username.substring(0, 3) + "...",
+      username: profile.username,
       profileFields: Object.keys(profile),
     });
 
@@ -63,13 +63,13 @@ export class AgentService implements IAgentService {
                   stack: result.error.stack,
                 }
               : String(result.error),
-          username: profile.username.substring(0, 3) + "...",
+          username: profile.username,
         });
       } else {
         console.log("[DEBUG] Social record created successfully:", {
           platform,
           socialId: result.social?.id,
-          username: profile.username.substring(0, 3) + "...",
+          username: profile.username,
         });
       }
 
@@ -84,7 +84,7 @@ export class AgentService implements IAgentService {
                 stack: error.stack,
               }
             : String(error),
-        username: profile.username.substring(0, 3) + "...",
+        username: profile.username,
       });
       return {
         social: null,
@@ -104,7 +104,7 @@ export class AgentService implements IAgentService {
     console.log("[DEBUG] Updating social record:", {
       platform,
       socialId,
-      username: profile.username.substring(0, 3) + "...",
+      username: profile.username,
       updatedFields: Object.keys(profile),
     });
 
@@ -132,7 +132,7 @@ export class AgentService implements IAgentService {
                 }
               : String(updateError),
           socialId,
-          username: profile.username.substring(0, 3) + "...",
+          username: profile.username,
         });
         return {
           data: null,
@@ -160,7 +160,7 @@ export class AgentService implements IAgentService {
               }
             : String(error),
         socialId,
-        username: profile.username.substring(0, 3) + "...",
+        username: profile.username,
       });
       return {
         data: null,
@@ -243,7 +243,7 @@ export class AgentService implements IAgentService {
     console.log("[INFO] Starting social data storage:", {
       platform,
       agentStatusId,
-      username: profile.username.substring(0, 3) + "...",
+      username: profile.username,
       dataStats: {
         posts: posts.length,
         comments: comments.length,
@@ -255,7 +255,7 @@ export class AgentService implements IAgentService {
       // Create social record
       console.log("[DEBUG] Creating social record:", {
         platform,
-        username: profile.username.substring(0, 3) + "...",
+        username: profile.username,
       });
 
       const { social, error: socialError } = await this.createSocial(profile);

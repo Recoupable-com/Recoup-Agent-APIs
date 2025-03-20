@@ -42,7 +42,7 @@ export class PilotController {
         handles: Object.entries(req.body.handles || {}).reduce(
           (acc, [k, v]) => ({
             ...acc,
-            [k]: typeof v === "string" ? v.substring(0, 3) + "..." : v,
+            [k]: v,
           }),
           {}
         ),
@@ -68,7 +68,7 @@ export class PilotController {
         handles: Object.entries(handles).reduce(
           (acc, [k, v]) => ({
             ...acc,
-            [k]: v ? v.substring(0, 3) + "..." : v,
+            [k]: v,
           }),
           {}
         ),
@@ -230,7 +230,7 @@ export class PilotController {
       console.log("[INFO] Processing platform:", {
         agentId,
         platform,
-        handle: handle.substring(0, 3) + "...",
+        handle,
       });
 
       try {
@@ -244,7 +244,7 @@ export class PilotController {
         const cleanHandle = handle.replaceAll("@", "");
         console.log("[DEBUG] Creating social record:", {
           platform,
-          handle: cleanHandle.substring(0, 3) + "...",
+          handle,
         });
 
         const { social, error: socialError } =
@@ -300,7 +300,7 @@ export class PilotController {
         // Scrape profile
         console.log("[DEBUG] Scraping profile:", {
           platform,
-          handle: cleanHandle.substring(0, 3) + "...",
+          handle,
         });
 
         const profile = await scraper.scrapeProfile(cleanHandle);
@@ -329,7 +329,7 @@ export class PilotController {
         // Fetch posts
         console.log("[DEBUG] Fetching posts:", {
           platform,
-          handle: cleanHandle.substring(0, 3) + "...",
+          handle,
         });
 
         await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);

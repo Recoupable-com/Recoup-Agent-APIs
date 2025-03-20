@@ -54,7 +54,6 @@ export async function enhanceTikTokProfiles(profiles: AuthorInput[]): Promise<{
           console.log(
             `✅ Uploaded avatar to Arweave for TikTok user: ${username}`
           );
-          console.log(`   Original URL: ${scrapedProfile.avatar}`);
           console.log(`   Arweave URL: ${arweaveUrl}`);
         } else {
           // Fallback to original URL if Arweave upload fails

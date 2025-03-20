@@ -57,7 +57,6 @@ export async function batchUploadToArweave(
 
           if (arweaveUrl) {
             console.log(`✅ Uploaded to Arweave: ${task.id}`);
-            console.log(`   Original URL: ${task.imageUrl}`);
             console.log(`   Arweave URL: ${arweaveUrl}`);
 
             return {

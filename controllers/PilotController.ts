@@ -36,11 +36,27 @@ export class PilotController {
   }
 
   public run_agent = async (req: Request, res: Response) => {
+    console.log("[INFO] Starting agent run:", {
+      body: {
+        ...req.body,
+        handles: Object.entries(req.body.handles || {}).reduce(
+          (acc, [k, v]) => ({
+            ...acc,
+            [k]: typeof v === "string" ? v.substring(0, 3) + "..." : v,
+          }),
+          {}
+        ),
+      },
+    });
+
     try {
       // Validate request
       const validationResult = RequestSchema.safeParse(req.body);
       if (!validationResult.success) {
-        console.error("❌ Invalid request:", validationResult.error);
+        console.error("[ERROR] Invalid request format:", {
+          errors: validationResult.error.errors,
+          body: req.body,
+        });
         return res.status(400).json({
           message: "Invalid request format",
           errors: validationResult.error.errors,
@@ -48,29 +64,76 @@ export class PilotController {
       }
 
       const { handles, artistId } = validationResult.data;
+      console.log("[DEBUG] Validated request data:", {
+        handles: Object.entries(handles).reduce(
+          (acc, [k, v]) => ({
+            ...acc,
+            [k]: v ? v.substring(0, 3) + "..." : v,
+          }),
+          {}
+        ),
+        artistId,
+      });
 
       // Validate at least one handle exists
       if (!Object.values(handles).some((h) => h?.trim())) {
-        console.error("❌ No handles provided");
+        console.error("[ERROR] No handles provided in request");
         return res.status(400).json({ message: "No handles provided." });
       }
 
       // Create agent
+      console.log("[DEBUG] Creating new agent");
       const { agent, error: agentError } = await createAgent();
       if (agentError || !agent) {
-        console.error("❌ Failed to create agent:", agentError);
+        console.error("[ERROR] Failed to create agent:", {
+          error:
+            agentError instanceof Error
+              ? {
+                  message: agentError.message,
+                  stack: agentError.stack,
+                }
+              : String(agentError),
+        });
         return res.status(500).json({ message: "Failed to create agent." });
       }
+
+      console.log("[INFO] Agent created successfully:", {
+        agentId: agent.id,
+      });
 
       // Return agent ID immediately
       res.status(200).json({ agentId: agent.id });
 
       // Process platforms in background
+      console.log("[DEBUG] Starting background platform processing:", {
+        agentId: agent.id,
+        platforms: Object.keys(handles).filter((k) =>
+          handles[k as keyof typeof handles]?.trim()
+        ),
+      });
+
       this.processPlatforms(agent.id, handles, artistId).catch((error) => {
-        console.error("❌ Background processing error:", error);
+        console.error("[ERROR] Background processing failed:", {
+          agentId: agent.id,
+          error:
+            error instanceof Error
+              ? {
+                  message: error.message,
+                  stack: error.stack,
+                }
+              : String(error),
+        });
       });
     } catch (error) {
-      console.error("❌ Error in run_agent:", error);
+      console.error("[ERROR] Unhandled error in run_agent:", {
+        error:
+          error instanceof Error
+            ? {
+                message: error.message,
+                stack: error.stack,
+              }
+            : String(error),
+      });
       return res.status(500).json({
         message: "Internal server error",
         error: error instanceof Error ? error.message : String(error),
@@ -83,50 +146,51 @@ export class PilotController {
     handles: z.infer<typeof HandlesSchema>,
     artistId?: string
   ) {
+    console.log("[INFO] Processing platforms:", {
+      agentId,
+      platforms: Object.keys(handles).filter((k) =>
+        handles[k as keyof typeof handles]?.trim()
+      ),
+      hasArtistId: !!artistId,
+    });
+
     // Helper function to check if all platforms are complete
     const areAllPlatformsComplete = async (
       agentId: string
     ): Promise<boolean> => {
-      console.log(`Checking completion status for agentId: ${agentId}`);
+      console.log("[DEBUG] Checking platform completion status:", {
+        agentId,
+      });
+
       const { data } = await this.agentService.getAgentStatus(agentId);
       if (!data) {
-        console.log(`No agent status data found for agentId: ${agentId}`);
+        console.warn("[WARN] No agent status data found:", {
+          agentId,
+        });
         return false;
       }
 
       // Consider both FINISHED and ERROR states as complete
-      const isComplete = data.statuses.every((status: DbAgentStatus) => {
-        if (status.status === null) return false;
-
-        const isTerminalState =
+      const statusBreakdown = data.statuses.map((status: DbAgentStatus) => ({
+        id: status.id,
+        status: status.status !== null ? STEP_OF_AGENT[status.status] : "null",
+        social_id: status.social_id,
+        isComplete:
           status.status === STEP_OF_AGENT.FINISHED ||
           status.status === STEP_OF_AGENT.ERROR ||
           status.status === STEP_OF_AGENT.MISSING_POSTS ||
           status.status === STEP_OF_AGENT.RATE_LIMIT_EXCEEDED ||
-          status.status === STEP_OF_AGENT.UNKNOWN_PROFILE;
+          status.status === STEP_OF_AGENT.UNKNOWN_PROFILE,
+      }));
 
-        if (isTerminalState) {
-          console.log(
-            `Status ${status.id} is in terminal state: ${status.status !== null ? STEP_OF_AGENT[status.status] : "null"}`
-          );
-        }
+      const isComplete = statusBreakdown.every((s) => s.isComplete);
 
-        return isTerminalState;
+      console.log("[DEBUG] Platform completion check result:", {
+        agentId,
+        isComplete,
+        statusBreakdown,
       });
 
-      console.log(
-        `All platforms complete for agentId ${agentId}: ${isComplete}`
-      );
-      if (isComplete) {
-        console.log(
-          "Final status breakdown:",
-          data.statuses.map((s) => ({
-            id: s.id,
-            status: s.status !== null ? STEP_OF_AGENT[s.status] : "null",
-            social_id: s.social_id,
-          }))
-        );
-      }
       return isComplete;
     };
 
@@ -135,53 +199,127 @@ export class PilotController {
       agentId: string,
       status: STEP_OF_AGENT
     ): Promise<void> => {
+      console.log("[DEBUG] Updating all agent statuses:", {
+        agentId,
+        newStatus: STEP_OF_AGENT[status],
+      });
+
       const { data } = await this.agentService.getAgentStatus(agentId);
       if (!data) {
+        console.warn("[WARN] No agent status data found for update:", {
+          agentId,
+        });
         return;
       }
+
       await Promise.all(
         data.statuses.map((agentStatus: DbAgentStatus) =>
           updateAgentStatus(agentStatus.id, status)
         )
       );
+
+      console.log("[DEBUG] Updated all agent statuses:", {
+        agentId,
+        newStatus: STEP_OF_AGENT[status],
+        updatedStatusCount: data.statuses.length,
+      });
     };
 
     // Helper function to process a platform
     const processPlatform = async (platform: SocialType, handle: string) => {
+      console.log("[INFO] Processing platform:", {
+        agentId,
+        platform,
+        handle: handle.substring(0, 3) + "...",
+      });
+
       try {
         // Get platform-specific scraper
         const scraper = ScraperFactory.getScraper(platform);
+        console.log("[DEBUG] Created scraper for platform:", {
+          platform,
+        });
 
         // Create social record first
+        const cleanHandle = handle.replaceAll("@", "");
+        console.log("[DEBUG] Creating social record:", {
+          platform,
+          handle: cleanHandle.substring(0, 3) + "...",
+        });
+
         const { social, error: socialError } =
           await this.agentService.createSocial({
-            username: handle.replaceAll("@", ""),
+            username: cleanHandle,
             profile_url: getProfileUrl(platform, handle),
           });
+
         if (socialError || !social) {
-          console.error(
-            `❌ Failed to create social record for ${platform}:`,
-            socialError
-          );
+          console.error("[ERROR] Failed to create social record:", {
+            platform,
+            error:
+              socialError instanceof Error
+                ? {
+                    message: socialError.message,
+                    stack: socialError.stack,
+                  }
+                : String(socialError),
+          });
           return;
         }
 
+        console.log("[DEBUG] Created social record:", {
+          platform,
+          socialId: social.id,
+        });
+
         // Create agent status with social.id
+        console.log("[DEBUG] Creating agent status:", {
+          agentId,
+          socialId: social.id,
+        });
+
         const { agent_status } = await createAgentStatus(
           agentId,
           social.id,
           STEP_OF_AGENT.PROFILE
         );
-        if (!agent_status?.id) return;
+
+        if (!agent_status?.id) {
+          console.error("[ERROR] Failed to create agent status:", {
+            agentId,
+            socialId: social.id,
+          });
+          return;
+        }
+
+        console.log("[DEBUG] Created agent status:", {
+          statusId: agent_status.id,
+          status: STEP_OF_AGENT[STEP_OF_AGENT.PROFILE],
+        });
 
         // Scrape profile
-        const profile = await scraper.scrapeProfile(handle.replaceAll("@", ""));
+        console.log("[DEBUG] Scraping profile:", {
+          platform,
+          handle: cleanHandle.substring(0, 3) + "...",
+        });
+
+        const profile = await scraper.scrapeProfile(cleanHandle);
+
+        console.log("[DEBUG] Profile scraped successfully:", {
+          platform,
+          profileFields: Object.keys(profile),
+        });
 
         // Update social record with profile data
         await this.agentService.updateSocial(social.id, profile);
 
         // Handle artist setup if needed
         if (artistId) {
+          console.log("[DEBUG] Setting up artist:", {
+            artistId,
+            statusId: agent_status.id,
+          });
+
           await updateAgentStatus(
             agent_status.id,
             STEP_OF_AGENT.SETTING_UP_ARTIST
@@ -189,17 +327,45 @@ export class PilotController {
         }
 
         // Fetch posts
+        console.log("[DEBUG] Fetching posts:", {
+          platform,
+          handle: cleanHandle.substring(0, 3) + "...",
+        });
+
         await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POSTURLS);
-        const posts = await scraper.scrapePosts(handle.replaceAll("@", ""));
+        const posts = await scraper.scrapePosts(cleanHandle);
+
+        console.log("[DEBUG] Posts fetched successfully:", {
+          platform,
+          postCount: posts.length,
+        });
 
         // Fetch comments
+        console.log("[DEBUG] Fetching comments for posts:", {
+          platform,
+          postCount: posts.length,
+        });
+
         await updateAgentStatus(agent_status.id, STEP_OF_AGENT.POST_COMMENTS);
         const comments = await scraper.scrapeComments(
           posts.map((p) => p.post_url)
         );
 
+        console.log("[DEBUG] Comments fetched successfully:", {
+          platform,
+          commentCount: comments.length,
+        });
+
         // Store all data
-        console.log("Scrape completed. Storing data...");
+        console.log("[DEBUG] Storing scraped data:", {
+          platform,
+          statusId: agent_status.id,
+          dataStats: {
+            posts: posts.length,
+            comments: comments.length,
+          },
+        });
+
         await this.agentService.storeSocialData({
           agentStatusId: agent_status.id,
           profile,
@@ -208,10 +374,23 @@ export class PilotController {
           artistId,
         });
 
-        console.log("Stored data. Updating final status...");
+        console.log("[INFO] Platform processing completed successfully:", {
+          platform,
+          statusId: agent_status.id,
+        });
+
         await updateAgentStatus(agent_status.id, STEP_OF_AGENT.FINISHED);
       } catch (error) {
-        console.error(`❌ Error processing ${platform}:`, error);
+        console.error("[ERROR] Platform processing failed:", {
+          platform,
+          error:
+            error instanceof Error
+              ? {
+                  message: error.message,
+                  stack: error.stack,
+                }
+              : String(error),
+        });
         // Don't throw here - we want to continue with other platforms
       }
     };
@@ -231,19 +410,46 @@ export class PilotController {
       tasks.push(runSpotifyAgent(agentId, handles.spotify, artistId || ""));
     }
 
+    console.log("[DEBUG] Starting parallel platform processing:", {
+      agentId,
+      platformCount: tasks.length,
+    });
+
     // Wait for all platforms to be processed
     await Promise.all(tasks);
 
+    console.log("[DEBUG] All platform processing tasks completed:", {
+      agentId,
+    });
+
     // Generate segments if all platforms are complete and artistId is provided
     if ((await areAllPlatformsComplete(agentId)) && artistId) {
-      console.log("All platforms complete. Starting segment generation...");
+      console.log("[INFO] Starting segment generation:", {
+        agentId,
+        artistId,
+      });
+
       try {
         await updateAllAgentStatuses(agentId, STEP_OF_AGENT.SEGMENTS);
         await generateSegmentsForAccount(artistId);
         await updateAllAgentStatuses(agentId, STEP_OF_AGENT.FINISHED);
-        console.log("Segment generation completed successfully.");
+
+        console.log("[INFO] Segment generation completed successfully:", {
+          agentId,
+          artistId,
+        });
       } catch (error) {
-        console.error("❌ Error generating segments:", error);
+        console.error("[ERROR] Segment generation failed:", {
+          agentId,
+          artistId,
+          error:
+            error instanceof Error
+              ? {
+                  message: error.message,
+                  stack: error.stack,
+                }
+              : String(error),
+        });
         // Update statuses back to FINISHED on error
         await updateAllAgentStatuses(agentId, STEP_OF_AGENT.FINISHED);
       }

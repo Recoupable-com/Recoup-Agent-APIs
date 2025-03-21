@@ -1,5 +1,6 @@
 import supabase from "./serverClient";
 import createOrGetCommentSocials from "./createOrGetCommentSocials";
+import { Database } from "../../types/database.types";
 
 export interface CommentInput {
   text: string;
@@ -8,7 +9,16 @@ export interface CommentInput {
   postUrl: string;
 }
 
-const savePostComments = async (comments: CommentInput[]): Promise<void> => {
+type DbPostComment = Database["public"]["Tables"]["post_comments"]["Row"];
+
+interface SavePostCommentsResult {
+  data: DbPostComment[] | null;
+  error: Error | null;
+}
+
+const savePostComments = async (
+  comments: CommentInput[]
+): Promise<SavePostCommentsResult> => {
   try {
     const postUrls = [...new Set(comments.map((comment) => comment.postUrl))];
     const { data: posts, error: postsError } = await supabase
@@ -18,7 +28,7 @@ const savePostComments = async (comments: CommentInput[]): Promise<void> => {
 
     if (postsError) {
       console.error("Failed to fetch posts:", postsError);
-      return;
+      return { data: null, error: postsError };
     }
 
     const postUrlToId = posts.reduce((acc: { [key: string]: string }, post) => {
@@ -39,21 +49,30 @@ const savePostComments = async (comments: CommentInput[]): Promise<void> => {
 
     if (formattedComments.length === 0) {
       console.log("No valid comments to save after filtering");
-      return;
+      return { data: [], error: null };
     }
 
-    const { error: commentsError } = await supabase
+    const { data: storedComments, error: commentsError } = await supabase
       .from("post_comments")
-      .upsert(formattedComments);
+      .upsert(formattedComments)
+      .select(); // Add select() to return the inserted/updated rows
 
     if (commentsError) {
       console.error("Failed to save post comments:", commentsError);
-      return;
+      return { data: null, error: commentsError };
     }
 
-    console.log(`✅ Saved ${formattedComments.length} post comments`);
+    console.log(`✅ Saved ${storedComments.length} post comments`);
+    return { data: storedComments, error: null };
   } catch (error) {
     console.error("Error in savePostComments:", error);
+    return {
+      data: null,
+      error:
+        error instanceof Error
+          ? error
+          : new Error("Unknown error in savePostComments"),
+    };
   }
 };
 

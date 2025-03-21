@@ -43,19 +43,23 @@ export interface AgentService {
     profile: ScrapedProfile
   ): Promise<AgentServiceResult<DbSocial>>;
 
-  // Data storage operations
-  storeComments(
-    comments: ScrapedComment[],
-    postId: string,
-    socialId: string
-  ): Promise<AgentServiceResult<DbPostComment[]>>;
+  // Artist operations
+  setupArtist(params: {
+    artistId: string;
+    social: DbSocial;
+    profile: ScrapedProfile;
+  }): Promise<AgentServiceResult<void>>;
 
-  // Composite operations
-  storeSocialData(params: StoreSocialDataParams): Promise<
-    AgentServiceResult<{
-      social: DbSocial;
-      posts: DbPost[];
-      comments: DbPostComment[];
-    }>
-  >;
+  // Post operations
+  storePosts(params: {
+    social: DbSocial;
+    posts: ScrapedPost[];
+  }): Promise<AgentServiceResult<DbPost[]>>;
+
+  // Comment operations
+  storeComments(params: {
+    social: DbSocial;
+    comments: ScrapedComment[];
+    posts: DbPost[];
+  }): Promise<AgentServiceResult<DbPostComment[]>>;
 }

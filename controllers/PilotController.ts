@@ -13,7 +13,6 @@ import { getProfileUrl } from "../lib/utils/getProfileUrl";
 
 type DbAgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 
-// Input validation schema
 const HandlesSchema = z.object({
   instagram: z.string().optional(),
   twitter: z.string().optional(),
@@ -50,7 +49,6 @@ export class PilotController {
     });
 
     try {
-      // Validate request
       const validationResult = RequestSchema.safeParse(req.body);
       if (!validationResult.success) {
         console.error("[ERROR] Invalid request format:", {
@@ -75,13 +73,11 @@ export class PilotController {
         artistId,
       });
 
-      // Validate at least one handle exists
       if (!Object.values(handles).some((h) => h?.trim())) {
         console.error("[ERROR] No handles provided in request");
         return res.status(400).json({ message: "No handles provided." });
       }
 
-      // Create agent
       console.log("[DEBUG] Creating new agent");
       const { agent, error: agentError } = await createAgent();
       if (agentError || !agent) {
@@ -154,7 +150,6 @@ export class PilotController {
       hasArtistId: !!artistId,
     });
 
-    // Helper function to check if all platforms are complete
     const areAllPlatformsComplete = async (
       agentId: string
     ): Promise<boolean> => {
@@ -170,7 +165,6 @@ export class PilotController {
         return false;
       }
 
-      // Consider both FINISHED and ERROR states as complete
       const statusBreakdown = data.statuses.map((status: DbAgentStatus) => ({
         id: status.id,
         status: status.status !== null ? STEP_OF_AGENT[status.status] : "null",
@@ -194,7 +188,6 @@ export class PilotController {
       return isComplete;
     };
 
-    // Helper function to update all agent statuses
     const updateAllAgentStatuses = async (
       agentId: string,
       status: STEP_OF_AGENT
@@ -225,7 +218,6 @@ export class PilotController {
       });
     };
 
-    // Helper function to process a platform
     const processPlatform = async (platform: SocialType, handle: string) => {
       console.log("[INFO] Processing platform:", {
         agentId,
@@ -234,60 +226,52 @@ export class PilotController {
       });
 
       try {
-        // Get platform-specific scraper
         const scraper = ScraperFactory.getScraper(platform);
         console.log("[DEBUG] Created scraper for platform:", {
           platform,
         });
 
-        // Create social record first
         const cleanHandle = handle.replaceAll("@", "");
-        console.log("[DEBUG] Creating social record:", {
+        console.log("[DEBUG] Processing platform:", {
           platform,
           handle,
         });
 
-        const { social, error: socialError } =
-          await this.agentService.createSocial({
+        const { social: existingSocial } = await this.agentService.createSocial(
+          {
             username: cleanHandle,
             profile_url: getProfileUrl(platform, handle),
-          });
+          }
+        );
 
-        if (socialError || !social) {
+        if (!existingSocial) {
           console.error("[ERROR] Failed to create social record:", {
             platform,
-            error:
-              socialError instanceof Error
-                ? {
-                    message: socialError.message,
-                    stack: socialError.stack,
-                  }
-                : String(socialError),
+            handle,
           });
           return;
         }
 
         console.log("[DEBUG] Created social record:", {
           platform,
-          socialId: social.id,
+          socialId: existingSocial.id,
         });
 
-        // Create agent status with social.id
         console.log("[DEBUG] Creating agent status:", {
           agentId,
-          socialId: social.id,
+          socialId: existingSocial.id,
         });
 
         const { agent_status } = await createAgentStatus(
           agentId,
-          social.id,
+          existingSocial.id,
           STEP_OF_AGENT.PROFILE
         );
 
         if (!agent_status?.id) {
           console.error("[ERROR] Failed to create agent status:", {
             agentId,
-            socialId: social.id,
+            socialId: existingSocial.id,
           });
           return;
         }
@@ -297,36 +281,32 @@ export class PilotController {
           status: STEP_OF_AGENT[STEP_OF_AGENT.PROFILE],
         });
 
-        // Scrape profile
         console.log("[DEBUG] Scraping profile:", {
           platform,
           handle,
         });
 
         const profile = await scraper.scrapeProfile(cleanHandle);
-
         console.log("[DEBUG] Profile scraped successfully:", {
           platform,
+          username: profile.username,
           profileFields: Object.keys(profile),
         });
 
-        // Update social record with profile data
-        await this.agentService.updateSocial(social.id, profile);
+        await updateAgentStatus(
+          agent_status.id,
+          STEP_OF_AGENT.SETTING_UP_ARTIST
+        );
 
-        // Handle artist setup if needed
-        if (artistId) {
-          console.log("[DEBUG] Setting up artist:", {
-            artistId,
-            statusId: agent_status.id,
-          });
-
-          await updateAgentStatus(
-            agent_status.id,
-            STEP_OF_AGENT.SETTING_UP_ARTIST
-          );
+        const { error: setupError } = await this.agentService.setupArtist({
+          artistId,
+          social: existingSocial,
+          profile,
+        });
+        if (setupError) {
+          throw setupError;
         }
 
-        // Fetch posts
         console.log("[DEBUG] Fetching posts:", {
           platform,
           handle,
@@ -340,7 +320,17 @@ export class PilotController {
           postCount: posts.length,
         });
 
-        // Fetch comments
+        const { data: stored_posts, error: postsError } =
+          await this.agentService.storePosts({
+            social: existingSocial,
+            posts,
+          });
+
+        if (postsError || !stored_posts) {
+          await updateAgentStatus(agent_status.id, STEP_OF_AGENT.MISSING_POSTS);
+          throw postsError || new Error("Failed to store posts");
+        }
+
         console.log("[DEBUG] Fetching comments for posts:", {
           platform,
           postCount: posts.length,
@@ -356,23 +346,18 @@ export class PilotController {
           commentCount: comments.length,
         });
 
-        // Store all data
-        console.log("[DEBUG] Storing scraped data:", {
-          platform,
-          statusId: agent_status.id,
-          dataStats: {
-            posts: posts.length,
-            comments: comments.length,
-          },
+        const { error: commentsError } = await this.agentService.storeComments({
+          social: existingSocial,
+          comments,
+          posts: stored_posts,
         });
 
-        await this.agentService.storeSocialData({
-          agentStatusId: agent_status.id,
-          profile,
-          posts,
-          comments,
-          artistId,
-        });
+        if (commentsError) {
+          console.error("[ERROR] Failed to store comments:", {
+            platform,
+            error: commentsError,
+          });
+        }
 
         console.log("[INFO] Platform processing completed successfully:", {
           platform,
@@ -395,7 +380,6 @@ export class PilotController {
       }
     };
 
-    // Process each platform
     const tasks: Promise<void>[] = [];
     if (handles.instagram?.trim()) {
       tasks.push(processPlatform("INSTAGRAM", handles.instagram));
@@ -415,14 +399,12 @@ export class PilotController {
       platformCount: tasks.length,
     });
 
-    // Wait for all platforms to be processed
     await Promise.all(tasks);
 
     console.log("[DEBUG] All platform processing tasks completed:", {
       agentId,
     });
 
-    // Generate segments if all platforms are complete and artistId is provided
     if ((await areAllPlatformsComplete(agentId)) && artistId) {
       console.log("[INFO] Starting segment generation:", {
         agentId,
@@ -450,7 +432,6 @@ export class PilotController {
                 }
               : String(error),
         });
-        // Update statuses back to FINISHED on error
         await updateAllAgentStatuses(agentId, STEP_OF_AGENT.FINISHED);
       }
     }

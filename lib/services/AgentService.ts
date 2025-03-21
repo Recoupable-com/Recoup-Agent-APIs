@@ -6,7 +6,7 @@ import {
   CreateSocialResult,
   StoreSocialDataParams,
 } from "../types/agent.types";
-import { ScrapedProfile, ScrapedComment } from "../scraping/types";
+import { ScrapedProfile, ScrapedComment, ScrapedPost } from "../scraping/types";
 import setArtistImage from "../supabase/setArtistImage";
 import connectSocialToArtist from "../supabase/connectSocialToArtist";
 import updateAgentStatus from "../supabase/updateAgentStatus";
@@ -163,43 +163,50 @@ export class AgentService implements IAgentService {
     }
   }
 
-  async storeComments(
-    comments: ScrapedComment[],
-    socialId: string
-  ): Promise<AgentServiceResult<DbPostComment[]>> {
-    // Get platform from the first comment's post URL if available
-    const platform =
-      comments.length > 0
-        ? getPlatformFromUrl(comments[0].post_url)
-        : "Unknown";
-
-    console.log("[DEBUG] Storing comments:", {
+  async setupArtist(params: {
+    artistId?: string;
+    social: DbSocial;
+    profile: ScrapedProfile;
+  }): Promise<AgentServiceResult<void>> {
+    const platform = getPlatformFromUrl(params.profile.profile_url);
+    console.log("[DEBUG] Setting up social/artist:", {
       platform,
-      socialId,
-      commentCount: comments.length,
+      artistId: params.artistId,
+      socialId: params.social.id,
     });
 
     try {
-      await savePostComments(
-        comments.map((comment) => ({
-          text: comment.comment,
-          timestamp: comment.commented_at,
-          ownerUsername: comment.username,
-          postUrl: comment.post_url,
-        }))
-      );
+      // Always update the social record
+      await this.updateSocial(params.social.id, params.profile);
 
-      console.log("[DEBUG] Comments stored successfully:", {
-        platform,
-        socialId,
-        commentCount: comments.length,
-      });
+      // If artistId is provided, set up the artist connection
+      if (params.artistId) {
+        const newImage = await setArtistImage(
+          params.artistId,
+          params.profile.avatar || null
+        );
+        // Update social again with the new image
+        await this.updateSocial(params.social.id, {
+          ...params.profile,
+          avatar: newImage,
+        });
+        await connectSocialToArtist(params.artistId, params.social);
 
-      // Since savePostComments doesn't return the stored comments,
-      // we'll consider success as an empty array for now
-      return { data: [], error: null };
+        console.log("[DEBUG] Artist setup completed:", {
+          platform,
+          artistId: params.artistId,
+          socialId: params.social.id,
+        });
+      } else {
+        console.log("[DEBUG] Social update completed:", {
+          platform,
+          socialId: params.social.id,
+        });
+      }
+
+      return { data: undefined, error: null };
     } catch (error) {
-      console.error("[ERROR] Failed to store comments:", {
+      console.error("[ERROR] Failed to setup social/artist:", {
         platform,
         error:
           error instanceof Error
@@ -208,97 +215,35 @@ export class AgentService implements IAgentService {
                 stack: error.stack,
               }
             : String(error),
-        socialId,
-        commentCount: comments.length,
+        artistId: params.artistId,
+        socialId: params.social.id,
       });
+
       return {
         data: null,
         error:
           error instanceof Error
             ? error
-            : new Error("Unknown error storing comments"),
+            : new Error("Failed to setup social/artist"),
       };
     }
   }
 
-  async storeSocialData(params: StoreSocialDataParams): Promise<
-    AgentServiceResult<{
-      social: DbSocial;
-      posts: DbPost[];
-      comments: DbPostComment[];
-    }>
-  > {
-    const { agentStatusId, profile, posts, comments, artistId } = params;
-    const platform = getPlatformFromUrl(profile.profile_url);
-
-    console.log("[INFO] Starting social data storage:", {
+  async storePosts(params: {
+    social: DbSocial;
+    posts: ScrapedPost[];
+  }): Promise<AgentServiceResult<DbPost[]>> {
+    const platform = getPlatformFromUrl(params.social.profile_url);
+    console.log("[DEBUG] Storing posts:", {
       platform,
-      agentStatusId,
-      username: profile.username,
-      dataStats: {
-        posts: posts.length,
-        comments: comments.length,
-      },
-      hasArtistId: !!artistId,
+      count: params.posts.length,
+      socialId: params.social.id,
+      urls: params.posts.map((p) => p.post_url),
     });
 
     try {
-      // Create social record
-      console.log("[DEBUG] Creating social record:", {
-        platform,
-        username: profile.username,
-      });
-
-      const { social, error: socialError } = await this.createSocial(profile);
-      if (socialError || !social) {
-        console.error("[ERROR] Failed to create social record:", {
-          platform,
-          error:
-            socialError instanceof Error
-              ? {
-                  message: socialError.message,
-                  stack: socialError.stack,
-                }
-              : String(socialError),
-        });
-        return {
-          data: null,
-          error: socialError || new Error("Failed to create social"),
-        };
-      }
-
-      // Handle artist-related operations if artistId is provided
-      if (artistId) {
-        console.log("[DEBUG] Setting up artist:", {
-          platform,
-          artistId,
-          socialId: social.id,
-        });
-
-        await updateAgentStatus(agentStatusId, STEP_OF_AGENT.SETTING_UP_ARTIST);
-        const newImage = await setArtistImage(artistId, profile.avatar || null);
-        await this.updateSocial(social.id, { ...profile, avatar: newImage });
-        await connectSocialToArtist(artistId, social);
-
-        console.log("[DEBUG] Artist setup completed:", {
-          platform,
-          artistId,
-          socialId: social.id,
-        });
-      }
-
-      // Store posts
-      console.log("[DEBUG] Storing posts:", {
-        platform,
-        count: posts.length,
-        socialId: social.id,
-        urls: posts.map((p) => p.post_url),
-      });
-
-      await updateAgentStatus(agentStatusId, STEP_OF_AGENT.POSTURLS);
-
       const { data: stored_posts, error: postsError } = await setNewPosts(
-        posts.map((p) => p.post_url)
+        params.posts.map((p) => p.post_url)
       );
 
       if (postsError || !stored_posts) {
@@ -311,10 +256,9 @@ export class AgentService implements IAgentService {
                   stack: postsError.stack,
                 }
               : String(postsError),
-          socialId: social.id,
+          socialId: params.social.id,
         });
 
-        await updateAgentStatus(agentStatusId, STEP_OF_AGENT.MISSING_POSTS);
         return {
           data: null,
           error: postsError || new Error("Failed to store posts"),
@@ -324,93 +268,18 @@ export class AgentService implements IAgentService {
       // Connect posts to social
       console.log("[DEBUG] Connecting posts to social:", {
         platform,
-        socialId: social.id,
-        postCount: posts.length,
+        socialId: params.social.id,
+        postCount: params.posts.length,
       });
 
       await connectPostsToSocial(
-        social,
-        posts.map((post) => post.post_url)
+        params.social,
+        params.posts.map((post) => post.post_url)
       );
 
-      // Store comments - Optimized to use a single database call
-      console.log("[DEBUG] Processing comments for storage:", {
-        platform,
-        totalComments: comments.length,
-        socialId: social.id,
-      });
-
-      const validPostUrls = new Set(stored_posts.map((post) => post.post_url));
-      const validComments = comments.filter((comment) =>
-        validPostUrls.has(comment.post_url)
-      );
-
-      console.log("[DEBUG] Filtered valid comments:", {
-        platform,
-        totalComments: comments.length,
-        validComments: validComments.length,
-        invalidComments: comments.length - validComments.length,
-        socialId: social.id,
-      });
-
-      if (validComments.length > 0) {
-        const { data: comments_result, error: commentsError } =
-          await this.storeComments(validComments, social.id);
-
-        if (commentsError) {
-          console.error("[ERROR] Failed to store comments:", {
-            platform,
-            error:
-              commentsError instanceof Error
-                ? {
-                    message: commentsError.message,
-                    stack: commentsError.stack,
-                  }
-                : String(commentsError),
-            socialId: social.id,
-          });
-          // Continue execution even if comments storage fails
-        }
-
-        console.log("[INFO] Social data storage completed successfully:", {
-          platform,
-          socialId: social.id,
-          stats: {
-            posts: stored_posts.length,
-            comments: comments_result?.length || 0,
-          },
-        });
-
-        return {
-          data: {
-            social,
-            posts: stored_posts,
-            comments: comments_result || [],
-          },
-          error: null,
-        };
-      }
-
-      // Return success even if there were no comments to store
-      console.log("[INFO] Social data storage completed (no comments):", {
-        platform,
-        socialId: social.id,
-        stats: {
-          posts: stored_posts.length,
-          comments: 0,
-        },
-      });
-
-      return {
-        data: {
-          social,
-          posts: stored_posts,
-          comments: [],
-        },
-        error: null,
-      };
+      return { data: stored_posts, error: null };
     } catch (error) {
-      console.error("[ERROR] Error in storeSocialData:", {
+      console.error("[ERROR] Failed to store posts:", {
         platform,
         error:
           error instanceof Error
@@ -419,14 +288,99 @@ export class AgentService implements IAgentService {
                 stack: error.stack,
               }
             : String(error),
-        agentStatusId,
+        socialId: params.social.id,
       });
+
+      return {
+        data: null,
+        error:
+          error instanceof Error ? error : new Error("Failed to store posts"),
+      };
+    }
+  }
+
+  async storeComments(params: {
+    social: DbSocial;
+    comments: ScrapedComment[];
+    posts: DbPost[];
+  }): Promise<AgentServiceResult<DbPostComment[]>> {
+    const platform = getPlatformFromUrl(params.social.profile_url);
+    console.log("[DEBUG] Processing comments for storage:", {
+      platform,
+      totalComments: params.comments.length,
+      socialId: params.social.id,
+    });
+
+    try {
+      // Filter comments based on valid post IDs
+      const validPostUrls = new Set(params.posts.map((post) => post.post_url));
+      const validComments = params.comments.filter((comment) =>
+        validPostUrls.has(comment.post_url)
+      );
+
+      console.log("[DEBUG] Filtered valid comments:", {
+        platform,
+        totalComments: params.comments.length,
+        validComments: validComments.length,
+        invalidComments: params.comments.length - validComments.length,
+        socialId: params.social.id,
+      });
+
+      if (validComments.length === 0) {
+        return { data: [], error: null };
+      }
+
+      const { data: storedComments, error: commentsError } =
+        await savePostComments(
+          validComments.map((comment) => ({
+            text: comment.comment,
+            timestamp: comment.commented_at,
+            ownerUsername: comment.username,
+            postUrl: comment.post_url,
+          }))
+        );
+
+      if (commentsError) {
+        console.error("[ERROR] Failed to store comments:", {
+          platform,
+          error:
+            commentsError instanceof Error
+              ? {
+                  message: commentsError.message,
+                  stack: commentsError.stack,
+                }
+              : String(commentsError),
+          socialId: params.social.id,
+        });
+        return { data: null, error: commentsError };
+      }
+
+      console.log("[DEBUG] Comments stored successfully:", {
+        platform,
+        socialId: params.social.id,
+        commentCount: storedComments?.length || 0,
+      });
+
+      return { data: storedComments || [], error: null };
+    } catch (error) {
+      console.error("[ERROR] Failed to store comments:", {
+        platform,
+        error:
+          error instanceof Error
+            ? {
+                message: error.message,
+                stack: error.stack,
+              }
+            : String(error),
+        socialId: params.social.id,
+      });
+
       return {
         data: null,
         error:
           error instanceof Error
             ? error
-            : new Error("Unknown error in storeSocialData"),
+            : new Error("Failed to store comments"),
       };
     }
   }

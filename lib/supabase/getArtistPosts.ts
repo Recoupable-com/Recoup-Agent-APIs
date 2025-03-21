@@ -34,6 +34,12 @@ export const getArtistPosts = async (
 ): Promise<GetArtistPostsResponse> => {
   const { limit = 20, page = 1 } = options;
 
+  console.log("[DEBUG] getArtistPosts called with:", {
+    artistAccountId,
+    limit,
+    page,
+  });
+
   const createEmptyPagination = (): PaginationMetadata => ({
     total: 0,
     page,
@@ -48,9 +54,22 @@ export const getArtistPosts = async (
   });
 
   try {
+    console.log(
+      "[DEBUG] Fetching account socials for artist:",
+      artistAccountId
+    );
     const { status, socials } = await getAccountSocials(artistAccountId);
 
+    console.log("[DEBUG] getAccountSocials response:", {
+      status,
+      socialsCount: socials.length,
+      socialIds: socials.map((s) => s.id),
+    });
+
     if (status !== "success" || !socials.length) {
+      console.log(
+        "[DEBUG] No socials found for artist, returning empty response"
+      );
       return {
         status: "success",
         posts: [],
@@ -59,10 +78,17 @@ export const getArtistPosts = async (
     }
 
     const socialIds = socials.map((social) => social.id);
-
+    console.log("[DEBUG] Fetching social posts for socialIds:", socialIds);
     const allSocialPosts = await getSocialPostsByIds(socialIds);
 
+    console.log("[DEBUG] getSocialPostsByIds response:", {
+      socialPostsCount: allSocialPosts.length,
+      uniqueSocialIds: [...new Set(allSocialPosts.map((sp) => sp.social_id))]
+        .length,
+    });
+
     if (!allSocialPosts.length) {
+      console.log("[DEBUG] No social posts found, returning empty response");
       return {
         status: "success",
         posts: [],
@@ -74,15 +100,39 @@ export const getArtistPosts = async (
       ...new Set(allSocialPosts.map((sp) => sp.post_id).filter(Boolean)),
     ];
 
+    console.log("[DEBUG] Unique post IDs found:", {
+      totalUniquePostIds: uniquePostIds.length,
+      firstFewIds: uniquePostIds.slice(0, 5),
+    });
+
     const total = uniquePostIds.length;
     const startIndex = (page - 1) * limit;
     const endIndex = Math.min(startIndex + limit, total);
     const paginatedPostIds = uniquePostIds.slice(startIndex, endIndex);
     const hasMore = endIndex < total;
 
+    console.log("[DEBUG] Pagination calculation:", {
+      total,
+      startIndex,
+      endIndex,
+      paginatedPostIdsCount: paginatedPostIds.length,
+      hasMore,
+    });
+
+    console.log(
+      "[DEBUG] Fetching posts for paginatedPostIds:",
+      paginatedPostIds
+    );
     const allPosts = await getPostsByIds(paginatedPostIds);
 
+    console.log("[DEBUG] getPostsByIds response:", {
+      requestedPostsCount: paginatedPostIds.length,
+      receivedPostsCount: allPosts.length,
+      missingPostsCount: paginatedPostIds.length - allPosts.length,
+    });
+
     if (allPosts.length === 0) {
+      console.log("[DEBUG] No posts found, returning empty response");
       return {
         status: "success",
         posts: [],
@@ -90,11 +140,23 @@ export const getArtistPosts = async (
       };
     }
 
+    console.log("[DEBUG] Enriching posts with platform information");
     const enrichedPosts = enrichPostsWithPlatform(
       allPosts,
       allSocialPosts as SocialPost[],
       socials
     );
+
+    console.log("[DEBUG] Final response:", {
+      status: "success",
+      postsCount: enrichedPosts.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        hasMore,
+      },
+    });
 
     return {
       status: "success",

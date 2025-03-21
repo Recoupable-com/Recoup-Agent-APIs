@@ -241,53 +241,48 @@ export class PilotController {
         });
 
         // Create social record first
-        const cleanHandle = handle.replaceAll("@", "");
-        console.log("[DEBUG] Creating social record:", {
+        const cleanHandle = handle.replace("@", "");
+        console.log("[DEBUG] Processing platform:", {
           platform,
           handle,
         });
 
-        const { social, error: socialError } =
-          await this.agentService.createSocial({
+        const { social: existingSocial } = await this.agentService.createSocial(
+          {
             username: cleanHandle,
             profile_url: getProfileUrl(platform, handle),
-          });
+          }
+        );
 
-        if (socialError || !social) {
+        if (!existingSocial) {
           console.error("[ERROR] Failed to create social record:", {
             platform,
-            error:
-              socialError instanceof Error
-                ? {
-                    message: socialError.message,
-                    stack: socialError.stack,
-                  }
-                : String(socialError),
+            handle,
           });
           return;
         }
 
         console.log("[DEBUG] Created social record:", {
           platform,
-          socialId: social.id,
+          socialId: existingSocial.id,
         });
 
         // Create agent status with social.id
         console.log("[DEBUG] Creating agent status:", {
           agentId,
-          socialId: social.id,
+          socialId: existingSocial.id,
         });
 
         const { agent_status } = await createAgentStatus(
           agentId,
-          social.id,
+          existingSocial.id,
           STEP_OF_AGENT.PROFILE
         );
 
         if (!agent_status?.id) {
           console.error("[ERROR] Failed to create agent status:", {
             agentId,
-            socialId: social.id,
+            socialId: existingSocial.id,
           });
           return;
         }
@@ -304,26 +299,24 @@ export class PilotController {
         });
 
         const profile = await scraper.scrapeProfile(cleanHandle);
-
         console.log("[DEBUG] Profile scraped successfully:", {
           platform,
+          username: profile.username,
           profileFields: Object.keys(profile),
         });
 
-        // Update social record with profile data
-        await this.agentService.updateSocial(social.id, profile);
+        await updateAgentStatus(
+          agent_status.id,
+          STEP_OF_AGENT.SETTING_UP_ARTIST
+        );
 
-        // Handle artist setup if needed
-        if (artistId) {
-          console.log("[DEBUG] Setting up artist:", {
-            artistId,
-            statusId: agent_status.id,
-          });
-
-          await updateAgentStatus(
-            agent_status.id,
-            STEP_OF_AGENT.SETTING_UP_ARTIST
-          );
+        const { error: setupError } = await this.agentService.setupArtist({
+          artistId,
+          social: existingSocial,
+          profile,
+        });
+        if (setupError) {
+          throw setupError;
         }
 
         // Fetch posts
@@ -339,6 +332,18 @@ export class PilotController {
           platform,
           postCount: posts.length,
         });
+
+        // Store posts immediately after fetching - moved earlier
+        const { data: stored_posts, error: postsError } =
+          await this.agentService.storePosts({
+            social: existingSocial,
+            posts,
+          });
+
+        if (postsError || !stored_posts) {
+          await updateAgentStatus(agent_status.id, STEP_OF_AGENT.MISSING_POSTS);
+          throw postsError || new Error("Failed to store posts");
+        }
 
         // Fetch comments
         console.log("[DEBUG] Fetching comments for posts:", {
@@ -356,23 +361,20 @@ export class PilotController {
           commentCount: comments.length,
         });
 
-        // Store all data
-        console.log("[DEBUG] Storing scraped data:", {
-          platform,
-          statusId: agent_status.id,
-          dataStats: {
-            posts: posts.length,
-            comments: comments.length,
-          },
+        // Store comments
+        const { error: commentsError } = await this.agentService.storeComments({
+          social: existingSocial,
+          comments,
+          posts: stored_posts,
         });
 
-        await this.agentService.storeSocialData({
-          agentStatusId: agent_status.id,
-          profile,
-          posts,
-          comments,
-          artistId,
-        });
+        if (commentsError) {
+          console.error("[ERROR] Failed to store comments:", {
+            platform,
+            error: commentsError,
+          });
+          // Continue execution even if comments storage fails
+        }
 
         console.log("[INFO] Platform processing completed successfully:", {
           platform,

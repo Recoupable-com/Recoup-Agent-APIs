@@ -275,7 +275,14 @@ export const get_account_socials = async (req: Request, res: Response) => {
 export const get_posts = async (req: Request, res: Response) => {
   const { artist_account_id, limit = 20, page = 1 } = req.query;
 
+  console.log("[DEBUG] /api/posts request params:", {
+    artist_account_id,
+    limit,
+    page,
+  });
+
   if (!artist_account_id) {
+    console.log("[ERROR] Missing artist_account_id parameter");
     return res.status(400).json({
       status: "error",
       message: "Missing required parameter: artist_account_id",
@@ -285,18 +292,40 @@ export const get_posts = async (req: Request, res: Response) => {
   const parsedLimit = Math.min(Number(limit) || 20, 100);
   const parsedPage = Math.max(Number(page) || 1, 1);
 
+  console.log("[DEBUG] Parsed pagination params:", {
+    parsedLimit,
+    parsedPage,
+  });
+
   try {
+    console.log(
+      "[DEBUG] Calling getArtistPosts for artist_account_id:",
+      artist_account_id
+    );
     const result = await getArtistPosts(artist_account_id as string, {
       limit: parsedLimit,
       page: parsedPage,
     });
 
     if (result.status === "error") {
+      console.log("[ERROR] getArtistPosts returned error status");
       return res.status(500).json({
         status: "error",
         message: "Failed to fetch posts",
       });
     }
+
+    console.log("[DEBUG] getArtistPosts response:", {
+      status: result.status,
+      postCount: result.posts.length,
+      pagination: {
+        total: result.pagination.total,
+        page: result.pagination.page,
+        limit: result.pagination.limit,
+        totalPages:
+          Math.ceil(result.pagination.total / result.pagination.limit) || 1,
+      },
+    });
 
     return res.status(200).json({
       status: "success",

@@ -12,34 +12,51 @@ type HandlesConfig = {
 };
 
 /**
- * Process multiple platforms for an agent
+ * Process multiple platforms for an agent in parallel
  */
 const processPlatforms = async (
   agentId: string,
   handles: HandlesConfig,
   artistId?: string
 ): Promise<void> => {
-  console.log("[INFO] Processing platforms:", {
+  const validPlatforms = Object.entries(handles).filter(([_, handle]) =>
+    handle?.trim()
+  );
+
+  console.log("[INFO] Starting parallel platform processing:", {
     agentId,
-    platforms: Object.keys(handles).filter((k) =>
-      handles[k as keyof HandlesConfig]?.trim()
-    ),
+    platforms: validPlatforms.map(([platform]) => platform),
   });
 
-  // Process platforms sequentially to avoid rate limiting
-  for (const [platform, handle] of Object.entries(handles)) {
-    if (handle?.trim()) {
-      const normalizedPlatform = normalizePlatform(platform);
-      await processPlatform(agentId, normalizedPlatform, handle, artistId);
-    }
+  try {
+    // Process all platforms in parallel
+    await Promise.all(
+      validPlatforms.map(async ([platform, handle]) => {
+        const normalizedPlatform = normalizePlatform(platform);
+        try {
+          await processPlatform(agentId, normalizedPlatform, handle!, artistId);
+        } catch (error) {
+          // Log error but don't fail other platforms
+          console.error("[ERROR] Platform processing failed:", {
+            agentId,
+            platform,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      })
+    );
+
+    console.log("[INFO] Completed parallel platform processing:", {
+      agentId,
+      platforms: validPlatforms.map(([platform]) => platform),
+    });
+  } catch (error) {
+    // This should rarely happen since individual platform errors are caught above
+    console.error("[ERROR] Critical error in parallel platform processing:", {
+      agentId,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
-
-  console.log("[INFO] Completed processing all platforms:", {
-    agentId,
-    platforms: Object.keys(handles).filter((k) =>
-      handles[k as keyof HandlesConfig]?.trim()
-    ),
-  });
 };
 
 export default processPlatforms;

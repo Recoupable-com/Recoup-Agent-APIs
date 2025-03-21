@@ -1,18 +1,13 @@
-import { STEP_OF_AGENT } from "../step";
 import { Database } from "../../types/database.types";
 import {
   AgentService as IAgentService,
   AgentServiceResult,
-  CreateSocialResult,
-  StoreSocialDataParams,
 } from "../types/agent.types";
 import { ScrapedProfile, ScrapedComment, ScrapedPost } from "../scraping/types";
 import setArtistImage from "../supabase/setArtistImage";
 import connectSocialToArtist from "../supabase/connectSocialToArtist";
-import updateAgentStatus from "../supabase/updateAgentStatus";
 import connectPostsToSocial from "../supabase/connectPostsToSocial";
 import setNewPosts from "../supabase/setNewPosts";
-import createSocial from "../supabase/createSocial";
 import updateSocial from "../supabase/updateSocial";
 import savePostComments from "../supabase/savePostComments";
 import getAgentStatus from "../supabase/getAgentStatus";
@@ -114,16 +109,13 @@ export class AgentService implements IAgentService {
     });
 
     try {
-      // Always update the social record
       await this.updateSocial(params.social.id, params.profile);
 
-      // If artistId is provided, set up the artist connection
       if (params.artistId) {
         const newImage = await setArtistImage(
           params.artistId,
           params.profile.avatar || null
         );
-        // Update social again with the new image
         await this.updateSocial(params.social.id, {
           ...params.profile,
           avatar: newImage,

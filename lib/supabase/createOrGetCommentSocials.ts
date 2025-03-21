@@ -1,58 +1,54 @@
 import { CommentInput } from "./savePostComments";
 import extractUniqueAuthors from "../utils/extractUniqueAuthors";
-import createSocials from "./createSocials";
 import enhanceAuthorsWithAvatars from "../scraping/enhanceAuthorsWithAvatar";
+import { EnhancedSocial } from "../../types/agent";
+
+interface CommentSocialsResult {
+  enhancedProfiles: EnhancedSocial[];
+  usernameMap: { [username: string]: string };
+}
 
 /**
- * Creates or retrieves social records for comment authors
+ * Extracts and enhances social profiles from comments
  *
  * This function orchestrates the process of:
  * 1. Extracting unique authors from comments
  * 2. Enhancing comment authors with avatars, bio, followers, following, etc.
- * 3. Upserting social records for all comment authors
  *
  * @param comments - Array of comments to process
- * @returns Object mapping usernames to social IDs
+ * @returns Object containing enhanced profiles and username mapping
  */
 const createOrGetCommentSocials = async (
   comments: CommentInput[]
-): Promise<{ [username: string]: string }> => {
+): Promise<CommentSocialsResult> => {
   try {
     const { authors, error: extractError } = extractUniqueAuthors(comments);
     if (extractError) {
       console.error("Failed to extract authors:", extractError);
-      return {};
+      return { enhancedProfiles: [], usernameMap: {} };
     }
 
     if (authors.length === 0) {
-      return {};
+      return { enhancedProfiles: [], usernameMap: {} };
     }
 
     const usernameMap = authors.reduce<{ [username: string]: string }>(
       (acc, author) => {
-        acc[author.username] = acc[author.profile_url];
+        acc[author.username] = author.profile_url;
         return acc;
       },
       {}
     );
 
     if (authors.length > 0) {
-      const enhancedAuthors = await enhanceAuthorsWithAvatars(authors);
-
-      const { socialMap: newSocials, error: createError } =
-        await createSocials(enhancedAuthors);
-      if (createError) {
-        console.error("Failed to create new socials:", createError);
-        return usernameMap;
-      }
-
-      return { ...usernameMap, ...newSocials };
+      const enhancedProfiles = await enhanceAuthorsWithAvatars(authors);
+      return { enhancedProfiles, usernameMap };
     }
 
-    return usernameMap;
+    return { enhancedProfiles: [], usernameMap };
   } catch (error) {
     console.error("Error in createOrGetCommentSocials:", error);
-    return {};
+    return { enhancedProfiles: [], usernameMap: {} };
   }
 };
 

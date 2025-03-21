@@ -25,68 +25,6 @@ type DbAgent = Database["public"]["Tables"]["agents"]["Row"];
 type DbAgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 
 export class AgentService implements IAgentService {
-  async createSocial(profile: ScrapedProfile): Promise<CreateSocialResult> {
-    const platform = getPlatformFromUrl(profile.profile_url);
-    console.log("[DEBUG] Creating social record:", {
-      platform,
-      username: profile.username,
-      profileFields: Object.keys(profile),
-    });
-
-    try {
-      const socialData = {
-        username: profile.username,
-        profile_url: profile.profile_url,
-        avatar: profile.avatar || null,
-        followerCount: profile.followerCount || null,
-        bio: profile.description || null,
-      };
-
-      const result = await createSocial(socialData);
-
-      if (result.error) {
-        console.error("[ERROR] Failed to create social record:", {
-          platform,
-          error:
-            result.error instanceof Error
-              ? {
-                  message: result.error.message,
-                  stack: result.error.stack,
-                }
-              : String(result.error),
-          username: profile.username,
-        });
-      } else {
-        console.log("[DEBUG] Social record created successfully:", {
-          platform,
-          socialId: result.social?.id,
-          username: profile.username,
-        });
-      }
-
-      return result;
-    } catch (error) {
-      console.error("[ERROR] Error in createSocial:", {
-        platform,
-        error:
-          error instanceof Error
-            ? {
-                message: error.message,
-                stack: error.stack,
-              }
-            : String(error),
-        username: profile.username,
-      });
-      return {
-        social: null,
-        error:
-          error instanceof Error
-            ? error
-            : new Error("Unknown error in createSocial"),
-      };
-    }
-  }
-
   async updateSocial(
     socialId: string,
     profile: ScrapedProfile
@@ -230,14 +168,14 @@ export class AgentService implements IAgentService {
   }
 
   async storePosts(params: {
-    social: DbSocial;
+    socialId: string;
     posts: ScrapedPost[];
   }): Promise<AgentServiceResult<DbPost[]>> {
-    const platform = getPlatformFromUrl(params.social.profile_url);
+    const platform = getPlatformFromUrl(params.posts[0].post_url);
     console.log("[DEBUG] Storing posts:", {
       platform,
       count: params.posts.length,
-      socialId: params.social.id,
+      socialId: params.socialId,
       urls: params.posts.map((p) => p.post_url),
     });
 
@@ -256,7 +194,7 @@ export class AgentService implements IAgentService {
                   stack: postsError.stack,
                 }
               : String(postsError),
-          socialId: params.social.id,
+          socialId: params.socialId,
         });
 
         return {
@@ -268,12 +206,12 @@ export class AgentService implements IAgentService {
       // Connect posts to social
       console.log("[DEBUG] Connecting posts to social:", {
         platform,
-        socialId: params.social.id,
+        socialId: params.socialId,
         postCount: params.posts.length,
       });
 
       await connectPostsToSocial(
-        params.social,
+        params.socialId,
         params.posts.map((post) => post.post_url)
       );
 
@@ -288,7 +226,7 @@ export class AgentService implements IAgentService {
                 stack: error.stack,
               }
             : String(error),
-        socialId: params.social.id,
+        socialId: params.socialId,
       });
 
       return {
@@ -303,6 +241,7 @@ export class AgentService implements IAgentService {
     social: DbSocial;
     comments: ScrapedComment[];
     posts: DbPost[];
+    socialMap: { [username: string]: string };
   }): Promise<AgentServiceResult<DbPostComment[]>> {
     const platform = getPlatformFromUrl(params.social.profile_url);
     console.log("[DEBUG] Processing comments for storage:", {
@@ -331,14 +270,15 @@ export class AgentService implements IAgentService {
       }
 
       const { data: storedComments, error: commentsError } =
-        await savePostComments(
-          validComments.map((comment) => ({
+        await savePostComments({
+          comments: validComments.map((comment) => ({
             text: comment.comment,
             timestamp: comment.commented_at,
             ownerUsername: comment.username,
             postUrl: comment.post_url,
-          }))
-        );
+          })),
+          socialMap: params.socialMap,
+        });
 
       if (commentsError) {
         console.error("[ERROR] Failed to store comments:", {

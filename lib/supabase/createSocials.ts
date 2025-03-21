@@ -1,15 +1,22 @@
 import supabase from "./serverClient";
 import { Social } from "../../types/agent";
+
 interface CreateSocialsResponse {
   socialMap: { [username: string]: string };
+  socials: Social[];
   error: Error | null;
 }
+
+type MinimalSocial = Pick<Social, "username" | "profile_url">;
 
 /**
  * Creates or updates social records for the given authors
  *
  * @param authors - Array of author objects containing username and profile_url
- * @returns Object mapping usernames to created or updated social IDs
+ * @returns Object containing:
+ *  - socialMap: mapping usernames to created/updated social IDs
+ *  - socials: array of created/updated social records
+ *  - error: any error that occurred
  *
  * @example
  * ```typescript
@@ -17,20 +24,21 @@ interface CreateSocialsResponse {
  *   username: "user1",
  *   profile_url: "https://instagram.com/user1"
  * }];
- * const { socialMap, error } = await createSocials(authors);
+ * const { socialMap, socials, error } = await createSocials(authors);
  * if (error) {
  *   console.error("Failed to create socials:", error);
  *   return;
  * }
  * // socialMap = { "user1": "social_id_1" }
+ * // socials = [{ id: "social_id_1", username: "user1", ... }]
  * ```
  */
 const createSocials = async (
-  authors: Social[]
+  authors: MinimalSocial[]
 ): Promise<CreateSocialsResponse> => {
   try {
     if (!authors.length) {
-      return { socialMap: {}, error: null };
+      return { socialMap: {}, socials: [], error: null };
     }
 
     // Filter out authors with empty profile_url or username
@@ -48,12 +56,13 @@ const createSocials = async (
         onConflict: "profile_url",
         ignoreDuplicates: false, // Update existing records
       })
-      .select("id, username");
+      .select("*");
 
     if (upsertError) {
       console.error("Failed to create/update socials:", upsertError);
       return {
         socialMap: {},
+        socials: [],
         error: new Error("Failed to create/update socials"),
       };
     }
@@ -65,11 +74,12 @@ const createSocials = async (
       return acc;
     }, {});
 
-    return { socialMap, error: null };
+    return { socialMap, socials: upsertedSocials || [], error: null };
   } catch (error) {
     console.error("Error in createSocials:", error);
     return {
       socialMap: {},
+      socials: [],
       error: error instanceof Error ? error : new Error("Unknown error"),
     };
   }

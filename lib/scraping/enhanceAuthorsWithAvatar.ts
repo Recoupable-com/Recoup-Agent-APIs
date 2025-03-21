@@ -1,4 +1,4 @@
-import { AuthorInput, Social } from "../../types/agent";
+import { AuthorInput, EnhancedSocial } from "../../types/agent";
 import enhanceTikTokProfiles from "../tiktok/enhanceTikTokProfiles";
 import enhanceInstagramProfiles from "../instagram/enhanceInstagramProfiles";
 
@@ -11,7 +11,7 @@ import enhanceInstagramProfiles from "../instagram/enhanceInstagramProfiles";
  */
 async function enhanceAuthorsWithAvatars(
   authors: AuthorInput[]
-): Promise<Social[]> {
+): Promise<EnhancedSocial[]> {
   if (!authors.length) {
     return [];
   }
@@ -28,61 +28,50 @@ async function enhanceAuthorsWithAvatars(
     (author) =>
       !author.profile_url.includes("tiktok.com") &&
       !author.profile_url.includes("instagram.com")
-  ) as Social[];
+  ) as EnhancedSocial[];
 
-  let enhancedTikTokAuthors: Social[] = [];
+  let enhancedTikTokAuthors: EnhancedSocial[] = [];
   if (tiktokAuthors.length > 0) {
     console.log("Original tiktokAuthors:", tiktokAuthors);
     const { enhancedProfiles } = await enhanceTikTokProfiles(tiktokAuthors);
     console.log("Enhanced TikTok profiles:", enhancedProfiles);
 
-    const mappedTikTokAuthors = enhancedProfiles.map((profile, index) => {
+    enhancedTikTokAuthors = enhancedProfiles.map((profile, index) => {
       // Get the original author data
       const originalAuthor = tiktokAuthors[index];
 
       return {
-        // Use original profile_url and username
+        ...profile,
+        // Override with original profile_url and username
         profile_url: originalAuthor.profile_url,
         username: originalAuthor.username,
-        // Add enhanced profile data
-        avatar: profile.avatar,
-        bio: profile.bio,
-        followerCount: profile.followerCount,
-        followingCount: profile.followingCount,
-        region: profile.region,
-      };
+      } as EnhancedSocial;
     });
 
-    enhancedTikTokAuthors = mappedTikTokAuthors as Social[];
     console.log("Final mapped TikTok authors:", enhancedTikTokAuthors);
   }
 
   // Process Instagram authors
-  let enhancedInstagramAuthors: Social[] = [];
+  let enhancedInstagramAuthors: EnhancedSocial[] = [];
   if (instagramAuthors.length > 0) {
     console.log("Original instagramAuthors:", instagramAuthors);
+
     const { enhancedProfiles } =
       await enhanceInstagramProfiles(instagramAuthors);
     console.log("Enhanced Instagram profiles:", enhancedProfiles);
 
-    const mappedInstagramAuthors = enhancedProfiles.map((profile, index) => {
+    enhancedInstagramAuthors = enhancedProfiles.map((profile, index) => {
       // Get the original author data
       const originalAuthor = instagramAuthors[index];
 
       return {
-        // Use original profile_url and username
+        ...profile,
+        // Override with original profile_url and username
         profile_url: originalAuthor.profile_url,
         username: originalAuthor.username,
-        // Add enhanced profile data
-        avatar: profile.avatar,
-        bio: profile.bio,
-        followerCount: profile.followerCount,
-        followingCount: profile.followingCount,
-        region: profile.region,
-      };
+      } as EnhancedSocial;
     });
 
-    enhancedInstagramAuthors = mappedInstagramAuthors as Social[];
     console.log("Final mapped Instagram authors:", enhancedInstagramAuthors);
   }
 

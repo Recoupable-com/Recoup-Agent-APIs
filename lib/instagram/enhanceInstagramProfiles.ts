@@ -1,19 +1,22 @@
-import { AuthorInput, Social } from "../../types/agent";
+import {
+  AuthorInput,
+  EnhancedSocial,
+  EnhanceProfilesResult,
+} from "../../types/agent";
 import { batchUploadToArweave } from "../arweave/batchUploadToArweave";
 import { getProfiles } from "./getProfiles";
 import { UploadTask } from "../arweave/types";
 
 /**
  * Enhances Instagram social profiles with additional data like avatars, follower counts, following counts, and bios
+ * Also includes post URLs for each profile if available
  *
  * @param profiles - Array of social profiles to enhance
  * @returns Enhanced profiles with additional data where available
  */
 export async function enhanceInstagramProfiles(
   profiles: AuthorInput[]
-): Promise<{
-  enhancedProfiles: Social[];
-}> {
+): Promise<EnhanceProfilesResult> {
   if (!profiles.length) {
     return {
       enhancedProfiles: [],
@@ -30,9 +33,9 @@ export async function enhanceInstagramProfiles(
   const { profiles: scrapedProfiles, errors } = await getProfiles(handles);
 
   // Prepare arrays for enhanced profiles and upload tasks
-  const enhancedProfiles: Social[] = [];
+  const enhancedProfiles: EnhancedSocial[] = [];
   const uploadTasks: UploadTask[] = [];
-  const profileMap = new Map<string, Social>();
+  const profileMap = new Map<string, EnhancedSocial>();
 
   // First pass: Process all profiles and collect avatar upload tasks
   for (const originalProfile of profiles) {
@@ -53,11 +56,11 @@ export async function enhanceInstagramProfiles(
             errors[username]
           );
         }
-        enhancedProfiles.push(originalProfile as Social);
+        enhancedProfiles.push(originalProfile as EnhancedSocial);
         continue;
       }
 
-      const enhancedProfile = { ...originalProfile } as Social;
+      const enhancedProfile = { ...originalProfile } as EnhancedSocial;
 
       // Add bio if available
       if (scrapedProfile.bio) {
@@ -77,6 +80,14 @@ export async function enhanceInstagramProfiles(
         console.log(`✅ Found following count for Instagram user: ${username}`);
       }
 
+      // Add post URLs if available
+      if (scrapedProfile.postUrls?.length) {
+        enhancedProfile.postUrls = scrapedProfile.postUrls;
+        console.log(
+          `✅ Found ${scrapedProfile.postUrls.length} posts for Instagram user: ${username}`
+        );
+      }
+
       // Add avatar if available
       if (scrapedProfile.avatar) {
         console.log(`✅ Found avatar for Instagram user: ${username}`);
@@ -93,7 +104,7 @@ export async function enhanceInstagramProfiles(
       }
     } catch (profileError) {
       console.error("Failed to process Instagram profile data:", profileError);
-      enhancedProfiles.push(originalProfile as Social);
+      enhancedProfiles.push(originalProfile as EnhancedSocial);
     }
   }
 
@@ -108,7 +119,8 @@ export async function enhanceInstagramProfiles(
     // Process results and add to enhanced profiles
     for (const result of uploadResults) {
       const profile =
-        (result.metadata?.profile as Social) || profileMap.get(result.id);
+        (result.metadata?.profile as EnhancedSocial) ||
+        profileMap.get(result.id);
 
       if (profile) {
         if (result.success && result.arweaveUrl) {

@@ -37,7 +37,6 @@ export interface StoreSocialDataParams {
 
 export interface AgentService {
   // Social operations
-  createSocial(profile: ScrapedProfile): Promise<CreateSocialResult>;
   updateSocial(
     socialId: string,
     profile: ScrapedProfile
@@ -52,7 +51,7 @@ export interface AgentService {
 
   // Post operations
   storePosts(params: {
-    social: DbSocial;
+    socialId: string;
     posts: ScrapedPost[];
   }): Promise<AgentServiceResult<DbPost[]>>;
 
@@ -61,5 +60,6 @@ export interface AgentService {
     social: DbSocial;
     comments: ScrapedComment[];
     posts: DbPost[];
+    socialMap: { [username: string]: string };
   }): Promise<AgentServiceResult<DbPostComment[]>>;
 }

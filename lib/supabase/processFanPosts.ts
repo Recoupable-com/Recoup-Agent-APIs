@@ -20,7 +20,6 @@ const processFanPosts = async (
   });
 
   try {
-    // Filter profiles that have post URLs
     const profilesWithPosts = enhancedProfiles.filter(
       (profile) => profile.postUrls && profile.postUrls.length > 0
     );
@@ -30,7 +29,6 @@ const processFanPosts = async (
       profilesWithPosts: profilesWithPosts.length,
     });
 
-    // Process each profile's posts
     for (const profile of profilesWithPosts) {
       if (!profile.postUrls?.length) continue;
 
@@ -39,7 +37,6 @@ const processFanPosts = async (
         postCount: profile.postUrls.length,
       });
 
-      // Use existing socialMap instead of making a new DB call
       const socialId = socialMap[profile.username];
       if (!socialId) {
         console.error("[ERROR] No social ID found for profile:", {
@@ -48,7 +45,6 @@ const processFanPosts = async (
         continue;
       }
 
-      // Convert post URLs to ScrapedPost format
       const platform = getSocialPlatformByLink(profile.profile_url);
       if (!isValidPlatform(platform)) {
         console.error("[ERROR] Invalid platform detected:", {
@@ -62,7 +58,6 @@ const processFanPosts = async (
         platform,
       }));
 
-      // Store posts using existing AgentService method
       const { error: postsError } = await agentService.storePosts({
         socialId,
         posts,
@@ -86,7 +81,6 @@ const processFanPosts = async (
       error: error instanceof Error ? error.message : String(error),
       agentStatusId,
     });
-    // Don't throw - we want to continue even if fan post processing fails
   }
 };
 

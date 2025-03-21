@@ -14,6 +14,10 @@ export class ScraperFactory {
    * Uses singleton pattern to reuse scraper instances.
    */
   static getScraper(platform: SocialType): SocialScraper {
+    console.log("[DEBUG] Getting scraper for platform:", {
+      platform,
+    });
+
     let scraper = this.scrapers.get(platform);
 
     if (!scraper) {
@@ -21,6 +25,9 @@ export class ScraperFactory {
       this.scrapers.set(platform, scraper);
     }
 
+    console.log("[DEBUG] Scraper:", {
+      scraper,
+    });
     return scraper;
   }
 

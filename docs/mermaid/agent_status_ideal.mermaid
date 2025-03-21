@@ -1,0 +1,32 @@
+graph TD
+    Start[Start] --> CreateAgent[Create Agent]
+    CreateAgent --> ProcessPlatform[Process Platform]
+    
+    subgraph Platform Processing
+        ProcessPlatform --> Initial[Set Status: INITIAL]
+        Initial --> Profile[Set Status: PROFILE]
+        Profile --> SetupArtist[Set Status: SETTING_UP_ARTIST]
+        SetupArtist --> PostURLs[Set Status: POSTURLS]
+        PostURLs --> PostComments[Set Status: POST_COMMENTS]
+        PostComments --> Finished[Set Status: FINISHED]
+    end
+
+    subgraph Error States
+        PostURLs --> |Posts Failed|MissingPosts[Status: MISSING_POSTS]
+        ProcessPlatform --> |Rate Limited|RateLimit[Status: RATE_LIMIT_EXCEEDED]
+        Profile --> |Profile Not Found|UnknownProfile[Status: UNKNOWN_PROFILE]
+        ProcessPlatform --> |Other Errors|Error[Status: ERROR]
+    end
+
+    subgraph Global Status
+        Finished --> |All Complete|Segments[Set Status: SEGMENTS]
+        Segments --> GlobalFinished[Set Status: FINISHED]
+    end
+
+    classDef status fill:#99ff99,stroke:#333,stroke-width:2px;
+    classDef error fill:#ffcc99,stroke:#333,stroke-width:2px;
+    classDef process fill:#ffffff,stroke:#333,stroke-width:2px;
+
+    class Initial,Profile,SetupArtist,PostURLs,PostComments,Finished,Segments,GlobalFinished status;
+    class MissingPosts,RateLimit,UnknownProfile,Error error;
+    class CreateAgent,ProcessPlatform process; 

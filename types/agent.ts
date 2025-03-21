@@ -19,3 +19,12 @@ export interface AuthorInput {
   username: string;
   profile_url: string;
 }
+
+// Enhanced types for profile enhancement flow
+export interface EnhancedSocial extends Social {
+  postUrls?: string[];
+}
+
+export interface EnhanceProfilesResult {
+  enhancedProfiles: EnhancedSocial[];
+}

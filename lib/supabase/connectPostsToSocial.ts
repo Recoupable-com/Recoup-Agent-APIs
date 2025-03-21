@@ -1,8 +1,8 @@
-import { Post, Social } from "../../types/agent";
+import { Post } from "../../types/agent";
 import supabase from "./serverClient";
 
 const connectPostsToSocial = async (
-  social: Social,
+  socialId: string,
   postUrls: string[]
 ): Promise<Post[]> => {
   try {
@@ -22,10 +22,10 @@ const connectPostsToSocial = async (
         await supabase
           .from("social_posts")
           .delete()
-          .eq("social_id", social.id)
+          .eq("social_id", socialId)
           .in("post_id", post_ids);
         const social_posts = existing_posts.map((post) => ({
-          social_id: social.id,
+          social_id: socialId,
           post_id: post.id,
           updated_at: new Date().toISOString(),
         }));

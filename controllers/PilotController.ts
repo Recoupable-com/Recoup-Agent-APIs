@@ -10,6 +10,16 @@ import createAgentStatus from "../lib/supabase/createAgentStatus";
 import runSpotifyAgent from "../agents/runSpotifyAgent";
 import { generateSegmentsForAccount } from "../lib/services/segmentService";
 import { getProfileUrl } from "../lib/utils/getProfileUrl";
+import {
+  ScrapedComment,
+  ScrapedProfile,
+  ScrapedPost,
+} from "../lib/scraping/types";
+import enhanceAuthorsWithAvatars from "../lib/scraping/enhanceAuthorsWithAvatar";
+import createSocials from "../lib/supabase/createSocials";
+import { EnhancedSocial } from "../types/agent";
+import getSocialPlatformByLink from "../lib/getSocialPlatformByLink";
+import { isValidPlatform } from "../lib/utils/validatePlatform";
 
 type DbAgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 
@@ -137,6 +147,187 @@ export class PilotController {
     }
   };
 
+  private async createInitialCommentSocials(
+    comments: ScrapedComment[]
+  ): Promise<{ [username: string]: string }> {
+    const uniqueAuthors = [
+      ...new Set(comments.map((comment) => comment.username)),
+    ];
+
+    console.log(
+      "[DEBUG] Creating initial social records for comment authors:",
+      {
+        authorCount: uniqueAuthors.length,
+      }
+    );
+
+    // Map comments to author objects
+    const authors = uniqueAuthors
+      .map((username) => {
+        const comment = comments.find((c) => c.username === username);
+        if (!comment) return null;
+        return {
+          username,
+          profile_url: comment.profile_url,
+        };
+      })
+      .filter(
+        (author): author is NonNullable<typeof author> => author !== null
+      );
+
+    const { socialMap, error } = await createSocials(authors);
+
+    if (error) {
+      console.error("[ERROR] Failed to create initial social records:", {
+        error: error.message,
+        authorCount: uniqueAuthors.length,
+      });
+      return {};
+    }
+
+    console.log("[DEBUG] Created initial social records:", {
+      totalCreated: Object.keys(socialMap).length,
+      totalAuthors: uniqueAuthors.length,
+    });
+
+    return socialMap;
+  }
+
+  private async enhanceCommentSocials(
+    comments: ScrapedComment[]
+  ): Promise<EnhancedSocial[]> {
+    const uniqueAuthors = [
+      ...new Set(comments.map((comment) => comment.username)),
+    ];
+
+    console.log("[DEBUG] Enhancing social records for comment authors:", {
+      authorCount: uniqueAuthors.length,
+    });
+
+    try {
+      const authors = uniqueAuthors
+        .map((username) => {
+          const comment = comments.find((c) => c.username === username);
+          if (!comment) return null;
+          return {
+            username,
+            profile_url: comment.profile_url,
+          };
+        })
+        .filter((author) => author !== null);
+
+      const enhancedProfiles = await enhanceAuthorsWithAvatars(authors);
+
+      console.log("[DEBUG] Enhanced social records:", {
+        totalEnhanced: enhancedProfiles.length,
+        totalAuthors: authors.length,
+      });
+
+      // Update each social record with enhanced data
+      for (const profile of enhancedProfiles) {
+        const scrapedProfile: ScrapedProfile = {
+          username: profile.username,
+          profile_url: profile.profile_url,
+          avatar: profile.avatar ?? undefined,
+          followerCount: profile.followerCount ?? undefined,
+          followingCount: profile.followingCount ?? undefined,
+          description: profile.bio ?? undefined,
+        };
+        await this.agentService.updateSocial(profile.id, scrapedProfile);
+      }
+
+      return enhancedProfiles;
+    } catch (error) {
+      console.error("[ERROR] Failed to enhance comment socials:", {
+        error: error instanceof Error ? error.message : String(error),
+        authorCount: uniqueAuthors.length,
+      });
+      // Return empty array instead of throwing - we want to continue even if enhancement fails
+      return [];
+    }
+  }
+
+  private async processFanPosts(
+    enhancedProfiles: EnhancedSocial[],
+    agentStatusId: string,
+    socialMap: { [username: string]: string }
+  ): Promise<void> {
+    console.log("[DEBUG] Processing fan posts:", {
+      profileCount: enhancedProfiles.length,
+      agentStatusId,
+    });
+
+    try {
+      // Filter profiles that have post URLs
+      const profilesWithPosts = enhancedProfiles.filter(
+        (profile) => profile.postUrls && profile.postUrls.length > 0
+      );
+
+      console.log("[DEBUG] Found profiles with posts:", {
+        totalProfiles: enhancedProfiles.length,
+        profilesWithPosts: profilesWithPosts.length,
+      });
+
+      // Process each profile's posts
+      for (const profile of profilesWithPosts) {
+        if (!profile.postUrls?.length) continue;
+
+        console.log("[DEBUG] Processing posts for profile:", {
+          username: profile.username,
+          postCount: profile.postUrls.length,
+        });
+
+        // Use existing socialMap instead of making a new DB call
+        const socialId = socialMap[profile.username];
+        if (!socialId) {
+          console.error("[ERROR] No social ID found for profile:", {
+            username: profile.username,
+          });
+          continue;
+        }
+
+        // Convert post URLs to ScrapedPost format
+        const platform = getSocialPlatformByLink(profile.profile_url);
+        if (!isValidPlatform(platform)) {
+          console.error("[ERROR] Invalid platform detected:", {
+            platform,
+            profileUrl: profile.profile_url,
+          });
+          continue;
+        }
+        const posts: ScrapedPost[] = profile.postUrls.map((url) => ({
+          post_url: url,
+          platform,
+        }));
+
+        // Store posts using existing AgentService method
+        const { error: postsError } = await this.agentService.storePosts({
+          socialId,
+          posts,
+        });
+
+        if (postsError) {
+          console.error("[ERROR] Failed to store fan posts:", {
+            username: profile.username,
+            error: postsError.message,
+          });
+          continue;
+        }
+
+        console.log("[DEBUG] Successfully stored fan posts:", {
+          username: profile.username,
+          postCount: posts.length,
+        });
+      }
+    } catch (error) {
+      console.error("[ERROR] Failed to process fan posts:", {
+        error: error instanceof Error ? error.message : String(error),
+        agentStatusId,
+      });
+      // Don't throw - we want to continue even if fan post processing fails
+    }
+  }
+
   private async processPlatforms(
     agentId: string,
     handles: z.infer<typeof HandlesSchema>,
@@ -237,20 +428,23 @@ export class PilotController {
           handle,
         });
 
-        const { social: existingSocial } = await this.agentService.createSocial(
+        const { socials, error: socialError } = await createSocials([
           {
             username: cleanHandle,
             profile_url: getProfileUrl(platform, handle),
-          }
-        );
+          },
+        ]);
 
-        if (!existingSocial) {
+        if (socialError || !socials.length) {
           console.error("[ERROR] Failed to create social record:", {
             platform,
             handle,
+            error: socialError?.message || "No social created",
           });
           return;
         }
+
+        const existingSocial = socials[0];
 
         console.log("[DEBUG] Created social record:", {
           platform,
@@ -322,7 +516,7 @@ export class PilotController {
 
         const { data: stored_posts, error: postsError } =
           await this.agentService.storePosts({
-            social: existingSocial,
+            socialId: existingSocial.id,
             posts,
           });
 
@@ -346,18 +540,26 @@ export class PilotController {
           commentCount: comments.length,
         });
 
-        const { error: commentsError } = await this.agentService.storeComments({
+        // Create initial social records for comment authors
+        const socialMap = await this.createInitialCommentSocials(comments);
+
+        // Store comments with initial social IDs
+        await this.agentService.storeComments({
           social: existingSocial,
           comments,
           posts: stored_posts,
+          socialMap,
         });
 
-        if (commentsError) {
-          console.error("[ERROR] Failed to store comments:", {
-            platform,
-            error: commentsError,
-          });
-        }
+        // Enhance social records with additional data
+        const enhancedProfiles = await this.enhanceCommentSocials(comments);
+
+        // Process fan posts if available - now passing socialMap
+        await this.processFanPosts(
+          enhancedProfiles,
+          agent_status.id,
+          socialMap
+        );
 
         console.log("[INFO] Platform processing completed successfully:", {
           platform,

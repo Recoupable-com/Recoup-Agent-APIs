@@ -1,5 +1,4 @@
 import supabase from "./serverClient";
-import createOrGetCommentSocials from "./createOrGetCommentSocials";
 import { Database } from "../../types/database.types";
 
 export interface CommentInput {
@@ -16,9 +15,21 @@ interface SavePostCommentsResult {
   error: Error | null;
 }
 
-const savePostComments = async (
-  comments: CommentInput[]
-): Promise<SavePostCommentsResult> => {
+interface SavePostCommentsParams {
+  comments: CommentInput[];
+  socialMap: { [username: string]: string };
+}
+
+/**
+ * Saves post comments to the database
+ *
+ * @param params - Object containing comments and socialMap
+ * @returns Object containing saved comments or error
+ */
+const savePostComments = async ({
+  comments,
+  socialMap,
+}: SavePostCommentsParams): Promise<SavePostCommentsResult> => {
   try {
     const postUrls = [...new Set(comments.map((comment) => comment.postUrl))];
     const { data: posts, error: postsError } = await supabase
@@ -36,14 +47,12 @@ const savePostComments = async (
       return acc;
     }, {});
 
-    const usernameToSocialId = await createOrGetCommentSocials(comments);
-
     const formattedComments = comments
       .map((comment) => ({
         comment: comment.text,
         commented_at: comment.timestamp,
         post_id: postUrlToId[comment.postUrl],
-        social_id: usernameToSocialId[comment.ownerUsername],
+        social_id: socialMap[comment.ownerUsername],
       }))
       .filter((comment) => comment.social_id); // Only include comments where we have a social_id
 

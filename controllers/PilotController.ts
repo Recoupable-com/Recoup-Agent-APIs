@@ -13,7 +13,6 @@ import { getProfileUrl } from "../lib/utils/getProfileUrl";
 
 type DbAgentStatus = Database["public"]["Tables"]["agent_status"]["Row"];
 
-// Input validation schema
 const HandlesSchema = z.object({
   instagram: z.string().optional(),
   twitter: z.string().optional(),
@@ -50,7 +49,6 @@ export class PilotController {
     });
 
     try {
-      // Validate request
       const validationResult = RequestSchema.safeParse(req.body);
       if (!validationResult.success) {
         console.error("[ERROR] Invalid request format:", {
@@ -75,13 +73,11 @@ export class PilotController {
         artistId,
       });
 
-      // Validate at least one handle exists
       if (!Object.values(handles).some((h) => h?.trim())) {
         console.error("[ERROR] No handles provided in request");
         return res.status(400).json({ message: "No handles provided." });
       }
 
-      // Create agent
       console.log("[DEBUG] Creating new agent");
       const { agent, error: agentError } = await createAgent();
       if (agentError || !agent) {
@@ -154,7 +150,6 @@ export class PilotController {
       hasArtistId: !!artistId,
     });
 
-    // Helper function to check if all platforms are complete
     const areAllPlatformsComplete = async (
       agentId: string
     ): Promise<boolean> => {
@@ -170,7 +165,6 @@ export class PilotController {
         return false;
       }
 
-      // Consider both FINISHED and ERROR states as complete
       const statusBreakdown = data.statuses.map((status: DbAgentStatus) => ({
         id: status.id,
         status: status.status !== null ? STEP_OF_AGENT[status.status] : "null",
@@ -194,7 +188,6 @@ export class PilotController {
       return isComplete;
     };
 
-    // Helper function to update all agent statuses
     const updateAllAgentStatuses = async (
       agentId: string,
       status: STEP_OF_AGENT
@@ -225,7 +218,6 @@ export class PilotController {
       });
     };
 
-    // Helper function to process a platform
     const processPlatform = async (platform: SocialType, handle: string) => {
       console.log("[INFO] Processing platform:", {
         agentId,
@@ -234,13 +226,11 @@ export class PilotController {
       });
 
       try {
-        // Get platform-specific scraper
         const scraper = ScraperFactory.getScraper(platform);
         console.log("[DEBUG] Created scraper for platform:", {
           platform,
         });
 
-        // Create social record first
         const cleanHandle = handle.replaceAll("@", "");
         console.log("[DEBUG] Processing platform:", {
           platform,
@@ -267,7 +257,6 @@ export class PilotController {
           socialId: existingSocial.id,
         });
 
-        // Create agent status with social.id
         console.log("[DEBUG] Creating agent status:", {
           agentId,
           socialId: existingSocial.id,
@@ -292,7 +281,6 @@ export class PilotController {
           status: STEP_OF_AGENT[STEP_OF_AGENT.PROFILE],
         });
 
-        // Scrape profile
         console.log("[DEBUG] Scraping profile:", {
           platform,
           handle,
@@ -319,7 +307,6 @@ export class PilotController {
           throw setupError;
         }
 
-        // Fetch posts
         console.log("[DEBUG] Fetching posts:", {
           platform,
           handle,
@@ -333,7 +320,6 @@ export class PilotController {
           postCount: posts.length,
         });
 
-        // Store posts immediately after fetching - moved earlier
         const { data: stored_posts, error: postsError } =
           await this.agentService.storePosts({
             social: existingSocial,
@@ -345,7 +331,6 @@ export class PilotController {
           throw postsError || new Error("Failed to store posts");
         }
 
-        // Fetch comments
         console.log("[DEBUG] Fetching comments for posts:", {
           platform,
           postCount: posts.length,
@@ -361,7 +346,6 @@ export class PilotController {
           commentCount: comments.length,
         });
 
-        // Store comments
         const { error: commentsError } = await this.agentService.storeComments({
           social: existingSocial,
           comments,
@@ -373,7 +357,6 @@ export class PilotController {
             platform,
             error: commentsError,
           });
-          // Continue execution even if comments storage fails
         }
 
         console.log("[INFO] Platform processing completed successfully:", {
@@ -397,7 +380,6 @@ export class PilotController {
       }
     };
 
-    // Process each platform
     const tasks: Promise<void>[] = [];
     if (handles.instagram?.trim()) {
       tasks.push(processPlatform("INSTAGRAM", handles.instagram));
@@ -417,14 +399,12 @@ export class PilotController {
       platformCount: tasks.length,
     });
 
-    // Wait for all platforms to be processed
     await Promise.all(tasks);
 
     console.log("[DEBUG] All platform processing tasks completed:", {
       agentId,
     });
 
-    // Generate segments if all platforms are complete and artistId is provided
     if ((await areAllPlatformsComplete(agentId)) && artistId) {
       console.log("[INFO] Starting segment generation:", {
         agentId,
@@ -452,7 +432,6 @@ export class PilotController {
                 }
               : String(error),
         });
-        // Update statuses back to FINISHED on error
         await updateAllAgentStatuses(agentId, STEP_OF_AGENT.FINISHED);
       }
     }

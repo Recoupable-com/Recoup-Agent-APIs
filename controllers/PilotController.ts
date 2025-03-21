@@ -241,7 +241,7 @@ export class PilotController {
         });
 
         // Create social record first
-        const cleanHandle = handle.replace("@", "");
+        const cleanHandle = handle.replaceAll("@", "");
         console.log("[DEBUG] Processing platform:", {
           platform,
           handle,

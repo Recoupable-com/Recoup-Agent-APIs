@@ -40,7 +40,6 @@ const enhanceCommentSocials = async (
 
     const agentService = new AgentService();
 
-    // Update each social record with enhanced data
     for (const profile of enhancedProfiles) {
       const scrapedProfile: ScrapedProfile = {
         username: profile.username,
@@ -59,7 +58,6 @@ const enhanceCommentSocials = async (
       error: error instanceof Error ? error.message : String(error),
       authorCount: uniqueAuthors.length,
     });
-    // Return empty array instead of throwing - we want to continue even if enhancement fails
     return [];
   }
 };

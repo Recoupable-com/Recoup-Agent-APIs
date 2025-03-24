@@ -9,9 +9,15 @@ interface ApifyRunInfo {
 const startCommentsScraping = async (
   postURLs: string[]
 ): Promise<ApifyRunInfo | null> => {
+  console.log(
+    "[DEBUG] Starting TikTok comments scraping for",
+    postURLs.length,
+    "posts"
+  );
+
   const input = {
     postURLs,
-    commentsPerPost: 100,
+    commentsPerPost: 10000,
     maxRepliesPerComment: 0,
   };
 
@@ -22,18 +28,25 @@ const startCommentsScraping = async (
     );
 
     if (!response) {
-      console.error("Failed to start TikTok comments scraping");
+      console.error("[ERROR] Failed to start TikTok comments scraping");
       return null;
     }
 
     const { error, runId, datasetId } = response;
     if (error) {
+      console.error("[ERROR] Apify actor error:", error);
       throw new Error(error);
     }
 
+    console.log("[DEBUG] Successfully started TikTok comments scraping:", {
+      runId,
+      datasetId,
+      postCount: postURLs.length,
+    });
+
     return { runId, datasetId };
   } catch (error) {
-    console.error("Error in startCommentsScraping:", error);
+    console.error("[ERROR] Error in startCommentsScraping:", error);
     throw error;
   }
 };

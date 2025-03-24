@@ -9,9 +9,15 @@ interface ApifyRunInfo {
 const startCommentsScraping = async (
   directUrls: Array<string>
 ): Promise<ApifyRunInfo | null> => {
+  console.log(
+    "[DEBUG] Starting Instagram comments scraping for",
+    directUrls.length,
+    "posts"
+  );
+
   const input = {
     directUrls,
-    resultsLimit: 100,
+    resultsLimit: 10000,
   };
 
   try {
@@ -21,18 +27,25 @@ const startCommentsScraping = async (
     );
 
     if (!response) {
-      console.error("Failed to start Instagram comments scraping");
+      console.error("[ERROR] Failed to start Instagram comments scraping");
       return null;
     }
 
     const { error, runId, datasetId } = response;
     if (error) {
+      console.error("[ERROR] Apify actor error:", error);
       throw new Error(error);
     }
 
+    console.log("[DEBUG] Successfully started Instagram comments scraping:", {
+      runId,
+      datasetId,
+      postCount: directUrls.length,
+    });
+
     return { runId, datasetId };
   } catch (error) {
-    console.error("Error in startCommentsScraping:", error);
+    console.error("[ERROR] Error in startCommentsScraping:", error);
     throw error;
   }
 };

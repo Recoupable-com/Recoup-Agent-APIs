@@ -1,56 +1,32 @@
 import { Post } from "../../types/agent";
 import { ScrapedComment } from "../scraping/types";
-import getActorStatus from "../apify/getActorStatus";
-import getDataset from "../apify/getDataset";
 import getFormattedComments from "./getFormattedComments";
 import startCommentsScraping from "./startCommentsScraping";
-
-const MAX_ATTEMPTS = 30;
-const POLLING_INTERVAL = 3000; // 3 seconds
+import pollCommentScraping from "../apify/pollCommentScraping";
 
 const getVideoComments = async (
   scraping_posts: Post[]
 ): Promise<ScrapedComment[]> => {
-  const postUrls = scraping_posts.map(
-    (scraping_post) => scraping_post.post_url
-  );
-
   try {
-    const runInfo = await startCommentsScraping(postUrls);
+    const runInfo = await startCommentsScraping(
+      scraping_posts.map((p) => p.post_url)
+    );
     if (!runInfo) {
-      console.error("Failed to start video comments scraping");
+      console.error("[ERROR] Failed to start video comments scraping");
       return [];
     }
 
-    const { runId, datasetId } = runInfo;
-    let attempts = 0;
-
-    while (attempts < MAX_ATTEMPTS) {
-      attempts++;
-      await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
-
-      const { status } = await getActorStatus(runId);
-
-      if (status === "FAILED") {
-        console.error("Video comments scraping failed");
-        return [];
-      }
-
-      if (status === "SUCCEEDED" || attempts === MAX_ATTEMPTS) {
-        const data = await getDataset(datasetId);
-        if (!data?.length) {
-          console.error("No data returned from dataset");
-          return [];
-        }
-
-        return getFormattedComments(data, scraping_posts);
-      }
-    }
-
-    console.error("Video comments scraping timed out");
-    return [];
+    return pollCommentScraping({
+      runInfo,
+      posts: scraping_posts,
+      platform: "TikTok",
+      formatComments: getFormattedComments,
+    });
   } catch (error) {
-    console.error("Error in getVideoComments:", error);
+    console.error("[ERROR] Error in getVideoComments:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return [];
   }
 };

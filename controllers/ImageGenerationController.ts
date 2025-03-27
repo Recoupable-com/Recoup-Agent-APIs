@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { generateImage } from "../lib/openai/generateImage";
 import getAccountSocials from "../lib/supabase/getAccountSocials";
 import uploadPfpToArweave from "../lib/arweave/uploadPfpToArweave";
+import { createContract } from "../lib/inprocess/createContract";
 
 /**
  * Validates the artist account exists in the database
@@ -73,14 +74,20 @@ export const generateImageHandler = async (
       });
     }
 
-    // Return successful response with Arweave URL
+    // Create contract for the image
+    console.log("[ImageGeneration] Creating contract...");
+    const contractResult = await createContract({
+      imageUrl: arweaveUrl,
+    });
+
+    // Return successful response with Arweave URL following API spec
     return res.status(200).json({
       status: "success",
       data: {
         image_url: arweaveUrl,
-        post_id: "", // Will be added in phase 2
+        post_id: contractResult.contractAddress,
         artist_id: artist_account_id,
-        created_at: new Date().toISOString(),
+        created_at: contractResult.createdAt,
       },
     });
   } catch (error) {

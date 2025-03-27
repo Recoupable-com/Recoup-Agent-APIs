@@ -7,7 +7,7 @@ dotenv.config();
 export const CHAIN = base;
 export const PAYMASTER_URL = `https://api.developer.coinbase.com/rpc/v1/base/${process.env.CDP_PAYMASTER_KEY}`;
 
-// Zora
+// In Process
 export const IN_PROCESS_FACTORY_ADDRESS =
   "0x540C18B7f99b3b599c6FeB99964498931c211858" as Address;
 

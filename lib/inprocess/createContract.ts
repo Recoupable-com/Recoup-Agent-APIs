@@ -44,7 +44,7 @@ export async function createContract({
 
     const defaultRoyaltyConfig = {
       royaltyMintSchedule: 0,
-      royaltyBPS: 1000, // 10%
+      royaltyBPS: 500, // 5%
       royaltyRecipient: smartWalletAddress,
     } as const;
 
@@ -73,13 +73,31 @@ export async function createContract({
       hash,
     });
 
-    const SETUP_NEW_CONTRACT_EVENT =
-      "0x89c5c58f568e3fa85f14c05b530f8586970ad06743c982f3b3c69b5f74910a14";
+    console.log("[createContract] Receipt logs:", receipt.logs);
+
+    // Event signature for contract creation from the logs
+    const CONTRACT_CREATED_EVENT =
+      "0xa45800684f65ae010ceb4385eceaed88dec7f6a6bcbe11f7ffd8bd24dd2653f4";
 
     const setupEvent = receipt.logs.find(
-      (log: { topics: string[] }) => log.topics[0] === SETUP_NEW_CONTRACT_EVENT
+      (log: { topics: string[] }) => log.topics[0] === CONTRACT_CREATED_EVENT
     );
-    const contractAddress = setupEvent?.address as Address;
+
+    console.log("[createContract] Setup event:", setupEvent);
+
+    // The deployed contract address is in topics[1]
+    const contractAddress = setupEvent?.topics[1]
+      ? (`0x${setupEvent.topics[1].slice(26)}` as Address)
+      : undefined;
+
+    console.log(
+      "[createContract] Extracted contract address:",
+      contractAddress
+    );
+
+    if (!contractAddress) {
+      throw new Error("Failed to extract contract address from event logs");
+    }
 
     return {
       contractAddress,

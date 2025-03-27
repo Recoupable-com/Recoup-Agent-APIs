@@ -1,12 +1,9 @@
 import { getAccountSocials } from "../supabase/getAccountSocials";
 import getSocialPostsByIds from "../supabase/getSocialPostsByIds";
-import { calculateProfileMetrics } from "../utils/calculateProfileMetrics";
-import { transformSocialToProfile } from "../utils/transformSocialToProfile";
+import { calculateProfileMetrics } from "./calculateProfileMetrics";
+import { transformSocialToProfile } from "./transformSocialToProfile";
 import { ArtistProfileResponse } from "../../types/artistProfile.types";
-import {
-  createErrorResponse,
-  createEmptyProfile,
-} from "../utils/artistProfileUtils";
+import { createErrorResponse, createEmptyProfile } from "./artistProfileUtils";
 
 /**
  * Get comprehensive profile information for an artist across all connected social media platforms

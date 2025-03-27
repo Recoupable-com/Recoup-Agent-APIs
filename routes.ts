@@ -2,6 +2,7 @@ import express from "express";
 import * as SegmentsController from "./controllers/SegmentsController";
 import * as GlobalController from "./controllers/GlobalController";
 import { PilotController } from "./controllers/PilotController";
+import { getArtistProfileHandler } from "./controllers/ArtistProfileController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -35,5 +36,7 @@ routes.post("/get_segments", GlobalController.get_segments as any);
 routes.get("/account/socials", GlobalController.get_account_socials as any);
 routes.get("/posts", GlobalController.get_posts as any);
 routes.get("/fans", GlobalController.get_fans as any);
+
+routes.get("/artist-profile", getArtistProfileHandler);
 
 export default routes;

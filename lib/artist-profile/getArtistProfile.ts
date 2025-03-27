@@ -1,7 +1,7 @@
-import { getAccountSocials } from "./getAccountSocials";
-import getSocialPostsByIds from "./getSocialPostsByIds";
+import { getAccountSocials } from "../supabase/getAccountSocials";
+import getSocialPostsByIds from "../supabase/getSocialPostsByIds";
 import { calculateProfileMetrics } from "../utils/calculateProfileMetrics";
-import { transformSocialToProfile } from "./transformSocialToProfile";
+import { transformSocialToProfile } from "../utils/transformSocialToProfile";
 import { ArtistProfileResponse } from "../../types/artistProfile.types";
 import {
   createErrorResponse,

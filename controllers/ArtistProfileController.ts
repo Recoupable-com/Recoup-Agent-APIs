@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { getArtistProfile } from "../lib/supabase/getArtistProfile";
-import { createErrorResponse } from "../lib/utils/artistProfileUtils";
+import { getArtistProfile } from "../lib/artist-profile/getArtistProfile";
+import { createErrorResponse } from "../lib/artist-profile/artistProfileUtils";
 
 /**
  * Handles GET requests for artist profile information

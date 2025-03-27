@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { generateImage } from "../lib/openai/generateImage";
 import getAccountSocials from "../lib/supabase/getAccountSocials";
+import uploadPfpToArweave from "../lib/arweave/uploadPfpToArweave";
 
 /**
  * Validates the artist account exists in the database
@@ -58,11 +59,25 @@ export const generateImageHandler = async (
     // Generate image
     const result = await generateImage(prompt);
 
-    // Return successful response
+    // Upload to Arweave
+    console.log("[ImageGeneration] Uploading to Arweave...");
+    const arweaveUrl = await uploadPfpToArweave(result.url);
+
+    if (!arweaveUrl) {
+      return res.status(500).json({
+        status: "error",
+        error: {
+          code: "storage_failed",
+          message: "Failed to store the image on Arweave",
+        },
+      });
+    }
+
+    // Return successful response with Arweave URL
     return res.status(200).json({
       status: "success",
       data: {
-        image_url: result.url,
+        image_url: arweaveUrl,
         post_id: "", // Will be added in phase 2
         artist_id: artist_account_id,
         created_at: new Date().toISOString(),

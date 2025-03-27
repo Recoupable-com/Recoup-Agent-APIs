@@ -1,6 +1,15 @@
 import dotenv from "dotenv";
-
+import { base } from "viem/chains";
+import type { Address } from "viem";
 dotenv.config();
+
+// Coinbase
+export const CHAIN = base;
+export const PAYMASTER_URL = `https://api.developer.coinbase.com/rpc/v1/base/${process.env.CDP_PAYMASTER_KEY}`;
+
+// Zora
+export const IN_PROCESS_FACTORY_ADDRESS =
+  "0x540C18B7f99b3b599c6FeB99964498931c211858" as Address;
 
 export const AI_MODEL = "gpt-4o-mini";
 export const APIFY_TOKEN = process.env.APIFY_TOKEN;

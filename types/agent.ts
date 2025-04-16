@@ -21,7 +21,6 @@ export interface AuthorInput {
   profile_url: string;
 }
 
-// Enhanced types for profile enhancement flow
 export interface EnhancedSocial extends Social {
   postUrls?: string[];
 }

@@ -4,6 +4,7 @@ import * as GlobalController from "./controllers/GlobalController";
 import { PilotController } from "./controllers/PilotController";
 import { getArtistProfileHandler } from "./controllers/ArtistProfileController";
 import { generateImageHandler } from "./controllers/ImageGenerationController";
+import { getCommentsHandler } from "./controllers/CommentsController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -41,5 +42,7 @@ routes.get("/fans", GlobalController.get_fans as any);
 routes.get("/artist-profile", getArtistProfileHandler);
 
 routes.get("/image-generation", generateImageHandler as any);
+
+routes.get("/comments", getCommentsHandler as any);
 
 export default routes;

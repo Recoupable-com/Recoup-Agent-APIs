@@ -1,6 +1,7 @@
 import getArtistPostIds from "./getArtistPostIds";
 import getCommentsCount from "./getCommentsCount";
 import getPaginatedComments from "./getPaginatedComments";
+import { Comment } from "../../types/agent";
 
 interface GetArtistCommentsParams {
   artist_account_id: string;
@@ -9,12 +10,24 @@ interface GetArtistCommentsParams {
   limit?: number;
 }
 
+interface GetArtistCommentsResponse {
+  status: "success" | "error";
+  comments: Comment[];
+  pagination: {
+    total_count: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
+  message?: string;
+}
+
 export const getArtistComments = async ({
   artist_account_id,
   post_id,
   page = 1,
   limit = 10,
-}: GetArtistCommentsParams) => {
+}: GetArtistCommentsParams): Promise<GetArtistCommentsResponse> => {
   try {
     console.log("[DEBUG] getArtistComments called with params:", {
       artist_account_id,
@@ -31,32 +44,28 @@ export const getArtistComments = async ({
     if (!postIds.length) {
       return {
         status: "success",
-        data: {
-          comments: [],
-          pagination: {
-            current_page: page,
-            total_pages: 0,
-            total_comments: 0,
-            per_page: limit,
-          },
+        comments: [],
+        pagination: {
+          total_count: 0,
+          page,
+          limit,
+          total_pages: 0,
         },
       };
     }
 
     // Get total comment count
-    const total_comments = await getCommentsCount(postIds);
+    const total_count = await getCommentsCount(postIds);
 
-    if (!total_comments) {
+    if (!total_count) {
       return {
         status: "success",
-        data: {
-          comments: [],
-          pagination: {
-            current_page: page,
-            total_pages: 0,
-            total_comments: 0,
-            per_page: limit,
-          },
+        comments: [],
+        pagination: {
+          total_count: 0,
+          page,
+          limit,
+          total_pages: 0,
         },
       };
     }
@@ -68,18 +77,16 @@ export const getArtistComments = async ({
       limit,
     });
 
-    const total_pages = Math.ceil(total_comments / limit);
+    const total_pages = Math.ceil(total_count / limit);
 
     return {
       status: "success",
-      data: {
-        comments,
-        pagination: {
-          current_page: page,
-          total_pages,
-          total_comments,
-          per_page: limit,
-        },
+      comments,
+      pagination: {
+        total_count,
+        page,
+        limit,
+        total_pages,
       },
     };
   } catch (error) {

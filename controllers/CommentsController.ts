@@ -9,6 +9,13 @@ export const getCommentsHandler = async (req: Request, res: Response) => {
       return res.status(400).json({
         status: "error",
         message: "artist_account_id is required and must be a string",
+        comments: [],
+        pagination: {
+          total_count: 0,
+          page: 1,
+          limit: 10,
+          total_pages: 0,
+        },
       });
     }
 
@@ -25,6 +32,13 @@ export const getCommentsHandler = async (req: Request, res: Response) => {
     res.status(500).json({
       status: "error",
       message: "Internal server error",
+      comments: [],
+      pagination: {
+        total_count: 0,
+        page: 1,
+        limit: 10,
+        total_pages: 0,
+      },
     });
   }
 };

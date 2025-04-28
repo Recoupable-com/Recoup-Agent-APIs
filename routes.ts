@@ -6,6 +6,7 @@ import { getArtistProfileHandler } from "./controllers/ArtistProfileController";
 import { generateImageHandler } from "./controllers/ImageGenerationController";
 import { getCommentsHandler } from "./controllers/CommentsController";
 import { getArtistSegmentsHandler } from "./controllers/ArtistSegmentsController";
+import { getSegmentFansHandler } from "./controllers/SegmentFansController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -47,5 +48,7 @@ routes.get("/image-generation", generateImageHandler as any);
 routes.get("/comments", getCommentsHandler as any);
 
 routes.get("/artist/segments", getArtistSegmentsHandler as any);
+
+routes.get("/segment/fans", getSegmentFansHandler as any);
 
 export default routes;

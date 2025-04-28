@@ -75,23 +75,23 @@ export const getArtistSegments = async ({
       };
     }
 
-    // Get paginated segments with joins
+    // Get paginated segments with joins - using simpler query with no inner joins
+    const queryText = `
+      id,
+      artist_account_id,
+      segment_id,
+      updated_at,
+      segments (
+        name
+      ),
+      accounts:artist_account_id (
+        name
+      )
+    `;
+
     const { data, error } = await supabase
       .from("artist_segments")
-      .select(
-        `
-        id,
-        artist_account_id,
-        segment_id,
-        updated_at,
-        segments!inner (
-          name
-        ),
-        accounts!inner:artist_account_id (
-          name
-        )
-      `
-      )
+      .select(queryText)
       .eq("artist_account_id", artist_account_id)
       .order("updated_at", { ascending: false })
       .range(offset, offset + validatedLimit - 1);

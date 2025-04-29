@@ -9,6 +9,7 @@ import { getArtistSegmentsHandler } from "./controllers/ArtistSegmentsController
 import { getSegmentFansHandler } from "./controllers/SegmentFansController";
 import { getArtistSocialsHandler } from "./controllers/ArtistSocialsController";
 import { getSocialPostsHandler } from "./controllers/SocialPostsController";
+import { getPostCommentsHandler } from "./controllers/PostCommentsController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -53,5 +54,6 @@ routes.get("/artist/segments", getArtistSegmentsHandler as any);
 routes.get("/segment/fans", getSegmentFansHandler as any);
 routes.get("/artist/socials", getArtistSocialsHandler as any);
 routes.get("/social/posts", getSocialPostsHandler as any);
+routes.get("/post/comments", getPostCommentsHandler as any);
 
 export default routes;

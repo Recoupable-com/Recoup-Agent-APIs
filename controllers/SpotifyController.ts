@@ -27,28 +27,7 @@ export const getSpotifySearchHandler = async (req: Request, res: Response) => {
       return res.status(502).json({ status: "error" });
     }
 
-    // Build pagination object if possible
-    let pagination = undefined;
-    if (data && data[type + "s"]) {
-      const section = data[type + "s"];
-      pagination = {
-        total_count: section.total,
-        page:
-          section.offset !== undefined && section.limit
-            ? Math.floor(section.offset / section.limit) + 1
-            : 1,
-        limit: section.limit,
-        total_pages: section.limit
-          ? Math.ceil(section.total / section.limit)
-          : 1,
-      };
-    }
-
-    return res.status(200).json({
-      status: "success",
-      [type + "s"]: data ? data[type + "s"]?.items || [] : [],
-      pagination,
-    });
+    return res.status(200).json({ status: "success", ...data });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ status: "error" });

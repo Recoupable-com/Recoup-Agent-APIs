@@ -16,12 +16,15 @@ const getSearch = async ({
   accessToken,
 }: GetSearchParams) => {
   try {
+    console.log("getSearch params", { q, type, market, limit, offset });
+
     const params = new URLSearchParams({ q, type });
     if (market) params.append("market", String(market));
     if (limit) params.append("limit", String(limit));
     if (offset) params.append("offset", String(offset));
 
     const url = `https://api.spotify.com/v1/search?${params.toString()}`;
+    console.log("url", url);
     const response = await fetch(url, {
       method: "GET",
       headers: {

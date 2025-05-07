@@ -1,26 +1,21 @@
 import { UNKNOWN_PROFILE_ERROR } from "../twitter/errors";
+import getSearch from "./getSearch";
 
 const searchArtist = async (handle: string, accessToken: string) => {
   try {
-    const response = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(`artist:${handle}`)}&type=artist`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      },
-    );
+    const { data, error } = await getSearch({
+      q: `artist:${handle}`,
+      type: "artist",
+      accessToken,
+    });
 
-    if (!response.ok)
+    if (error)
       return { error: new Error("Spotify api request failed"), artist: null };
 
-    const data = await response.json();
-
-    if (data.artists.items.length === 0)
+    if (!data?.artists?.items?.length)
       return { error: UNKNOWN_PROFILE_ERROR, artist: null };
-    return { artist: data.artists.items?.[0], error: null };
+
+    return { artist: data.artists.items[0], error: null };
   } catch (error) {
     console.error(error);
     return {

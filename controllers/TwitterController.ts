@@ -57,7 +57,6 @@ export const searchTweetsHandler = async (req: Request, res: Response) => {
       maxTweets,
       modeEnum
     );
-    console.log("searchResults", searchResults);
     return res.json({
       status: "success",
       tweets: searchResults,

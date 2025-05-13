@@ -50,12 +50,7 @@ export const searchTweetsHandler = async (req: Request, res: Response) => {
     }
 
     const twitterScraper = new Scraper();
-    const allTweets = new Map();
-
     const modeEnum = getSearchModeEnum(searchMode);
-
-    console.log("modeEnum", modeEnum);
-
     const searchResults = await getAllTweets(
       twitterScraper,
       query,
@@ -66,10 +61,6 @@ export const searchTweetsHandler = async (req: Request, res: Response) => {
     return res.json({
       status: "success",
       tweets: searchResults,
-      pagination: {
-        total_count: searchResults.length,
-        maxTweets,
-      },
     });
   } catch (error) {
     return res

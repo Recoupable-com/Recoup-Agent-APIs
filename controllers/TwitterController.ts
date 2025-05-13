@@ -30,9 +30,6 @@ export const searchTweetsHandler = async (req: Request, res: Response) => {
     const query = req.query.query as string;
     const maxTweets = parseInt(req.query.maxTweets as string, 10);
     const searchMode = (req.query.searchMode as string) || "Latest";
-    console.log("searchMode", searchMode);
-    console.log("query", query);
-    console.log("maxTweets", maxTweets);
 
     if (!query || isNaN(maxTweets)) {
       return res.status(400).json({

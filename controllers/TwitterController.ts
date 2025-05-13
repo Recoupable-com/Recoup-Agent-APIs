@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Scraper, SearchMode } from "agent-twitter-client";
 import getAllTweets from "../lib/twitter/getAllTweets";
 import getSearchModeEnum from "../lib/twitter/getSearchModeEnum";
+import { getTrends } from "../lib/twitter/getTrends";
 
 export const searchTweetsHandler = async (req: Request, res: Response) => {
   try {
@@ -46,7 +47,7 @@ export const searchTweetsHandler = async (req: Request, res: Response) => {
 export const getTrendsHandler = async (req: Request, res: Response) => {
   try {
     const scraper = new Scraper();
-    const trends = await scraper.getTrends();
+    const trends = await getTrends(scraper);
     return res.json({ status: "success", trends });
   } catch (error) {
     return res

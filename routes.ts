@@ -11,6 +11,7 @@ import { getArtistSocialsHandler } from "./controllers/ArtistSocialsController";
 import { getSocialPostsHandler } from "./controllers/SocialPostsController";
 import { getPostCommentsHandler } from "./controllers/PostCommentsController";
 import { getSpotifySearchHandler } from "./controllers/SpotifyController";
+import { searchTweetsHandler } from "./controllers/TwitterController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -58,5 +59,7 @@ routes.get("/social/posts", getSocialPostsHandler as any);
 routes.get("/post/comments", getPostCommentsHandler as any);
 
 routes.get("/spotify/search", getSpotifySearchHandler as any);
+
+routes.get("/x/search", searchTweetsHandler as any);
 
 export default routes;

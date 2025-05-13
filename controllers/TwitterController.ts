@@ -3,10 +3,6 @@ import { Scraper, SearchMode } from "agent-twitter-client";
 import getAllTweets from "../lib/twitter/getAllTweets";
 import getSearchModeEnum from "../lib/twitter/getSearchModeEnum";
 
-/**
- * Handler for /x/search endpoint. Currently only supports Twitter handle as query.
- * TODO: Extend TwitterScraper to support full Twitter search queries and searchMode.
- */
 export const searchTweetsHandler = async (req: Request, res: Response) => {
   try {
     const query = req.query.query as string;

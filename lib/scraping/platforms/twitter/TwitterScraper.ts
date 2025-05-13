@@ -24,7 +24,7 @@ export class TwitterScraper extends BaseScraper {
 
   async scrapePosts(handle: string): Promise<ScrapedPost[]> {
     try {
-      const allTweets = await getAllTweets(scraper, handle);
+      const allTweets = await getAllTweets(scraper, `to:${handle}`);
       if (!allTweets?.length) {
         return [];
       }

@@ -16,19 +16,16 @@ export const searchTweetsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    // Convert SearchMode enum to array of allowed string values
-    const allowedModes = Object.keys(SearchMode).filter((k) =>
-      isNaN(Number(k))
-    );
-    if (!allowedModes.includes(searchMode)) {
+    const modeEnum = getSearchModeEnum(searchMode);
+    if (!modeEnum) {
       return res.status(400).json({
         status: "error",
-        message: `Invalid searchMode. Allowed: ${allowedModes.join(", ")}`,
+        message:
+          "Invalid searchMode. Allowed: Top, Latest, Photos, Videos, Users",
       });
     }
 
     const twitterScraper = new Scraper();
-    const modeEnum = getSearchModeEnum(searchMode);
     const searchResults = await getAllTweets(
       twitterScraper,
       query,

@@ -4,6 +4,8 @@ import getAllTweets from "../lib/twitter/getAllTweets";
 import getSearchModeEnum from "../lib/twitter/getSearchModeEnum";
 import { getTrends } from "../lib/twitter/getTrends";
 
+const twitterScraper = new Scraper();
+
 export const searchTweetsHandler = async (req: Request, res: Response) => {
   try {
     const query = req.query.query as string;
@@ -26,7 +28,6 @@ export const searchTweetsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const twitterScraper = new Scraper();
     const searchResults = await getAllTweets(
       twitterScraper,
       query,
@@ -46,8 +47,7 @@ export const searchTweetsHandler = async (req: Request, res: Response) => {
 
 export const getTrendsHandler = async (req: Request, res: Response) => {
   try {
-    const scraper = new Scraper();
-    const trends = await getTrends(scraper);
+    const trends = await getTrends(twitterScraper);
     return res.json({ status: "success", trends });
   } catch (error) {
     return res

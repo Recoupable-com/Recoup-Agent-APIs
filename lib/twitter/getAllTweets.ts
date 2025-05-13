@@ -5,7 +5,12 @@ import path from "path";
 import loadCookies from "./loadCookies.js";
 import saveCookies from "./saveCookies.js";
 
-export const getAllTweets = async (scraper: any, handle: string) => {
+export const getAllTweets = async (
+  scraper: any,
+  query: string,
+  maxTweets = MAX_TWEETS,
+  searchMode = SearchMode.Latest
+) => {
   const allTweets = new Map();
   let previousCount = 0;
   let stagnantBatches = 0;
@@ -17,7 +22,7 @@ export const getAllTweets = async (scraper: any, handle: string) => {
   const cookies_path = path.join(
     process.cwd(),
     "cookies",
-    `${username}_cookies.json`,
+    `${username}_cookies.json`
   );
 
   try {
@@ -29,11 +34,7 @@ export const getAllTweets = async (scraper: any, handle: string) => {
       if (isNewLoggedIn) await saveCookies(scraper, cookies_path);
     }
 
-    const searchResults = scraper.searchTweets(
-      `to:${handle}`,
-      MAX_TWEETS,
-      SearchMode.Latest,
-    );
+    const searchResults = scraper.searchTweets(query, maxTweets, searchMode);
 
     for await (const tweet of searchResults) {
       if (tweet && !allTweets.has(tweet.id)) {

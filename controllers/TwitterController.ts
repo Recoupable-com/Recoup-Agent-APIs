@@ -58,9 +58,13 @@ export const searchTweetsHandler = async (req: Request, res: Response) => {
     const modeEnum = getSearchModeEnum(searchMode);
 
     console.log("modeEnum", modeEnum);
-    // Consume the AsyncGenerator into an array
 
-    const searchResults = await getAllTweets(twitterScraper, query);
+    const searchResults = await getAllTweets(
+      twitterScraper,
+      query,
+      maxTweets,
+      modeEnum
+    );
     console.log("searchResults", searchResults);
     return res.json({
       status: "success",

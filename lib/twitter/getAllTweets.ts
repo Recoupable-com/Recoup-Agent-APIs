@@ -1,9 +1,7 @@
 import { SearchMode } from "agent-twitter-client";
 import { MAX_TWEETS } from "../consts.js";
 import processTweetData from "./processTweetData.js";
-import path from "path";
-import loadCookies from "./loadCookies.js";
-import saveCookies from "./saveCookies.js";
+import { verifyLoggedIn } from "./verifyLoggedIn.js";
 
 export const getAllTweets = async (
   scraper: any,
@@ -15,24 +13,9 @@ export const getAllTweets = async (
   let previousCount = 0;
   let stagnantBatches = 0;
   const MAX_STAGNANT_BATCHES = 2;
-  const username = process.env.TWITTER_USERNAME;
-  const password = process.env.TWITTER_PASSWORD;
-  const email = process.env.TWITTER_EMAIL;
-
-  const cookies_path = path.join(
-    process.cwd(),
-    "cookies",
-    `${username}_cookies.json`
-  );
 
   try {
-    await loadCookies(scraper, cookies_path);
-    const isLoggedIn = await scraper.isLoggedIn();
-    if (!isLoggedIn) {
-      await scraper.login(username, password, email);
-      const isNewLoggedIn = await scraper.isLoggedIn();
-      if (isNewLoggedIn) await saveCookies(scraper, cookies_path);
-    }
+    await verifyLoggedIn(scraper);
 
     const searchResults = scraper.searchTweets(query, maxTweets, searchMode);
 

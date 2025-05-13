@@ -1,25 +1,7 @@
 import { Request, Response } from "express";
-import { Scraper, SearchMode, Tweet } from "agent-twitter-client";
-import processTweetData from "../lib/twitter/processTweetData";
+import { Scraper, SearchMode } from "agent-twitter-client";
 import getAllTweets from "../lib/twitter/getAllTweets";
-
-// Utility to map string to SearchMode enum value
-const getSearchModeEnum = (mode: string): SearchMode | undefined => {
-  switch (mode) {
-    case "Top":
-      return SearchMode.Top;
-    case "Latest":
-      return SearchMode.Latest;
-    case "Photos":
-      return SearchMode.Photos;
-    case "Videos":
-      return SearchMode.Videos;
-    case "Users":
-      return SearchMode.Users;
-    default:
-      return undefined;
-  }
-};
+import getSearchModeEnum from "../lib/twitter/getSearchModeEnum";
 
 /**
  * Handler for /x/search endpoint. Currently only supports Twitter handle as query.

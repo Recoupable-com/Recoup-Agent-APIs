@@ -4,6 +4,7 @@ interface ApifyRunResponse {
   runId: string;
   datasetId: string;
   error?: string;
+  data?: any;
 }
 
 const runApifyActor = async (
@@ -35,7 +36,7 @@ const runApifyActor = async (
       return null;
     }
 
-    return { runId, datasetId };
+    return { runId, datasetId, data };
   } catch (error) {
     console.error(error);
     return null;

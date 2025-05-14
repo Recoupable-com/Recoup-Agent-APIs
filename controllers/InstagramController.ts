@@ -16,7 +16,6 @@ export const getInstagramProfilesHandler = async (
 
     // Convert handles to array if it's a single string
     const handlesArray = Array.isArray(handles) ? handles : [handles];
-    console.log(handlesArray);
 
     // Clean and validate handles
     const cleanHandles = handlesArray.map((handle) => {

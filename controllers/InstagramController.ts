@@ -48,3 +48,47 @@ export const getInstagramProfilesHandler = async (
     });
   }
 };
+
+export const getInstagramCommentsHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { postUrls } = req.query;
+
+    if (!postUrls || !Array.isArray(postUrls) || postUrls.length === 0) {
+      res.status(400).json({
+        error: "Missing or invalid postUrls parameter",
+      });
+      return;
+    }
+
+    const input = {
+      directUrls: postUrls,
+      resultsLimit: 10000,
+    };
+
+    const response = await runApifyActor(
+      input,
+      "apify~instagram-comment-scraper"
+    );
+
+    if (!response) {
+      res.status(500).json({
+        error: "Failed to start Apify actor",
+      });
+      return;
+    }
+
+    res.json({
+      runId: response.runId,
+      datasetId: response.datasetId,
+      error: null,
+    });
+  } catch (error) {
+    console.error("Error in getInstagramCommentsHandler:", error);
+    res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};

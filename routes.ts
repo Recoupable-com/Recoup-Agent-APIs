@@ -15,7 +15,10 @@ import {
   searchTweetsHandler,
   getTrendsHandler,
 } from "./controllers/TwitterController";
-import { getInstagramProfilesHandler } from "./controllers/InstagramController";
+import {
+  getInstagramProfilesHandler,
+  getInstagramCommentsHandler,
+} from "./controllers/InstagramController";
 import { getScraperResultsHandler } from "./controllers/ApifyController";
 
 const routes = express.Router();
@@ -69,5 +72,6 @@ routes.get("/spotify/search", getSpotifySearchHandler as any);
 routes.get("/x/search", searchTweetsHandler as any);
 routes.get("/x/trends", getTrendsHandler as any);
 routes.get("/instagram/profiles", getInstagramProfilesHandler as any);
+routes.get("/instagram/comments", getInstagramCommentsHandler as any);
 
 export default routes;

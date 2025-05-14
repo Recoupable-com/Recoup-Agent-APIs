@@ -16,6 +16,7 @@ import {
   getTrendsHandler,
 } from "./controllers/TwitterController";
 import { getInstagramProfilesHandler } from "./controllers/InstagramController";
+import { getScraperResultsHandler } from "./controllers/ApifyController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -31,6 +32,7 @@ routes.post("/generate_segments", SegmentsController.generate_segments as any);
 
 routes.get("/get_dataset_items", GlobalController.get_dataset_items as any);
 routes.get("/get_dataset_status", GlobalController.get_dataset_status as any);
+routes.get("/apify/scraper", getScraperResultsHandler as any);
 
 routes.get("/get_social_handles", GlobalController.get_social_handles as any);
 

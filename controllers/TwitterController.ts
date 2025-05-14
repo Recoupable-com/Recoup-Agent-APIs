@@ -61,7 +61,6 @@ export const searchTweetsHandler = async (req: Request, res: Response) => {
     return res.json({
       status: "success",
       tweets: searchResults,
-      stored: storedPosts?.length || 0,
     });
   } catch (error) {
     console.error("Error in searchTweetsHandler:", error);

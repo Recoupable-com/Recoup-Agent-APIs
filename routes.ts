@@ -10,7 +10,10 @@ import { getSegmentFansHandler } from "./controllers/SegmentFansController";
 import { getArtistSocialsHandler } from "./controllers/ArtistSocialsController";
 import { getSocialPostsHandler } from "./controllers/SocialPostsController";
 import { getPostCommentsHandler } from "./controllers/PostCommentsController";
-import { getSpotifySearchHandler } from "./controllers/SpotifyController";
+import {
+  getSpotifySearchHandler,
+  getSpotifyTopTracksHandler,
+} from "./controllers/SpotifyController";
 import {
   searchTweetsHandler,
   getTrendsHandler,
@@ -29,7 +32,7 @@ routes.post("/get_pitch_report", SegmentsController.get_pitch_report as any);
 routes.post("/get_next_steps", SegmentsController.get_next_steps as any);
 routes.post(
   "/get_segments_icons",
-  SegmentsController.get_segments_icons as any
+  SegmentsController.get_segments_icons as any,
 );
 routes.post("/generate_segments", SegmentsController.generate_segments as any);
 
@@ -46,7 +49,7 @@ routes.get("/get_profile", GlobalController.get_profile as any);
 routes.post("/get_fans_segments", GlobalController.get_fans_segments as any);
 routes.post(
   "/connect_fans_segments_to_artist",
-  GlobalController.connect_fans_segments_to_artist as any
+  GlobalController.connect_fans_segments_to_artist as any,
 );
 routes.get("/get_tiktok_profile", GlobalController.get_tiktok_profile as any);
 routes.get("/get_twitter_profile", GlobalController.get_twitter_profile as any);
@@ -68,6 +71,7 @@ routes.get("/social/posts", getSocialPostsHandler as any);
 routes.get("/post/comments", getPostCommentsHandler as any);
 
 routes.get("/spotify/search", getSpotifySearchHandler as any);
+routes.get("/spotify/artist/topTracks", getSpotifyTopTracksHandler as any);
 
 routes.get("/x/search", searchTweetsHandler as any);
 routes.get("/x/trends", getTrendsHandler as any);

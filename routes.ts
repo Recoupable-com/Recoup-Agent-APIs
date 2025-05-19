@@ -12,6 +12,7 @@ import { getSocialPostsHandler } from "./controllers/SocialPostsController";
 import { getPostCommentsHandler } from "./controllers/PostCommentsController";
 import {
   getSpotifySearchHandler,
+  getSpotifyAlbumHandler,
   getSpotifyTopTracksHandler,
   getSpotifyArtistAlbumsHandler,
 } from "./controllers/SpotifyController";
@@ -72,6 +73,7 @@ routes.get("/social/posts", getSocialPostsHandler as any);
 routes.get("/post/comments", getPostCommentsHandler as any);
 
 routes.get("/spotify/search", getSpotifySearchHandler as any);
+routes.get("/spotify/album", getSpotifyAlbumHandler as any);
 routes.get("/spotify/artist/topTracks", getSpotifyTopTracksHandler as any);
 routes.get("/spotify/artist/albums", getSpotifyArtistAlbumsHandler as any);
 

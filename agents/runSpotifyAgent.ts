@@ -2,7 +2,7 @@ import { STEP_OF_AGENT } from "../lib/step";
 import updateAnalysisStatus from "../lib/supabase/updateAgentStatus";
 import getAccessToken from "../lib/supabase/getAccessToken";
 import getAlbums from "../lib/spotify/getAlbums";
-import getTopTracks from "../lib/spotify/getTopTracks";
+import { getArtistTopTracks } from "../lib/spotify/getArtistTopTracks";
 import updateAgentStatus from "../lib/supabase/updateAgentStatus";
 import getArtist from "../lib/spotify/getArtist";
 import searchArtist from "../lib/spotify/searchArtist";
@@ -16,6 +16,7 @@ import setNewAlbums from "../lib/supabase/setNewAlbums";
 import connectAlbumsToSocial from "../lib/supabase/connectAlbumsToSocial";
 import setNewTracks from "../lib/supabase/setNewTracks";
 import connectTracksToSocial from "../lib/supabase/connectTracksToSocial";
+import getFormattedTracks from "../lib/spotify/getFormattedTracks";
 
 const runSpotifyAgent = async (
   agent_id: string,
@@ -71,8 +72,8 @@ const runSpotifyAgent = async (
     await connectAlbumsToSocial(social, albums);
 
     await updateAnalysisStatus(agent_status.id, STEP_OF_AGENT.TRACKS);
-    const tracks = await getTopTracks(artistUri, accessToken);
-    await setNewTracks(tracks);
+    const tracks = await getArtistTopTracks({ id: artistUri, accessToken });
+    await setNewTracks(getFormattedTracks(tracks));
     await connectTracksToSocial(social, tracks);
 
     await updateAnalysisStatus(agent_status.id, STEP_OF_AGENT.FINISHED);

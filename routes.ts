@@ -10,7 +10,10 @@ import { getSegmentFansHandler } from "./controllers/SegmentFansController";
 import { getArtistSocialsHandler } from "./controllers/ArtistSocialsController";
 import { getSocialPostsHandler } from "./controllers/SocialPostsController";
 import { getPostCommentsHandler } from "./controllers/PostCommentsController";
-import { getSpotifySearchHandler } from "./controllers/SpotifyController";
+import {
+  getSpotifySearchHandler,
+  getSpotifyAlbumHandler,
+} from "./controllers/SpotifyController";
 import {
   searchTweetsHandler,
   getTrendsHandler,
@@ -68,6 +71,7 @@ routes.get("/social/posts", getSocialPostsHandler as any);
 routes.get("/post/comments", getPostCommentsHandler as any);
 
 routes.get("/spotify/search", getSpotifySearchHandler as any);
+routes.get("/spotify/album", getSpotifyAlbumHandler as any);
 
 routes.get("/x/search", searchTweetsHandler as any);
 routes.get("/x/trends", getTrendsHandler as any);

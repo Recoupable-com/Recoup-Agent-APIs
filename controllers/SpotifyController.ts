@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import getSearch from "../lib/spotify/getSearch";
+import getAlbum from "../lib/spotify/getAlbum";
 import generateAccessToken from "../lib/spotify/generateAccessToken";
 
 export const getSpotifySearchHandler = async (req: Request, res: Response) => {
@@ -28,6 +29,35 @@ export const getSpotifySearchHandler = async (req: Request, res: Response) => {
     }
 
     return res.status(200).json({ status: "success", ...data });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: "error" });
+  }
+};
+
+export const getSpotifyAlbumHandler = async (req: Request, res: Response) => {
+  try {
+    const { id, market } = req.query;
+    if (!id) {
+      return res.status(400).json({ status: "error" });
+    }
+
+    const tokenResult = await generateAccessToken();
+    if (!tokenResult || tokenResult.error || !tokenResult.access_token) {
+      return res.status(500).json({ status: "error" });
+    }
+
+    const { album, error } = await getAlbum({
+      id: String(id),
+      market: market ? String(market) : undefined,
+      accessToken: tokenResult.access_token,
+    });
+
+    if (error) {
+      return res.status(502).json({ status: "error" });
+    }
+
+    return res.status(200).json({ status: "success", ...album });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ status: "error" });

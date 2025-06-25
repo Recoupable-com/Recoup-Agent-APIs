@@ -82,3 +82,58 @@ You should use the [scratchpad.md](mdc:scratchpad.md) file as a Scratchpad to or
 Also update the progress of the task in the Scratchpad when you finish a subtask.
 Especially when you finished a milestone, it will help to improve your depth of task accomplishment to use the Scratchpad to reflect and plan.
 The goal is to help you maintain a big picture as well as the progress of the task. Always refer to the Scratchpad when you plan the next step.
+
+# Current Task: Add Webhooks Parameter Support for Instagram API Endpoints
+
+## Task Description
+Update Instagram API endpoints (`instagram/profiles` and `instagram/comments`) and the underlying `runApifyActor` function to accept and pass webhooks parameter to Apify API.
+
+## Requirements
+- [ ] Update `/api/instagram/profiles` to accept webhooks param from request.query
+- [ ] Update `/api/instagram/comments` to accept webhooks param from request.query  
+- [ ] Update `lib/apify/runApifyActor.ts` to pass webhooks param to Apify API
+- [ ] Webhooks param should be passed to `https://api.apify.com/v2/acts/${actorId}/runs?token=${APIFY_TOKEN}`
+- [ ] Follow Apify webhooks documentation format
+
+## Progress
+- [X] Explore current codebase structure
+- [X] Locate Instagram API endpoints
+- [X] Locate runApifyActor function
+- [X] Update runApifyActor to accept webhooks parameter
+- [X] Update Instagram profiles endpoint
+- [X] Update Instagram comments endpoint
+- [X] Test implementation
+- [X] Verify no breaking changes for other runApifyActor usages
+
+## Summary of Changes Made
+
+### 1. Updated `lib/apify/runApifyActor.ts`
+- Added optional `webhooks?: string` parameter to function signature
+- Modified URL construction to include webhooks parameter when provided
+- Used `encodeURIComponent()` to properly encode the webhooks value
+- Maintained backward compatibility with existing callers
+
+### 2. Updated `controllers/InstagramController.ts`
+- Modified `getInstagramProfilesHandler` to extract `webhooks` from `req.query`
+- Modified `getInstagramCommentsHandler` to extract `webhooks` from `req.query`
+- Both handlers now pass webhooks parameter to `runApifyActor`
+- Maintained all existing functionality and error handling
+
+### 3. Backward Compatibility
+- All existing calls to `runApifyActor` continue to work without modification
+- The webhooks parameter is optional, so no breaking changes were introduced
+- Verified that 6 other files using `runApifyActor` remain unaffected
+
+## API Usage Examples
+
+### Instagram Profiles with Webhooks
+```
+GET /instagram/profiles?handles=@username&webhooks=BASE64_ENCODED_WEBHOOKS_JSON
+```
+
+### Instagram Comments with Webhooks  
+```
+GET /instagram/comments?postUrls=["url1","url2"]&webhooks=BASE64_ENCODED_WEBHOOKS_JSON
+```
+
+The implementation follows the Apify API documentation for ad-hoc webhooks by passing the webhooks parameter as a query parameter to the actor run API endpoint.

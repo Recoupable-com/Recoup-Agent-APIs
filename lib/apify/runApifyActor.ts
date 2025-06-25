@@ -9,19 +9,23 @@ interface ApifyRunResponse {
 
 const runApifyActor = async (
   input: any,
-  actorId: string
+  actorId: string,
+  webhooks?: string
 ): Promise<ApifyRunResponse | null> => {
   try {
-    const response = await fetch(
-      `https://api.apify.com/v2/acts/${actorId}/runs?token=${APIFY_TOKEN}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      }
-    );
+    // Build URL with optional webhooks parameter
+    let url = `https://api.apify.com/v2/acts/${actorId}/runs?token=${APIFY_TOKEN}`;
+    if (webhooks) {
+      url += `&webhooks=${encodeURIComponent(webhooks)}`;
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+    });
 
     const data: any = await response.json();
     const error = data?.error;

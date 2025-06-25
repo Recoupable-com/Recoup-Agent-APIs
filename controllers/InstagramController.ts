@@ -6,7 +6,7 @@ export const getInstagramProfilesHandler = async (
   res: Response
 ) => {
   try {
-    const { handles } = req.query;
+    const { handles, webhooks } = req.query;
 
     if (!handles) {
       return res.status(400).json({
@@ -28,7 +28,8 @@ export const getInstagramProfilesHandler = async (
 
     const runInfo = await runApifyActor(
       { usernames: cleanHandles },
-      "apify~instagram-profile-scraper"
+      "apify~instagram-profile-scraper",
+      webhooks as string
     );
 
     if (!runInfo) {
@@ -54,7 +55,7 @@ export const getInstagramCommentsHandler = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { postUrls } = req.query;
+    const { postUrls, webhooks } = req.query;
 
     if (!postUrls || !Array.isArray(postUrls) || postUrls.length === 0) {
       res.status(400).json({
@@ -70,7 +71,8 @@ export const getInstagramCommentsHandler = async (
 
     const response = await runApifyActor(
       input,
-      "apify~instagram-comment-scraper"
+      "apify~instagram-comment-scraper",
+      webhooks as string
     );
 
     if (!response) {

@@ -68,6 +68,7 @@ export const getInstagramCommentsHandler = async (
     const input: Record<string, any> = {
       directUrls: Array.isArray(postUrls) ? postUrls : [postUrls],
       resultsLimit: 10000, // default
+      isNewestComments: true,
     };
 
     // If resultsLimit is provided and is a valid number, override default

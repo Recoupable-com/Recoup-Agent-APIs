@@ -55,7 +55,7 @@ export const getInstagramCommentsHandler = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { postUrls, webhooks } = req.query;
+    const { postUrls, webhooks, resultsLimit, isNewestComments } = req.query;
 
     if (!postUrls || !Array.isArray(postUrls) || postUrls.length === 0) {
       res.status(400).json({
@@ -64,10 +64,28 @@ export const getInstagramCommentsHandler = async (
       return;
     }
 
-    const input = {
+    // Build input object with required and optional params
+    const input: Record<string, any> = {
       directUrls: postUrls,
-      resultsLimit: 10000,
+      resultsLimit: 10000, // default
     };
+
+    // If resultsLimit is provided and is a valid number, override default
+    if (resultsLimit !== undefined) {
+      const parsedLimit = parseInt(resultsLimit as string, 10);
+      if (!isNaN(parsedLimit) && parsedLimit > 0) {
+        input.resultsLimit = parsedLimit;
+      }
+    }
+
+    // If isNewestComments is provided, parse as boolean
+    if (isNewestComments !== undefined) {
+      if (isNewestComments === "true") {
+        input.isNewestComments = true;
+      } else if (isNewestComments === "false") {
+        input.isNewestComments = false;
+      }
+    }
 
     const response = await runApifyActor(
       input,

@@ -57,7 +57,7 @@ export const getInstagramCommentsHandler = async (
   try {
     const { postUrls, webhooks, resultsLimit, isNewestComments } = req.query;
 
-    if (!postUrls || !Array.isArray(postUrls) || postUrls.length === 0) {
+    if (!postUrls) {
       res.status(400).json({
         error: "Missing or invalid postUrls parameter",
       });
@@ -66,7 +66,7 @@ export const getInstagramCommentsHandler = async (
 
     // Build input object with required and optional params
     const input: Record<string, any> = {
-      directUrls: postUrls,
+      directUrls: Array.isArray(postUrls) ? postUrls : [postUrls],
       resultsLimit: 10000, // default
     };
 

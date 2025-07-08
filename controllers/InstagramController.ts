@@ -80,11 +80,7 @@ export const getInstagramCommentsHandler = async (
 
     // If isNewestComments is provided, parse as boolean
     if (isNewestComments !== undefined) {
-      if (isNewestComments === "true") {
-        input.isNewestComments = true;
-      } else if (isNewestComments === "false") {
-        input.isNewestComments = false;
-      }
+      input.isNewestComments = isNewestComments === "true";
     }
 
     const response = await runApifyActor(

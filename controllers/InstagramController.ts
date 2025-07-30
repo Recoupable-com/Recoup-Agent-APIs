@@ -67,15 +67,18 @@ export const getInstagramCommentsHandler = async (
     // Build input object with required and optional params
     const input: Record<string, any> = {
       directUrls: Array.isArray(postUrls) ? postUrls : [postUrls],
-      resultsLimit: 10000, // default
+      resultsLimit: 100, // default
     };
 
     // If resultsLimit is provided and is a valid number, override default
+    // Only override if the provided limit is a positive number *and* smaller than the current default
     if (resultsLimit !== undefined) {
       const parsedLimit = parseInt(resultsLimit as string, 10);
-      if (!isNaN(parsedLimit) && parsedLimit > 0) {
-        input.resultsLimit = parsedLimit;
-      }
+      const isAcceptableLimit =
+        !isNaN(parsedLimit) &&
+        parsedLimit > 0 &&
+        parsedLimit < input.resultsLimit;
+      if (isAcceptableLimit) input.resultsLimit = parsedLimit;
     }
 
     // If isNewestComments is provided, parse as boolean
@@ -96,11 +99,7 @@ export const getInstagramCommentsHandler = async (
       return;
     }
 
-    res.json({
-      runId: response.runId,
-      datasetId: response.datasetId,
-      error: null,
-    });
+    res.json(response);
   } catch (error) {
     console.error("Error in getInstagramCommentsHandler:", error);
     res.status(500).json({

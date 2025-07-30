@@ -99,11 +99,7 @@ export const getInstagramCommentsHandler = async (
       return;
     }
 
-    res.json({
-      runId: response.runId,
-      datasetId: response.datasetId,
-      error: null,
-    });
+    res.json(response);
   } catch (error) {
     console.error("Error in getInstagramCommentsHandler:", error);
     res.status(500).json({

@@ -27,6 +27,7 @@
     "@supabase/supabase-js": "^2.47.9",
     "@tavily/core": "^0.0.2",
     "@types/cheerio": "^0.22.35",
+    "@types/stripe": "^8.0.417",
     "@types/uuid": "^10.0.0",
     "agent-twitter-client": "^0.0.16",
     "apify-client": "^2.10.0",
@@ -42,6 +43,7 @@
     "openai": "^4.74.0",
     "prettier": "^3.4.1",
     "socket.io": "^4.8.1",
+    "stripe": "^18.5.0",
     "ts-node": "^10.9.2",
     "uuid": "^11.0.5",
     "zod": "^3.24.1"

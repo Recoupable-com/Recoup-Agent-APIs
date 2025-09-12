@@ -25,6 +25,7 @@ import {
   getInstagramCommentsHandler,
 } from "./controllers/InstagramController";
 import { getScraperResultsHandler } from "./controllers/ApifyController";
+import { getSubscriptionsHandler } from "./controllers/SubscriptionsController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -81,5 +82,7 @@ routes.get("/x/search", searchTweetsHandler as any);
 routes.get("/x/trends", getTrendsHandler as any);
 routes.get("/instagram/profiles", getInstagramProfilesHandler as any);
 routes.get("/instagram/comments", getInstagramCommentsHandler as any);
+
+routes.get("/subscriptions", getSubscriptionsHandler as any);
 
 export default routes;

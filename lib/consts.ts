@@ -20,6 +20,15 @@ export const AGENT_RUN = "agent_run";
 export const MESSAGE_SENT_POINT = 1;
 export const MESSAGE_SENT_EVENT = "message_sent";
 
+export const ENTERPRISE_DOMAINS: ReadonlySet<string> = new Set([
+  "recoupable.com",
+  "rostrum.com",
+  "spaceheatermusic.io",
+  "fatbeats.com",
+  "cantorarecords.net",
+  "rostrumrecords.com",
+]);
+
 export const HTML_RESPONSE_FORMAT_INSTRUCTIONS = `
   Please provide a wide range of HTML formats with embedded HTML tags such as <div>, <p>, <ul>, <li>, and <span>, along with CSS styles including font size, margin, and padding. 
    - Please do not include any color styles. The font size for all text should be 14px. Paragraph should be left padding 8px & top padding 4px for indentation.

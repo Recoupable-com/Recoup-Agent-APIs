@@ -1,4 +1,5 @@
-import supabase from "../supabase/serverClient";
+import { insertCatalogs } from "../supabase/catalogs/insertCatalogs";
+import { insertAccountCatalogs } from "../supabase/account_catalogs/insertAccountCatalogs";
 
 /**
  * Creates a new catalog and links it to an account
@@ -7,28 +8,13 @@ export async function createAndLinkNewCatalog(
   accountId: string,
   catalogName: string
 ): Promise<void> {
-  // Create the new catalog
-  const { data: newCatalog, error: createError } = await supabase
-    .from("catalogs")
-    .insert({
-      name: catalogName,
-    })
-    .select()
-    .single();
+  const newCatalogs = await insertCatalogs([{ name: catalogName }]);
 
-  if (createError || !newCatalog) {
-    throw new Error(
-      `Failed to create catalog: ${createError?.message || "Unknown error"}`
-    );
+  if (!newCatalogs || newCatalogs.length === 0) {
+    throw new Error("Failed to create catalog: No catalog was created");
   }
 
-  // Link the new catalog to the account
-  const { error: linkError } = await supabase.from("account_catalogs").insert({
-    account: accountId,
-    catalog: newCatalog.id,
-  });
+  const newCatalog = newCatalogs[0];
 
-  if (linkError) {
-    throw new Error(`Failed to link new catalog: ${linkError.message}`);
-  }
+  await insertAccountCatalogs([{ account: accountId, catalog: newCatalog.id }]);
 }

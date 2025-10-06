@@ -15,21 +15,19 @@ export async function processCatalogInput(
 ): Promise<void> {
   const { account_id, name, catalog_id } = catalogInput;
 
-  // Validate required fields
   if (!account_id) {
     throw new Error("account_id is required for each catalog");
   }
 
-  // If catalog_id is provided, link existing catalog (takes priority)
   if (catalog_id) {
     await linkExistingCatalog(account_id, catalog_id);
+    return;
   }
-  // If name is provided and catalog_id is omitted, create new catalog
-  else if (name) {
+
+  if (name) {
     await createAndLinkNewCatalog(account_id, name);
+    return;
   }
-  // If neither is provided, it's an invalid input
-  else {
-    throw new Error("Either catalog_id or name must be provided");
-  }
+
+  throw new Error("Either catalog_id or name must be provided");
 }

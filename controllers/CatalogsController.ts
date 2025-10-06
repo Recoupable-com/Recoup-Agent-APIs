@@ -13,6 +13,36 @@ type CreateCatalogsRequest = {
 };
 
 /**
+ * Retrieves all catalogs associated with a specific account.
+ */
+export const getCatalogsHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { account_id } = req.query;
+
+    if (!account_id || typeof account_id !== "string") {
+      res.status(400).json({
+        status: "error",
+        error: "account_id parameter is required",
+      });
+      return;
+    }
+
+    // Get catalogs for the specified account
+    const response = await getCatalogsForAccounts([account_id]);
+    res.json(response);
+  } catch (error) {
+    console.error("Error fetching catalogs:", error);
+    res.status(500).json({
+      status: "error",
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+};
+
+/**
  * Creates new catalogs or links existing catalogs to accounts.
  *
  * Behavior:

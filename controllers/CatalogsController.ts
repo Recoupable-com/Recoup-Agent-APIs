@@ -54,12 +54,6 @@ export const getCatalogsHandler = async (
 
 /**
  * Creates new catalogs or links existing catalogs to accounts.
- *
- * Behavior:
- * - If catalog_id is provided: links existing catalog to account
- * - If name is provided and catalog_id is omitted: creates new catalog then links it
- * - If both name and catalog_id are provided: catalog_id takes priority
- * - Returns the catalogs list for the specified account_id
  */
 export const createCatalogsHandler = async (
   req: Request,
@@ -117,12 +111,6 @@ export const createCatalogsHandler = async (
 
 /**
  * Deletes catalog-account relationships and cleans up orphaned catalogs.
- *
- * Behavior:
- * - Removes the relationship in account_catalogs for each {catalog_id, account_id} pair
- * - After removal, if no account_catalogs records remain for a catalog_id, the catalog is deleted from catalogs (cascades delete of related catalog_songs)
- * - If other account_catalogs records remain for a catalog_id, only the relationship is removed; the catalog remains for other accounts
- * - If either catalog_id or account_id is missing in any item, an error is returned
  */
 export const deleteCatalogsHandler = async (
   req: Request,

@@ -13,7 +13,9 @@ type CatalogsResponse = {
 export async function getCatalogsForAccounts(
   accountIds: string[]
 ): Promise<CatalogsResponse> {
-  const data = await selectAccountCatalogs(accountIds);
+  const data = await selectAccountCatalogs({
+    accountIds,
+  });
 
   // Transform the nested data structure
   const catalogs =

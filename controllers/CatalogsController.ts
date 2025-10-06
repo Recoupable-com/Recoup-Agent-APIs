@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { processCatalogInput } from "../lib/catalogs/processCatalogInput";
 import { getCatalogsForAccounts } from "../lib/catalogs/getCatalogsForAccounts";
+import { deleteCatalogsForAccounts } from "../lib/catalogs/deleteCatalogsForAccounts";
 
 type CatalogInput = {
   account_id: string;
@@ -10,6 +11,15 @@ type CatalogInput = {
 
 type CreateCatalogsRequest = {
   catalogs: CatalogInput[];
+};
+
+export type DeleteCatalogRequest = {
+  catalog_id: string;
+  account_id: string;
+};
+
+type DeleteCatalogsRequest = {
+  catalogs: DeleteCatalogRequest[];
 };
 
 /**
@@ -101,6 +111,63 @@ export const createCatalogsHandler = async (
     res.status(500).json({
       status: "error",
       error: "Internal server error",
+    });
+  }
+};
+
+/**
+ * Deletes catalog-account relationships and cleans up orphaned catalogs.
+ *
+ * Behavior:
+ * - Removes the relationship in account_catalogs for each {catalog_id, account_id} pair
+ * - After removal, if no account_catalogs records remain for a catalog_id, the catalog is deleted from catalogs (cascades delete of related catalog_songs)
+ * - If other account_catalogs records remain for a catalog_id, only the relationship is removed; the catalog remains for other accounts
+ * - If either catalog_id or account_id is missing in any item, an error is returned
+ */
+export const deleteCatalogsHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const body = req.body as DeleteCatalogsRequest;
+
+    // Validate request body
+    if (
+      !body.catalogs ||
+      !Array.isArray(body.catalogs) ||
+      body.catalogs.length === 0
+    ) {
+      res.status(400).json({
+        status: "error",
+        error: "catalogs array is required and must not be empty",
+      });
+      return;
+    }
+
+    // Validate all delete requests have required fields
+    const invalidRequests = body.catalogs.filter(
+      (catalog) => !catalog.catalog_id || !catalog.account_id
+    );
+    if (invalidRequests.length > 0) {
+      res.status(400).json({
+        status: "error",
+        error: "Both catalog_id and account_id are required for each catalog",
+      });
+      return;
+    }
+
+    // Delete catalog-account relationships and clean up orphaned catalogs
+    await deleteCatalogsForAccounts(body.catalogs);
+
+    res.json({
+      status: "success",
+      message: "Catalogs deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting catalogs:", error);
+    res.status(500).json({
+      status: "error",
+      error: error instanceof Error ? error.message : "Internal server error",
     });
   }
 };

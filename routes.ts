@@ -26,7 +26,10 @@ import {
 } from "./controllers/InstagramController";
 import { getScraperResultsHandler } from "./controllers/ApifyController";
 import { getSubscriptionsHandler } from "./controllers/SubscriptionsController";
-import { createCatalogsHandler } from "./controllers/CatalogsController";
+import {
+  createCatalogsHandler,
+  getCatalogsHandler,
+} from "./controllers/CatalogsController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -86,6 +89,7 @@ routes.get("/instagram/comments", getInstagramCommentsHandler as any);
 
 routes.get("/subscriptions", getSubscriptionsHandler as any);
 
+routes.get("/catalogs", getCatalogsHandler as any);
 routes.post("/catalogs", createCatalogsHandler as any);
 
 export default routes;

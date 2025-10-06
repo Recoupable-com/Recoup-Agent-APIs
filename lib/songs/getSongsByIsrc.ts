@@ -1,10 +1,21 @@
 import { Tables } from "../../types/database.types";
 import generateAccessToken from "../spotify/generateAccessToken";
 import getIsrc from "../spotify/getIsrc";
+import { getSpotifyArtists, SpotifyArtist } from "./getSpotifyArtists";
+
+export type SongWithSpotify = Tables<"songs"> & {
+  spotifyArtists?: SpotifyArtist[];
+};
+
+type SpotifyTrackInfo = {
+  name?: string | null;
+  album?: string | null;
+  artists?: SpotifyArtist[];
+};
 
 const getSongsByIsrc = async (
   songs: Tables<"songs">[]
-): Promise<Tables<"songs">[]> => {
+): Promise<SongWithSpotify[]> => {
   if (songs.length === 0) return songs;
 
   const tokenResult = await generateAccessToken();
@@ -14,10 +25,7 @@ const getSongsByIsrc = async (
   }
 
   const accessToken = tokenResult.access_token;
-  const spotifyTrackByIsrc = new Map<
-    string,
-    { name?: string | null; album?: { name?: string | null } | null }
-  >();
+  const spotifyTrackByIsrc = new Map<string, SpotifyTrackInfo>();
 
   await Promise.all(
     songs.map(async (song) => {
@@ -29,7 +37,8 @@ const getSongsByIsrc = async (
       if (track) {
         spotifyTrackByIsrc.set(song.isrc, {
           name: track.name,
-          album: track.album,
+          album: track.album?.name,
+          artists: getSpotifyArtists(track.artists),
         });
       }
     })
@@ -45,7 +54,8 @@ const getSongsByIsrc = async (
     return {
       ...song,
       name: track.name ?? song.name,
-      album: track.album?.name ?? song.album,
+      album: track.album ?? song.album,
+      spotifyArtists: track.artists,
     };
   });
 };

@@ -1,6 +1,5 @@
 import { Tables } from "../../types/database.types";
-import generateAccessToken from "../spotify/generateAccessToken";
-import getIsrc from "../spotify/getIsrc";
+import getSongsByIsrc from "./getSongsByIsrc";
 import { upsertSongs } from "../supabase/songs/upsertSongs";
 
 /**
@@ -23,47 +22,6 @@ export async function processSongsInput(
 
   if (uniqueSongs.length === 0) return;
 
-  const tokenResult = await generateAccessToken();
-
-  if (!tokenResult.access_token || tokenResult.error) {
-    throw tokenResult.error ?? new Error("Failed to generate Spotify token");
-  }
-
-  const accessToken = tokenResult.access_token;
-  const spotifyTrackByIsrc = new Map<
-    string,
-    { name?: string | null; album?: { name?: string | null } | null }
-  >();
-
-  await Promise.all(
-    uniqueSongs.map(async (song) => {
-      const { track } = await getIsrc({
-        isrc: song.isrc,
-        accessToken,
-      });
-
-      if (track) {
-        spotifyTrackByIsrc.set(song.isrc, {
-          name: track.name,
-          album: track.album,
-        });
-      }
-    })
-  );
-
-  const enrichedSongs = uniqueSongs.map((song) => {
-    const track = spotifyTrackByIsrc.get(song.isrc);
-
-    if (!track) {
-      return song;
-    }
-
-    return {
-      ...song,
-      name: track.name ?? song.name,
-      album: track.album?.name ?? song.album,
-    };
-  });
-
+  const enrichedSongs = await getSongsByIsrc(uniqueSongs);
   await upsertSongs(enrichedSongs);
 }

@@ -7,19 +7,23 @@ import { DeleteCatalogRequest } from "../../../controllers/CatalogsController";
 export async function deleteAccountCatalogs(
   deleteRequests: DeleteCatalogRequest[]
 ): Promise<string[]> {
-  const catalogIds = deleteRequests.map((req) => req.catalog_id);
-  const accountIds = deleteRequests.map((req) => req.account_id);
+  // Delete each specific combination individually
+  const deletePromises = deleteRequests.map(async (req) => {
+    const { error } = await supabase
+      .from("account_catalogs")
+      .delete()
+      .eq("catalog", req.catalog_id)
+      .eq("account", req.account_id);
 
-  // Delete all matching relationships
-  const { error } = await supabase
-    .from("account_catalogs")
-    .delete()
-    .in("catalog", catalogIds)
-    .in("account", accountIds);
+    if (error) {
+      throw new Error(
+        `Failed to delete account_catalog relationship: ${error.message}`
+      );
+    }
 
-  if (error) {
-    throw new Error(`Failed to delete account_catalogs: ${error.message}`);
-  }
+    return req.catalog_id;
+  });
 
+  const catalogIds = await Promise.all(deletePromises);
   return catalogIds;
 }

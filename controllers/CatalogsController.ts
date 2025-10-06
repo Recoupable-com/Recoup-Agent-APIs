@@ -12,16 +12,9 @@ type CreateCatalogsRequest = {
   catalogs: CatalogInput[];
 };
 
-type Catalog = {
-  id: string;
-  name: string;
-  created_at: string;
-  updated_at: string;
-};
-
 type CatalogsResponse = {
   status: string;
-  catalogs?: Catalog[];
+  catalogs?: Tables<"catalogs">[];
   error?: string;
 };
 
@@ -220,7 +213,7 @@ async function getCatalogsForAccount(
   }
 
   // Transform the nested data structure
-  const catalogs: Catalog[] =
+  const catalogs: Tables<"catalogs">[] =
     data?.map((item: any) => ({
       id: item.catalogs.id,
       name: item.catalogs.name,

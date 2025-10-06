@@ -159,10 +159,14 @@ export const deleteCatalogsHandler = async (
     // Delete catalog-account relationships and clean up orphaned catalogs
     await deleteCatalogsForAccounts(body.catalogs);
 
-    res.json({
-      status: "success",
-      message: "Catalogs deleted successfully",
-    });
+    // Get unique account IDs from the delete requests
+    const uniqueAccountIds = [
+      ...new Set(body.catalogs.map((catalog) => catalog.account_id)),
+    ];
+
+    // Return the updated catalogs list for all accounts
+    const response = await getCatalogsForAccounts(uniqueAccountIds);
+    res.json(response);
   } catch (error) {
     console.error("Error deleting catalogs:", error);
     res.status(500).json({

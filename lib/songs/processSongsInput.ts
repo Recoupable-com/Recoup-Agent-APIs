@@ -21,10 +21,7 @@ export async function processSongsInput(
 
   const uniqueSongs = Array.from(songMap.values());
 
-  if (uniqueSongs.length === 0) {
-    await upsertSongs(uniqueSongs);
-    return;
-  }
+  if (uniqueSongs.length === 0) return;
 
   const tokenResult = await generateAccessToken();
 

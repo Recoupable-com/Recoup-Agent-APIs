@@ -1,5 +1,6 @@
-import { upsertSongs } from "../supabase/songs/upsertSongs";
 import { Tables } from "../../types/database.types";
+import getSongsByIsrc from "./getSongsByIsrc";
+import { upsertSongs } from "../supabase/songs/upsertSongs";
 
 /**
  * Processes songs input - upserts songs
@@ -19,6 +20,8 @@ export async function processSongsInput(
 
   const uniqueSongs = Array.from(songMap.values());
 
-  // Upsert songs
-  await upsertSongs(uniqueSongs);
+  if (uniqueSongs.length === 0) return;
+
+  const enrichedSongs = await getSongsByIsrc(uniqueSongs);
+  await upsertSongs(enrichedSongs);
 }

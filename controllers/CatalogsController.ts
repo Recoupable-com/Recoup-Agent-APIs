@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { processCatalogInput } from "../lib/catalogs/processCatalogInput";
 import { getCatalogsForAccounts } from "../lib/catalogs/getCatalogsForAccounts";
+import { deleteCatalogsForAccounts } from "../lib/catalogs/deleteCatalogsForAccounts";
 
 type CatalogInput = {
   account_id: string;
@@ -10,6 +11,15 @@ type CatalogInput = {
 
 type CreateCatalogsRequest = {
   catalogs: CatalogInput[];
+};
+
+export type DeleteCatalogRequest = {
+  catalog_id: string;
+  account_id: string;
+};
+
+type DeleteCatalogsRequest = {
+  catalogs: DeleteCatalogRequest[];
 };
 
 /**
@@ -44,12 +54,6 @@ export const getCatalogsHandler = async (
 
 /**
  * Creates new catalogs or links existing catalogs to accounts.
- *
- * Behavior:
- * - If catalog_id is provided: links existing catalog to account
- * - If name is provided and catalog_id is omitted: creates new catalog then links it
- * - If both name and catalog_id are provided: catalog_id takes priority
- * - Returns the catalogs list for the specified account_id
  */
 export const createCatalogsHandler = async (
   req: Request,
@@ -101,6 +105,61 @@ export const createCatalogsHandler = async (
     res.status(500).json({
       status: "error",
       error: "Internal server error",
+    });
+  }
+};
+
+/**
+ * Deletes catalog-account relationships and cleans up orphaned catalogs.
+ */
+export const deleteCatalogsHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const body = req.body as DeleteCatalogsRequest;
+
+    // Validate request body
+    if (
+      !body.catalogs ||
+      !Array.isArray(body.catalogs) ||
+      body.catalogs.length === 0
+    ) {
+      res.status(400).json({
+        status: "error",
+        error: "catalogs array is required and must not be empty",
+      });
+      return;
+    }
+
+    // Validate all delete requests have required fields
+    const invalidRequests = body.catalogs.filter(
+      (catalog) => !catalog.catalog_id || !catalog.account_id
+    );
+    if (invalidRequests.length > 0) {
+      res.status(400).json({
+        status: "error",
+        error: "Both catalog_id and account_id are required for each catalog",
+      });
+      return;
+    }
+
+    // Delete catalog-account relationships and clean up orphaned catalogs
+    await deleteCatalogsForAccounts(body.catalogs);
+
+    // Get unique account IDs from the delete requests
+    const uniqueAccountIds = [
+      ...new Set(body.catalogs.map((catalog) => catalog.account_id)),
+    ];
+
+    // Return the updated catalogs list for all accounts
+    const response = await getCatalogsForAccounts(uniqueAccountIds);
+    res.json(response);
+  } catch (error) {
+    console.error("Error deleting catalogs:", error);
+    res.status(500).json({
+      status: "error",
+      error: error instanceof Error ? error.message : "Internal server error",
     });
   }
 };

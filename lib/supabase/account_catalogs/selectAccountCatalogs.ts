@@ -6,27 +6,42 @@ type AccountCatalogWithCatalog = {
   catalogs: Tables<"catalogs">[];
 };
 
+type SelectAccountCatalogsParams = {
+  accountIds?: string[];
+  catalogIds?: string[];
+};
+
 /**
- * Selects account_catalogs with related catalog data for multiple accounts
+ * Selects account_catalogs with optional related catalog data
  */
 export async function selectAccountCatalogs(
-  accountIds: string[]
+  params: SelectAccountCatalogsParams
 ): Promise<AccountCatalogWithCatalog[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("account_catalogs")
     .select(
       `
-      catalog,
-      catalogs!inner (
-        id,
-        name,
-        created_at,
-        updated_at
-      )
-    `
+    catalog,
+    catalogs!inner (
+      id,
+      name,
+      created_at,
+      updated_at
     )
-    .in("account", accountIds)
+  `
+    )
     .order("created_at", { ascending: false });
+
+  // Add filters based on provided parameters
+  if (params.accountIds && params.accountIds.length > 0) {
+    query = query.in("account", params.accountIds);
+  }
+
+  if (params.catalogIds && params.catalogIds.length > 0) {
+    query = query.in("catalog", params.catalogIds);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(`Failed to fetch account_catalogs: ${error.message}`);

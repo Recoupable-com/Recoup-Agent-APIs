@@ -29,6 +29,7 @@ import { getSubscriptionsHandler } from "./controllers/SubscriptionsController";
 import {
   createCatalogsHandler,
   getCatalogsHandler,
+  deleteCatalogsHandler,
 } from "./controllers/CatalogsController";
 
 const routes = express.Router();
@@ -91,5 +92,6 @@ routes.get("/subscriptions", getSubscriptionsHandler as any);
 
 routes.get("/catalogs", getCatalogsHandler as any);
 routes.post("/catalogs", createCatalogsHandler as any);
+routes.delete("/catalogs", deleteCatalogsHandler as any);
 
 export default routes;

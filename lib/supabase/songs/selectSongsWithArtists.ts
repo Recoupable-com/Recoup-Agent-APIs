@@ -53,10 +53,13 @@ export async function selectSongsWithArtists(
   }
 
   // Transform the nested data structure
-  const songs: SongWithArtists[] = (data || []).map((song: any) => ({
-    ...song,
-    artists: song.song_artists?.map((sa: any) => sa.accounts) || [],
-  }));
+  const songs: SongWithArtists[] = (data || []).map((song: any) => {
+    const { song_artists, ...songData } = song;
+    return {
+      ...songData,
+      artists: song_artists?.map((sa: any) => sa.accounts) || [],
+    };
+  });
 
   return songs;
 }

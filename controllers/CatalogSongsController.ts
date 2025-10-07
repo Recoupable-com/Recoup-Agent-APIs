@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
-import { TablesInsert } from "../types/database.types";
+import { TablesInsert, Tables } from "../types/database.types";
 import { insertCatalogSongs } from "../lib/supabase/catalog_songs/insertCatalogSongs";
 import { selectCatalogSongsWithArtists } from "../lib/supabase/catalog_songs/selectCatalogSongsWithArtists";
+import { processSongsInput } from "../lib/songs/processSongsInput";
 
 type CatalogSongInput = {
   catalog_id: string;
@@ -49,6 +50,20 @@ export const createCatalogSongsHandler = async (
       return;
     }
 
+    // Get unique ISRCs and ensure song records exist
+    const uniqueIsrcs = [...new Set(body.songs.map((song) => song.isrc))];
+
+    // Create song records for any missing ISRCs using existing lib
+    const songsToProcess: Tables<"songs">[] = uniqueIsrcs.map((isrc) => ({
+      isrc,
+      name: "",
+      album: "",
+      lyrics: "",
+      updated_at: new Date().toISOString(),
+    }));
+
+    await processSongsInput(songsToProcess);
+
     // Prepare catalog_songs data for insertion
     const catalogSongsData: TablesInsert<"catalog_songs">[] = body.songs.map(
       (song) => ({
@@ -60,11 +75,10 @@ export const createCatalogSongsHandler = async (
     // Insert catalog_songs relationships
     await insertCatalogSongs(catalogSongsData);
 
-    // Get unique catalog IDs and ISRCs for fetching the created relationships
+    // Get unique catalog IDs for fetching the created relationships
     const uniqueCatalogIds = [
       ...new Set(body.songs.map((song) => song.catalog_id)),
     ];
-    const uniqueIsrcs = [...new Set(body.songs.map((song) => song.isrc))];
 
     // Fetch the created catalog songs with artist information
     const catalogSongs = await selectCatalogSongsWithArtists({

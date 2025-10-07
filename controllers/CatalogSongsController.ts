@@ -81,12 +81,12 @@ export const createCatalogSongsHandler = async (
     ];
 
     // Fetch the created catalog songs with artist information
-    const catalogSongs = await selectCatalogSongsWithArtists({
+    const result = await selectCatalogSongsWithArtists({
       isrcs: uniqueIsrcs,
     });
 
     // Filter to only include songs from the catalogs we just added to
-    const filteredCatalogSongs = catalogSongs.filter((catalogSong) =>
+    const filteredCatalogSongs = result.songs.filter((catalogSong) =>
       uniqueCatalogIds.includes(catalogSong.catalog_id)
     );
 
@@ -96,6 +96,81 @@ export const createCatalogSongsHandler = async (
     });
   } catch (error) {
     console.error("Error creating catalog songs:", error);
+    res.status(500).json({
+      status: "error",
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+};
+
+/**
+ * Retrieves catalog songs with pagination.
+ *
+ * Parameters:
+ * - catalog_id (required): The unique identifier of the catalog to query songs for
+ * - page (optional): Page number for pagination (default: 1)
+ * - limit (optional): Number of songs per page (default: 20, max: 100)
+ *
+ * Returns songs with associated artist information and pagination metadata.
+ */
+export const getCatalogSongsHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { catalog_id, page, limit } = req.query;
+
+    // Validate required catalog_id parameter
+    if (!catalog_id || typeof catalog_id !== "string") {
+      res.status(400).json({
+        status: "error",
+        error: "catalog_id parameter is required",
+      });
+      return;
+    }
+
+    // Parse and validate pagination parameters
+    const pageNum = page ? parseInt(page as string, 10) : 1;
+    const limitNum = limit ? parseInt(limit as string, 10) : 20;
+
+    if (isNaN(pageNum) || pageNum < 1) {
+      res.status(400).json({
+        status: "error",
+        error: "page must be a positive integer",
+      });
+      return;
+    }
+
+    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+      res.status(400).json({
+        status: "error",
+        error: "limit must be a positive integer between 1 and 100",
+      });
+      return;
+    }
+
+    // Fetch catalog songs with pagination
+    const result = await selectCatalogSongsWithArtists({
+      catalogId: catalog_id,
+      page: pageNum,
+      limit: limitNum,
+    });
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(result.total_count / limitNum);
+
+    res.json({
+      status: "success",
+      songs: result.songs,
+      pagination: {
+        total_count: result.total_count,
+        page: pageNum,
+        limit: limitNum,
+        total_pages: totalPages,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching catalog songs:", error);
     res.status(500).json({
       status: "error",
       error: error instanceof Error ? error.message : "Internal server error",

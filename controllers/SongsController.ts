@@ -24,8 +24,11 @@ export const getSongsHandler = async (
     const { isrc, artist_account_id } = req.query;
 
     // Prepare parameters for the query
-    const isrcs = isrc ? [isrc] : [];
-    const artistAccountIds = artist_account_id ? [artist_account_id] : [];
+    const isrcs = isrc && typeof isrc === "string" ? [isrc] : undefined;
+    const artistAccountIds =
+      artist_account_id && typeof artist_account_id === "string"
+        ? [artist_account_id]
+        : undefined;
 
     // Get songs with artist information
     const response = await getSongsWithArtists(isrcs, artistAccountIds);

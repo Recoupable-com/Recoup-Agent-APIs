@@ -2,18 +2,21 @@ import supabase from "../serverClient";
 import { TablesInsert } from "../../../types/database.types";
 
 /**
- * Inserts catalog_songs relationships
+ * Upserts catalog_songs relationships (inserts if new, ignores if exists)
  */
 export async function insertCatalogSongs(
   catalogSongs: TablesInsert<"catalog_songs">[]
 ): Promise<TablesInsert<"catalog_songs">[]> {
   const { data, error } = await supabase
     .from("catalog_songs")
-    .insert(catalogSongs)
+    .upsert(catalogSongs, {
+      onConflict: "catalog,song",
+      ignoreDuplicates: true,
+    })
     .select();
 
   if (error) {
-    throw new Error(`Failed to insert catalog_songs: ${error.message}`);
+    throw new Error(`Failed to upsert catalog_songs: ${error.message}`);
   }
 
   return data || [];

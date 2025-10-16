@@ -24,12 +24,12 @@ export class PilotController {
     const validationResult = RequestSchema.safeParse(req.body);
     if (!validationResult.success) {
       console.error("[ERROR] Invalid request format:", {
-        errors: validationResult.error.errors,
+        errors: validationResult.error.issues,
         body: req.body,
       });
       return res.status(400).json({
         message: "Invalid request format",
-        errors: validationResult.error.errors,
+        errors: validationResult.error.issues,
       });
     }
     const { handles, artistId } = validationResult.data;

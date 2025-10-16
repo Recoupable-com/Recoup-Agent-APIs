@@ -1,6 +1,18 @@
 import { generateText } from "ai";
 import { DEFAULT_MODEL } from "../consts";
 import { SpotifyTrack } from "../../types/spotify.types";
+import { getSpotifyArtistNames } from "./getSpotifyArtistNames";
+
+const systemPrompt = `You are a music metadata expert that creates factual track descriptions for AI-powered music recommendation systems. 
+
+CRITICAL: Only include information that can be directly derived from the provided track data. Do NOT estimate, guess, or hallucinate any details like:
+- BPM/tempo (unless explicitly provided)
+- Specific genres (unless clearly indicated by artist/title context)
+- Instrumentation details
+- Energy levels
+- Mood characteristics
+
+Focus on creating concise, factual metadata that helps AI assistants understand what the track actually is based on verifiable information.`;
 
 /**
  * Generates descriptive notes for a Spotify track using AI
@@ -14,24 +26,10 @@ export const generateTrackNotes = async (
     return "";
   }
 
+  const artistNames = getSpotifyArtistNames(track.artists);
+
   try {
-    const artistNames =
-      track.artists
-        .map((artist) => artist.name)
-        .filter(Boolean)
-        .join(", ") || "Unknown Artist";
     const albumName = track.album.name || "Unknown Album";
-
-    const systemPrompt = `You are a music metadata expert that creates factual track descriptions for AI-powered music recommendation systems. 
-
-CRITICAL: Only include information that can be directly derived from the provided track data. Do NOT estimate, guess, or hallucinate any details like:
-- BPM/tempo (unless explicitly provided)
-- Specific genres (unless clearly indicated by artist/title context)
-- Instrumentation details
-- Energy levels
-- Mood characteristics
-
-Focus on creating concise, factual metadata that helps AI assistants understand what the track actually is based on verifiable information.`;
 
     const userPrompt = `Track Details:
 Name: ${track.name}
@@ -52,12 +50,6 @@ Generate a concise, factual track description based only on the provided informa
     return result.text.trim();
   } catch (error) {
     console.error("Error generating track notes:", error);
-    // Return a fallback description if AI generation fails
-    const artistNames =
-      track.artists
-        .map((artist) => artist.name)
-        .filter(Boolean)
-        .join(", ") || "Unknown Artist";
     return `"${track.name}" by ${artistNames} - A musical track from ${track.album.name || "an album"}.`;
   }
 };

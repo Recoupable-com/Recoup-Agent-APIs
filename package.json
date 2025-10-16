@@ -30,6 +30,7 @@
     "@types/stripe": "^8.0.417",
     "@types/uuid": "^10.0.0",
     "agent-twitter-client": "^0.0.16",
+    "ai": "^5.0.72",
     "apify-client": "^2.10.0",
     "arweave": "^1.14.4",
     "axios": "^1.7.9",

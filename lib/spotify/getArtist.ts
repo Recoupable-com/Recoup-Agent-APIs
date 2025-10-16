@@ -1,4 +1,9 @@
-const getArtist = async (id: string, accessToken: string) => {
+import { SpotifyArtist } from "../../types/spotify.types";
+
+const getArtist = async (
+  id: string,
+  accessToken: string
+): Promise<{ artist: SpotifyArtist | null; error: Error | null }> => {
   try {
     const response = await fetch(`https://api.spotify.com/v1/artists/${id}`, {
       method: "GET",

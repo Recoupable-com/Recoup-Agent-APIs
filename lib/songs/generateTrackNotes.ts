@@ -2,12 +2,13 @@ import { generateText } from "ai";
 import { DEFAULT_MODEL } from "../consts";
 import { SpotifyTrack } from "../../types/spotify.types";
 import { getSpotifyArtistNames } from "./getSpotifyArtistNames";
+import { getArtistsWithGenres } from "./getArtistsWithGenres";
 
 const systemPrompt = `You are a music metadata expert that creates factual track descriptions for AI-powered music recommendation systems. 
 
 CRITICAL: Only include information that can be directly derived from the provided track data. Do NOT estimate, guess, or hallucinate any details like:
 - BPM/tempo (unless explicitly provided)
-- Specific genres (unless clearly indicated by artist/title context)
+- Specific genres (unless indicated by the artists genres)
 - Instrumentation details
 - Energy levels
 - Mood characteristics
@@ -30,10 +31,11 @@ export const generateTrackNotes = async (
 
   try {
     const albumName = track.album.name || "Unknown Album";
+    const artistsWithGenres = await getArtistsWithGenres(track);
 
     const userPrompt = `Track Details:
 Name: ${track.name}
-Artists: ${artistNames}
+Artists: ${artistsWithGenres}
 Album: ${albumName}
 Duration: ${Math.floor(track.duration_ms / 1000)}s
 Popularity: ${track.popularity}/100

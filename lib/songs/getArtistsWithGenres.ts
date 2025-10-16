@@ -10,7 +10,6 @@ import generateAccessToken from "../spotify/generateAccessToken";
 export const getArtistsWithGenres = async (
   track: SpotifyTrack
 ): Promise<string> => {
-  // Get Spotify access token
   const tokenResult = await generateAccessToken();
   if (!tokenResult.access_token || tokenResult.error) {
     throw tokenResult.error ?? new Error("Failed to generate Spotify token");

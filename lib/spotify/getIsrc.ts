@@ -1,17 +1,10 @@
 import getSearch from "./getSearch";
+import { SpotifyTrack } from "../../types/spotify.types";
 
 type GetIsrcParams = {
   isrc: string;
   accessToken: string;
   market?: string;
-};
-
-type SpotifyTrack = {
-  name?: string | null;
-  album?: {
-    name?: string | null;
-  } | null;
-  [key: string]: unknown;
 };
 
 const getIsrc = async ({

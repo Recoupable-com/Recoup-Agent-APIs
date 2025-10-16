@@ -44,7 +44,7 @@ export async function selectCatalogSongsWithArtists(
         isrc,
         name,
         album,
-        lyrics,
+        notes,
         updated_at,
         song_artists (
           artist,

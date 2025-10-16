@@ -2,15 +2,17 @@ import { Tables } from "../../types/database.types";
 import generateAccessToken from "../spotify/generateAccessToken";
 import getIsrc from "../spotify/getIsrc";
 import { getSpotifyArtists, SpotifyArtist } from "./getSpotifyArtists";
-
-export type SongWithSpotify = Tables<"songs"> & {
-  spotifyArtists?: SpotifyArtist[];
-};
+import { generateTrackNotes } from "./generateTrackNotes";
 
 type SpotifyTrackInfo = {
   name?: string | null;
   album?: string | null;
   artists?: SpotifyArtist[];
+  notes: string;
+};
+
+export type SongWithSpotify = Tables<"songs"> & {
+  spotifyArtists?: SpotifyArtist[];
 };
 
 const getSongsByIsrc = async (
@@ -35,10 +37,13 @@ const getSongsByIsrc = async (
       });
 
       if (track) {
+        const notes = await generateTrackNotes(track);
+
         spotifyTrackByIsrc.set(song.isrc, {
           name: track.name,
           album: track.album?.name,
           artists: getSpotifyArtists(track.artists),
+          notes,
         });
       }
     })
@@ -56,6 +61,7 @@ const getSongsByIsrc = async (
       name: track.name ?? song.name,
       album: track.album ?? song.album,
       spotifyArtists: track.artists,
+      notes: track.notes || null,
     };
   });
 };

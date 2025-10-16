@@ -63,7 +63,7 @@ export const createCatalogSongsHandler = async (
       isrc,
       name: "",
       album: "",
-      lyrics: "",
+      notes: "",
       updated_at: new Date().toISOString(),
     }));
 

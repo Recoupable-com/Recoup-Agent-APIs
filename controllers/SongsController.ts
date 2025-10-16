@@ -48,7 +48,7 @@ export const getSongsHandler = async (
  * Behavior:
  * - Upserts songs based on ISRC (inserts if new, updates if exists)
  * - Links songs to the specified artist accounts
- * - Optional fields (name, album, lyrics) are applied only if internal search cannot find valid info for the provided ISRC
+ * - Optional fields (name, album, notes) are applied only if internal search cannot find valid info for the provided ISRC
  * - Returns the created/updated songs with artist information
  */
 export const createSongsHandler = async (

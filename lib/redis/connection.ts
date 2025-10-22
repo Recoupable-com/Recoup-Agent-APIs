@@ -1,11 +1,16 @@
 import { Redis } from "ioredis";
 
-// Redis connection configuration using REDIS_URL
+// Verify environment is loaded
+const redisUrl = process.env.REDIS_URL;
+
+// Parse Redis URL manually to ensure proper connection
+const url = new URL(redisUrl as string);
 const redisConfig = {
-  url: process.env.REDIS_URL,
+  host: url.hostname,
+  port: parseInt(url.port),
+  password: url.password,
   lazyConnect: true,
   retryDelayOnFailover: 100,
-  maxRetriesPerRequest: 3,
 };
 
 // Create Redis connection

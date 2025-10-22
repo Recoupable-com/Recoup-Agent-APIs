@@ -50,9 +50,6 @@ importers:
       agent-twitter-client:
         specifier: ^0.0.16
         version: 0.0.16
-      ai:
-        specifier: ^5.0.72
-        version: 5.0.72(zod@4.1.12)
       apify-client:
         specifier: ^2.10.0
         version: 2.12.0
@@ -140,22 +137,6 @@ packages:
 
   '@adraffy/ens-normalize@1.11.0':
     resolution: {integrity: sha512-/3DDPKHqqIqxUULp8yP4zODUY1i+2xvVWsv8A79xGWdCAG+8sb0hRh0Rk2QyOJUnnbyPUAZYcpBuRe3nS2OIUg==}
-
-  '@ai-sdk/gateway@1.0.40':
-    resolution: {integrity: sha512-zlixM9jac0w0jjYl5gwNq+w9nydvraAmLaZQbbh+QpHU+OPkTIZmyBcKeTq5eGQKQxhi+oquHxzCSKyJx3egGw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/provider-utils@3.0.12':
-    resolution: {integrity: sha512-ZtbdvYxdMoria+2SlNarEk6Hlgyf+zzcznlD55EAl+7VZvJaSg2sqPvwArY7L6TfDEDJsnCq0fdhBSkYo0Xqdg==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/provider@2.0.0':
-    resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
-    engines: {node: '>=18'}
 
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
@@ -698,10 +679,6 @@ packages:
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
     engines: {node: ^14.21.3 || >=16}
 
-  '@opentelemetry/api@1.9.0':
-    resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
-    engines: {node: '>=8.0.0'}
-
   '@playwright/test@1.50.1':
     resolution: {integrity: sha512-Jii3aBg+CEDpgnuDxEp/h7BimHcUTDlpEtce89xEumlJ5ef2hqepZ+PWp1DDpYC/VO9fmWVI1IlEaoI5fK9FXQ==}
     engines: {node: '>=18'}
@@ -792,9 +769,6 @@ packages:
 
   '@stackso/js-core@0.5.11':
     resolution: {integrity: sha512-gq4y3Oj4yOkt9jqELOHB+qB+Jmi6GOIPokaRFVfEBcW8IiPX+Hi1jBl8/nxvfbRTRcLCdOliRDcQOiaaGs3HsQ==}
-
-  '@standard-schema/spec@1.0.0':
-    resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
 
   '@starknet-io/types-js@0.7.10':
     resolution: {integrity: sha512-1VtCqX4AHWJlRRSYGSn+4X1mqolI1Tdq62IwzoU2vUuEE72S1OlEeGhpvd6XsdqXcfHmVzYfj8k1XtKBQqwo9w==}
@@ -960,10 +934,6 @@ packages:
   '@types/yargs@17.0.33':
     resolution: {integrity: sha512-WpxBCKWPLr4xSsHgz511rFJAM+wS28w2zEO1QDNY5zM/S8ok70NNfztH0xwhqKyaK0OHCbN98LDAZuy1ctxDkA==}
 
-  '@vercel/oidc@3.0.2':
-    resolution: {integrity: sha512-JekxQ0RApo4gS4un/iMGsIL1/k4KUBe3HmnGcDvzHuFBdQdudEJgTqcsJC7y6Ul4Yw5CeykgvQbX2XeEJd0+DA==}
-    engines: {node: '>= 20'}
-
   JSONStream@1.3.5:
     resolution: {integrity: sha512-E+iruNOY8VV9s4JEbe1aNEm6MiszPRr/UfcHMz0TQh1BXSxHK+ASV1R6W4HpjBhSeS+54PIsAMCBmwD06LLsqQ==}
     hasBin: true
@@ -1023,12 +993,6 @@ packages:
   agentkeepalive@4.6.0:
     resolution: {integrity: sha512-kja8j7PjmncONqaTsB8fQ+wE2mSU2DJ9D4XKoJ5PFWIdRMa6SLSN1ff4mOr4jCbfRSsxR4keIiySJU0N9T5hIQ==}
     engines: {node: '>= 8.0.0'}
-
-  ai@5.0.72:
-    resolution: {integrity: sha512-LB4APrlESLGHG/5x+VVdl0yYPpHPHpnGd5Gwl7AWVL+n7T0GYsNos/S/6dZ5CZzxLnPPEBkRgvJC4rupeZqyNg==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
 
   algo-msgpack-with-bigint@2.1.1:
     resolution: {integrity: sha512-F1tGh056XczEaEAqu7s+hlZUDWwOBT70Eq0lfMpBP2YguSQVyxRbprLq5rELXKQOyOaixTWYhMeMQMzP0U5FoQ==}
@@ -1657,10 +1621,6 @@ packages:
   eventemitter3@5.0.1:
     resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
 
-  eventsource-parser@3.0.6:
-    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
-    engines: {node: '>=18.0.0'}
-
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
     engines: {node: '>=10'}
@@ -2183,9 +2143,6 @@ packages:
 
   json-parse-even-better-errors@2.3.1:
     resolution: {integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==}
-
-  json-schema@0.4.0:
-    resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
 
   json-stable-stringify@1.2.1:
     resolution: {integrity: sha512-Lp6HbbBgosLmJbjx0pBLbgvx68FaFU1sdkmBuckmhhJ88kL13OA51CDtR2yJB50eCNMH9wRqtQNNiAqQH4YXnA==}
@@ -3237,24 +3194,6 @@ snapshots:
 
   '@adraffy/ens-normalize@1.11.0': {}
 
-  '@ai-sdk/gateway@1.0.40(zod@4.1.12)':
-    dependencies:
-      '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.12(zod@4.1.12)
-      '@vercel/oidc': 3.0.2
-      zod: 4.1.12
-
-  '@ai-sdk/provider-utils@3.0.12(zod@4.1.12)':
-    dependencies:
-      '@ai-sdk/provider': 2.0.0
-      '@standard-schema/spec': 1.0.0
-      eventsource-parser: 3.0.6
-      zod: 4.1.12
-
-  '@ai-sdk/provider@2.0.0':
-    dependencies:
-      json-schema: 0.4.0
-
   '@ampproject/remapping@2.3.0':
     dependencies:
       '@jridgewell/gen-mapping': 0.3.8
@@ -4273,8 +4212,6 @@ snapshots:
 
   '@noble/hashes@1.8.0': {}
 
-  '@opentelemetry/api@1.9.0': {}
-
   '@playwright/test@1.50.1':
     dependencies:
       playwright: 1.50.1
@@ -4392,8 +4329,6 @@ snapshots:
       - typescript
       - utf-8-validate
       - zod
-
-  '@standard-schema/spec@1.0.0': {}
 
   '@starknet-io/types-js@0.7.10': {}
 
@@ -4605,8 +4540,6 @@ snapshots:
     dependencies:
       '@types/yargs-parser': 21.0.3
 
-  '@vercel/oidc@3.0.2': {}
-
   JSONStream@1.3.5:
     dependencies:
       jsonparse: 1.3.1
@@ -4663,14 +4596,6 @@ snapshots:
   agentkeepalive@4.6.0:
     dependencies:
       humanize-ms: 1.2.1
-
-  ai@5.0.72(zod@4.1.12):
-    dependencies:
-      '@ai-sdk/gateway': 1.0.40(zod@4.1.12)
-      '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.12(zod@4.1.12)
-      '@opentelemetry/api': 1.9.0
-      zod: 4.1.12
 
   algo-msgpack-with-bigint@2.1.1:
     optional: true
@@ -5406,8 +5331,6 @@ snapshots:
   eventemitter3@4.0.7: {}
 
   eventemitter3@5.0.1: {}
-
-  eventsource-parser@3.0.6: {}
 
   execa@5.1.1:
     dependencies:
@@ -6160,8 +6083,6 @@ snapshots:
     optional: true
 
   json-parse-even-better-errors@2.3.1: {}
-
-  json-schema@0.4.0: {}
 
   json-stable-stringify@1.2.1:
     dependencies:

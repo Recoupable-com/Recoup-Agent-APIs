@@ -12,7 +12,6 @@ export const IN_PROCESS_FACTORY_ADDRESS =
   "0x540C18B7f99b3b599c6FeB99964498931c211858" as Address;
 
 export const AI_MODEL = "gpt-4o-mini";
-export const DEFAULT_MODEL = "openai/gpt-5-mini";
 
 export const APIFY_TOKEN = process.env.APIFY_TOKEN;
 export const MAX_TWEETS = 1000;

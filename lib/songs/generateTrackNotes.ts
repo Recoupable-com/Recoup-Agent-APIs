@@ -1,22 +1,9 @@
-import { generateText } from "ai";
-import { DEFAULT_MODEL } from "../consts";
 import { SpotifyTrack } from "../../types/spotify.types";
 import { getSpotifyArtistNames } from "./getSpotifyArtistNames";
 import { getArtistsWithGenres } from "./getArtistsWithGenres";
 
-const systemPrompt = `You are a music metadata expert that creates contextual track descriptions for AI-powered music recommendation systems. Your goal is to help AI assistants understand what this track sounds like and when/where it would be appropriate to recommend.
-
-Based on the track information provided, create a concise description that includes:
-- Genre and musical style characteristics
-- Mood, vibe, and emotional tone
-- Energy level and tempo
-- Recommended context for this track (e.g., party, workout, chill, emotional, celebration, etc.)
-- Key musical elements and instrumentation
-
-Your notes should help an AI assistant answer: "When would I recommend this track?" and "What does this track sound/feel like?"`;
-
 /**
- * Generates descriptive notes for a Spotify track using AI
+ * Generates descriptive notes for a Spotify track
  * @param track - The raw Spotify track object from getIsrc
  * @returns Promise containing the generated notes
  */
@@ -27,31 +14,17 @@ export const generateTrackNotes = async (
     return "";
   }
 
-  const artistNames = getSpotifyArtistNames(track.artists);
-
   try {
     const albumName = track.album.name || "Unknown Album";
     const artistsWithGenres = await getArtistsWithGenres(track);
+    const durationMinutes = Math.floor(track.duration_ms / 60000);
+    const durationSeconds = Math.floor((track.duration_ms % 60000) / 1000);
+    const durationFormatted = `${durationMinutes}:${durationSeconds.toString().padStart(2, "0")}`;
 
-    const userPrompt = `Track Details:
-Name: ${track.name}
-Artists: ${artistsWithGenres}
-Album: ${albumName}
-Duration: ${Math.floor(track.duration_ms / 1000)}s
-Popularity: ${track.popularity}/100
-Release Date: ${track.album.release_date}
-Explicit: ${track.explicit ? "Yes" : "No"}
-
-Generate a concise, factual track description based only on the provided information:`;
-
-    const result = await generateText({
-      model: DEFAULT_MODEL,
-      system: systemPrompt,
-      prompt: userPrompt,
-    });
-    return result.text.trim();
+    return `${track.name} by ${artistsWithGenres} - a musical track from ${albumName}. The track was released on ${track.album.release_date}, has a popularity score of ${track.popularity}/100 and a duration of ${durationFormatted}. It has an explicit flag of ${track.explicit ? "true" : "false"}.`;
   } catch (error) {
     console.error("Error generating track notes:", error);
-    return `"${track.name}" by ${artistNames} - A musical track from ${track.album.name || "an album"}.`;
+    const artistNames = getSpotifyArtistNames(track.artists);
+    return `${track.name} by ${artistNames} - a musical track from ${track.album.name || "an album"}.`;
   }
 };

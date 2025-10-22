@@ -2,9 +2,10 @@ import { Tables } from "../../types/database.types";
 import getSongsByIsrc from "./getSongsByIsrc";
 import { upsertSongs } from "../supabase/songs/upsertSongs";
 import { linkSongsToArtists } from "./linkSongsToArtists";
+import { queueRedisSongs } from "./queueRedisSongs";
 
 /**
- * Processes songs input - upserts songs
+ * Processes songs input - upserts songs and queues ISRCs to Redis
  */
 export async function processSongsInput(
   songsInput: Tables<"songs">[]
@@ -32,4 +33,6 @@ export async function processSongsInput(
   await upsertSongs(songsToUpsert);
 
   await linkSongsToArtists(enrichedSongs);
+
+  await queueRedisSongs(enrichedSongs);
 }

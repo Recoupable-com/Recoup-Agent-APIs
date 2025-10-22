@@ -15,17 +15,6 @@ export async function queueRedisSongs(songs: SongWithSpotify[]): Promise<void> {
 
     const jobData: SongsIsrcJobData = {
       isrc: song.isrc,
-      songData: {
-        name: song.name || undefined,
-        artists:
-          song.spotifyArtists?.map((artist) => artist.name).join(", ") ||
-          undefined,
-        album: song.album || undefined,
-        duration_ms: undefined, // Not available in SongWithSpotify
-        popularity: undefined, // Not available in SongWithSpotify
-        release_date: undefined, // Not available in SongWithSpotify
-        explicit: undefined, // Not available in SongWithSpotify
-      },
     };
 
     try {

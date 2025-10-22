@@ -26,15 +26,6 @@ songsIsrcQueue.on("error", (error) => {
 // Job data interface for type safety
 export interface SongsIsrcJobData {
   isrc: string;
-  songData: {
-    name?: string;
-    artists?: string;
-    album?: string;
-    duration_ms?: number;
-    popularity?: number;
-    release_date?: string;
-    explicit?: boolean;
-  };
 }
 
 export default songsIsrcQueue;

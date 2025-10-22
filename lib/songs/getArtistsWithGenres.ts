@@ -26,7 +26,7 @@ export const getArtistsWithGenres = async (
     const result = artistResults[index];
     if (result.artist && !result.error && result.artist.genres.length > 0) {
       const genres = result.artist.genres.join(", ");
-      return `${artist.name} - artist genres: ${genres}.`;
+      return `${artist.name} (artist genres: ${genres})`;
     }
     return artist.name;
   });

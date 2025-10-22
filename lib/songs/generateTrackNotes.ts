@@ -1,31 +1,17 @@
-import { generateText, stepCountIs } from "ai";
+import { generateText } from "ai";
 import { DEFAULT_MODEL } from "../consts";
 import { SpotifyTrack } from "../../types/spotify.types";
 import { getSpotifyArtistNames } from "./getSpotifyArtistNames";
 import { getArtistsWithGenres } from "./getArtistsWithGenres";
-import searchWebTool from "../perplexity/searchWebTool";
 
 const systemPrompt = `You are a music metadata expert that creates contextual track descriptions for AI-powered music recommendation systems. Your goal is to help AI assistants understand what this track sounds like and when/where it would be appropriate to recommend.
 
-MANDATORY: You MUST use the searchWeb tool to research additional information about this track. Search for:
+Based on the track information provided, create a concise description that includes:
+- Genre and musical style characteristics
 - Mood, vibe, and emotional tone
+- Energy level and tempo
 - Recommended context for this track (e.g., party, workout, chill, emotional, celebration, etc.)
-- Genre classifications from reliable music sources
-- Lyrics analysis and song meaning
-- Album context and significance  
-- Artist background and musical style
-- Press reviews or critical reception
-
-CRITICAL INSTRUCTIONS:
-1. ALWAYS call the searchWeb tool before generating your final notes
-2. READ and ANALYZE the search results thoroughly
-3. INCORPORATE specific details from the search results into your notes
-4. Focus on information that helps with contextual placement decisions
-5. Include insights about: mood/vibe, lyrical themes, emotional tone, energy level, and genre characteristics
-6. Help AI assistants understand when this track would be appropriate (e.g., party, workout, chill, emotional, celebration, etc.)
-7. DO NOT write generic notes - use the specific information you found in the web search
-
-MANDATORY: Your final notes MUST include specific details, descriptions, or context that you found in the web search results. Do not write notes that could apply to any track - make them specific to what you discovered about THIS track.
+- Key musical elements and instrumentation
 
 Your notes should help an AI assistant answer: "When would I recommend this track?" and "What does this track sound/feel like?"`;
 
@@ -62,10 +48,6 @@ Generate a concise, factual track description based only on the provided informa
       model: DEFAULT_MODEL,
       system: systemPrompt,
       prompt: userPrompt,
-      tools: {
-        searchWeb: searchWebTool,
-      },
-      stopWhen: stepCountIs(3),
     });
     return result.text.trim();
   } catch (error) {

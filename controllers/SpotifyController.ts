@@ -142,7 +142,7 @@ export const getSpotifyArtistHandler = async (req: Request, res: Response) => {
     if (!id || typeof id !== "string") {
       return res.status(400).json({
         artist: null,
-        error: new Error("Missing or invalid id parameter"),
+        error: "Missing or invalid id parameter",
       });
     }
 
@@ -150,14 +150,17 @@ export const getSpotifyArtistHandler = async (req: Request, res: Response) => {
     if (!tokenResult || tokenResult.error || !tokenResult.access_token) {
       return res.status(500).json({
         artist: null,
-        error: new Error("Failed to generate access token"),
+        error: "Failed to generate access token",
       });
     }
 
     const { artist, error } = await getArtist(id, tokenResult.access_token);
 
     if (error) {
-      return res.status(502).json({ artist: null, error });
+      return res.status(502).json({
+        artist: null,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     return res.status(200).json({ artist, error: null });
@@ -165,8 +168,7 @@ export const getSpotifyArtistHandler = async (req: Request, res: Response) => {
     console.error(error);
     return res.status(500).json({
       artist: null,
-      error:
-        error instanceof Error ? error : new Error("Unknown error occurred"),
+      error: error instanceof Error ? error.message : "Unknown error occurred",
     });
   }
 };

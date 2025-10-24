@@ -15,6 +15,7 @@ import {
   getSpotifyAlbumHandler,
   getSpotifyTopTracksHandler,
   getSpotifyArtistAlbumsHandler,
+  getSpotifyArtistHandler,
 } from "./controllers/SpotifyController";
 import {
   searchTweetsHandler,
@@ -89,6 +90,7 @@ routes.get("/post/comments", getPostCommentsHandler as any);
 
 routes.get("/spotify/search", getSpotifySearchHandler as any);
 routes.get("/spotify/album", getSpotifyAlbumHandler as any);
+routes.get("/spotify/artist", getSpotifyArtistHandler as any);
 routes.get("/spotify/artist/topTracks", getSpotifyTopTracksHandler as any);
 routes.get("/spotify/artist/albums", getSpotifyArtistAlbumsHandler as any);
 

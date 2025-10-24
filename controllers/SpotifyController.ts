@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import getSearch from "../lib/spotify/getSearch";
 import getAlbum from "../lib/spotify/getAlbum";
+import getArtist from "../lib/spotify/getArtist";
 import generateAccessToken from "../lib/spotify/generateAccessToken";
 import { getArtistTopTracks } from "../lib/spotify/getArtistTopTracks";
 import getArtistAlbums from "../lib/spotify/getArtistAlbums";
@@ -132,5 +133,40 @@ export const getSpotifyAlbumHandler = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ status: "error" });
+  }
+};
+
+export const getSpotifyArtistHandler = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.query;
+    if (!id || typeof id !== "string") {
+      return res.status(400).json({
+        artist: null,
+        error: new Error("Missing or invalid id parameter"),
+      });
+    }
+
+    const tokenResult = await generateAccessToken();
+    if (!tokenResult || tokenResult.error || !tokenResult.access_token) {
+      return res.status(500).json({
+        artist: null,
+        error: new Error("Failed to generate access token"),
+      });
+    }
+
+    const { artist, error } = await getArtist(id, tokenResult.access_token);
+
+    if (error) {
+      return res.status(502).json({ artist: null, error });
+    }
+
+    return res.status(200).json({ artist, error: null });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      artist: null,
+      error:
+        error instanceof Error ? error : new Error("Unknown error occurred"),
+    });
   }
 };

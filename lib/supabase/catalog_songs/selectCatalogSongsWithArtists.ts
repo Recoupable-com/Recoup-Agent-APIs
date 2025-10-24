@@ -57,7 +57,6 @@ export async function selectCatalogSongsWithArtists(
       )
     `
     )
-    .order("updated_at", { ascending: false })
     .order("song", { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
 

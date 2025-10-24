@@ -8,6 +8,9 @@ import { processSongsInput } from "../lib/songs/processSongsInput";
 type CatalogSongInput = {
   catalog_id: string;
   isrc: string;
+  name?: string;
+  album?: string;
+  notes?: string;
 };
 
 type CreateCatalogSongsRequest = {
@@ -55,30 +58,35 @@ export const createCatalogSongsHandler = async (
       return;
     }
 
-    // Get unique ISRCs and ensure song records exist
-    const uniqueIsrcs = [...new Set(body.songs.map((song) => song.isrc))];
+    // Get unique ISRCs and create song records with CSV data preserved
+    const dataByIsrc = body.songs.reduce((map, song) => {
+      if (song.isrc) {
+        map.set(song.isrc, {
+          name: song.name || "",
+          album: song.album || "",
+          notes: song.notes || "",
+        });
+      }
+      return map;
+    }, new Map<string, { name: string; album: string; notes: string }>());
 
-    // Create song records for any missing ISRCs using existing lib
-    const songsToProcess: Tables<"songs">[] = uniqueIsrcs.map((isrc) => ({
+    const songsToProcess: Tables<"songs">[] = Array.from(
+      dataByIsrc.entries()
+    ).map(([isrc, csvData]) => ({
       isrc,
-      name: "",
-      album: "",
-      notes: "",
+      ...csvData,
       updated_at: new Date().toISOString(),
     }));
 
     await processSongsInput(songsToProcess);
 
-    // Prepare catalog_songs data for insertion
-    const catalogSongsData: TablesInsert<"catalog_songs">[] = body.songs.map(
-      (song) => ({
+    // Insert catalog_songs relationships
+    await insertCatalogSongs(
+      body.songs.map((song) => ({
         catalog: song.catalog_id,
         song: song.isrc,
-      })
+      }))
     );
-
-    // Insert catalog_songs relationships
-    await insertCatalogSongs(catalogSongsData);
 
     // Get unique catalog IDs for fetching the created relationships
     const uniqueCatalogIds = [
@@ -87,7 +95,7 @@ export const createCatalogSongsHandler = async (
 
     // Fetch the created catalog songs with artist information
     const result = await selectCatalogSongsWithArtists({
-      isrcs: uniqueIsrcs,
+      isrcs: Array.from(dataByIsrc.keys()),
     });
 
     // Filter to only include songs from the catalogs we just added to

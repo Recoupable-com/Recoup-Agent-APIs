@@ -26,7 +26,7 @@ type CatalogSongsWithPagination = {
 export async function selectCatalogSongsWithArtists(
   params: SelectCatalogSongsParams
 ): Promise<CatalogSongsWithPagination> {
-  const { catalogId, isrcs, page = 1, limit = 20 } = params;
+  const { catalogId, isrcs, page, limit } = params;
 
   // Get the total count for pagination
   const totalCount = await getCatalogSongsCount({
@@ -34,7 +34,6 @@ export async function selectCatalogSongsWithArtists(
     isrcs,
   });
 
-  // Now get the actual data with pagination
   let query = supabase
     .from("catalog_songs")
     .select(
@@ -57,8 +56,12 @@ export async function selectCatalogSongsWithArtists(
       )
     `
     )
-    .order("song", { ascending: false })
-    .range((page - 1) * limit, page * limit - 1);
+    .order("song", { ascending: false });
+
+  // Only apply pagination if both page and limit are provided
+  if (page !== undefined && limit !== undefined) {
+    query = query.range((page - 1) * limit, page * limit - 1);
+  }
 
   // Add filters based on provided parameters
   if (catalogId) {

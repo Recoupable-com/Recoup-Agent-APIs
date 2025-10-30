@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import { processSongsInput } from "../lib/songs/processSongsInput";
 import { getSongsWithArtists } from "../lib/songs/getSongsWithArtists";
-import { Tables } from "../types/database.types";
+import { TablesInsert } from "../types/database.types";
+
+type SongInputExtended = TablesInsert<"songs"> & { artists?: string[] };
 
 type CreateSongsRequest = {
-  songs: Tables<"songs">[];
+  songs: SongInputExtended[];
 };
 
 /**
@@ -77,8 +79,26 @@ export const createSongsHandler = async (
       return;
     }
 
-    // Process songs (upsert and link to artists)
-    await processSongsInput(body.songs);
+    // Build optional artists map by ISRC from request body
+    const artistsByIsrc: Record<string, string[]> = {};
+    body.songs.forEach((song) => {
+      if (song.isrc && Array.isArray(song.artists) && song.artists.length > 0) {
+        artistsByIsrc[song.isrc] = song.artists;
+      }
+    });
+
+    // Strip non-table fields before processing
+    const songsForUpsert: TablesInsert<"songs">[] = body.songs.map(
+      ({ isrc, name, album, notes }) => ({
+        isrc,
+        name,
+        album,
+        notes,
+      })
+    );
+
+    // Process songs (upsert and link to artists) with fallback artists
+    await processSongsInput(songsForUpsert, artistsByIsrc);
 
     // Get unique ISRCs from the processed songs
     const uniqueIsrcs = [...new Set(body.songs.map((song) => song.isrc))];

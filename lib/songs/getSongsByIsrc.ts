@@ -1,4 +1,4 @@
-import { Tables } from "../../types/database.types";
+import { TablesInsert } from "../../types/database.types";
 import generateAccessToken from "../spotify/generateAccessToken";
 import getIsrc from "../spotify/getIsrc";
 import { getSpotifyArtists, SpotifyArtist } from "./getSpotifyArtists";
@@ -11,12 +11,12 @@ type SpotifyTrackInfo = {
   notes: string;
 };
 
-export type SongWithSpotify = Tables<"songs"> & {
+export type SongWithSpotify = TablesInsert<"songs"> & {
   spotifyArtists?: SpotifyArtist[];
 };
 
 const getSongsByIsrc = async (
-  songs: Tables<"songs">[]
+  songs: TablesInsert<"songs">[]
 ): Promise<SongWithSpotify[]> => {
   if (songs.length === 0) return songs;
 

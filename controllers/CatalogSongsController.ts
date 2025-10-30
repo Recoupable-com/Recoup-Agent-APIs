@@ -149,6 +149,8 @@ export const getCatalogSongsHandler = async (
     // Parse and validate pagination parameters
     const pageNum = page ? parseInt(page as string, 10) : 1;
     const limitNum = limit ? parseInt(limit as string, 10) : 20;
+    const artistNameParam =
+      artistName && typeof artistName === "string" ? artistName : undefined;
 
     if (isNaN(pageNum) || pageNum < 1) {
       res.status(400).json({
@@ -169,8 +171,7 @@ export const getCatalogSongsHandler = async (
     // Fetch catalog songs with pagination
     const result = await selectCatalogSongsWithArtists({
       catalogId: catalog_id,
-      artistName:
-        artistName && typeof artistName === "string" ? artistName : undefined,
+      artistName: artistNameParam,
       page: pageNum,
       limit: limitNum,
     });

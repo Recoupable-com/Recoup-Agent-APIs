@@ -3,20 +3,26 @@ import getSongsByIsrc, { SongWithSpotify } from "./getSongsByIsrc";
 import { upsertSongs } from "../supabase/songs/upsertSongs";
 import { linkSongsToArtists } from "./linkSongsToArtists";
 import { queueRedisSongs } from "./queueRedisSongs";
-import { SpotifyArtist } from "./getSpotifyArtists";
 import { mapArtistsFallback } from "./mapArtistsFallback";
+import { formatSongsInput, SongInput } from "./formatSongsInput";
 
 /**
- * Processes songs input - upserts songs and queues ISRCs to Redis
+ * Processes songs input with artists fallback support
+ * - Accepts raw song input with optional artists field
+ * - Formats and enriches songs with Spotify data
+ * - Links artists using Spotify data or fallback artists when provided
+ * - Queues ISRCs to Redis
  */
 export async function processSongsInput(
-  songsInput: TablesInsert<"songs">[],
-  artistsByIsrc?: Record<string, string[]>
+  songsInput: SongInput[]
 ): Promise<void> {
+  // Format input: extract artists and prepare for upsert
+  const { songsForUpsert, artistsByIsrc } = formatSongsInput(songsInput);
+
   // Extract unique songs (by ISRC) and prepare for upsert
   const songMap = new Map<string, TablesInsert<"songs">>();
 
-  songsInput.forEach((song) => {
+  songsForUpsert.forEach((song) => {
     if (!song.isrc) return;
 
     songMap.set(song.isrc, song);

@@ -28,19 +28,19 @@ export async function processSongsInput(
 
   const enrichedSongs = await getSongsByIsrc(uniqueSongs);
 
-  const songsWithArtistFallback: SongWithSpotify[] = mapArtistsFallback(
+  const songsWithArtists: SongWithSpotify[] = mapArtistsFallback(
     enrichedSongs,
     artistsByIsrc
   );
 
-  const songsToUpsert = songsWithArtistFallback.map((song) => {
+  const songsToUpsert = songsWithArtists.map((song) => {
     const { spotifyArtists, ...songRecord } = song;
     return songRecord;
   });
 
   await upsertSongs(songsToUpsert);
 
-  await linkSongsToArtists(songsWithArtistFallback);
+  await linkSongsToArtists(songsWithArtists);
 
-  await queueRedisSongs(songsWithArtistFallback);
+  await queueRedisSongs(songsWithArtists);
 }

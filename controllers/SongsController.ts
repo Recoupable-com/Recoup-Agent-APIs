@@ -2,13 +2,10 @@ import { Request, Response } from "express";
 import { processSongsInput } from "../lib/songs/processSongsInput";
 import { getSongsWithArtists } from "../lib/songs/getSongsWithArtists";
 import { TablesInsert } from "../types/database.types";
-import {
-  formatSongsInput,
-  SongInputExtended,
-} from "../lib/songs/formatSongsInput";
+import { formatSongsInput, SongInput } from "../lib/songs/formatSongsInput";
 
 type CreateSongsRequest = {
-  songs: SongInputExtended[];
+  songs: SongInput[];
 };
 
 /**
@@ -60,7 +57,7 @@ export const createSongsHandler = async (
   res: Response
 ): Promise<void> => {
   try {
-    const body = req.body as { songs: SongInputExtended[] };
+    const body = req.body as { songs: SongInput[] };
 
     // Validate request body
     if (!body.songs || !Array.isArray(body.songs) || body.songs.length === 0) {
@@ -81,9 +78,7 @@ export const createSongsHandler = async (
       return;
     }
 
-    const { songsForUpsert, artistsByIsrc } = formatSongsInput(
-      body.songs as SongInputExtended[]
-    );
+    const { songsForUpsert, artistsByIsrc } = formatSongsInput(body.songs);
 
     // Process songs (upsert and link to artists) with fallback artists
     await processSongsInput(songsForUpsert, artistsByIsrc);

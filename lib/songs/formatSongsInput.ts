@@ -1,15 +1,13 @@
 import { TablesInsert } from "../../types/database.types";
 
-export type SongInputExtended = TablesInsert<"songs"> & { artists?: string[] };
+export type SongInput = TablesInsert<"songs"> & { artists?: string[] };
 
 export type FormattedSongsInput = {
   songsForUpsert: TablesInsert<"songs">[];
   artistsByIsrc: Record<string, string[]>;
 };
 
-export function formatSongsInput(
-  songs: SongInputExtended[]
-): FormattedSongsInput {
+export function formatSongsInput(songs: SongInput[]): FormattedSongsInput {
   const artistsByIsrc: Record<string, string[]> = {};
 
   songs.forEach((song) => {

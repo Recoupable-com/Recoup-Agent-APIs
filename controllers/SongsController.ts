@@ -57,7 +57,7 @@ export const createSongsHandler = async (
   res: Response
 ): Promise<void> => {
   try {
-    const body = req.body as { songs: SongInput[] };
+    const body = req.body as CreateSongsRequest;
 
     // Validate request body
     if (!body.songs || !Array.isArray(body.songs) || body.songs.length === 0) {

@@ -4,6 +4,7 @@ import { insertCatalogSongs } from "../lib/supabase/catalog_songs/insertCatalogS
 import { selectCatalogSongsWithArtists } from "../lib/supabase/catalog_songs/selectCatalogSongsWithArtists";
 import { deleteCatalogSongs } from "../lib/supabase/catalog_songs/deleteCatalogSongs";
 import { processSongsInput } from "../lib/songs/processSongsInput";
+import { SongInput } from "../lib/songs/formatSongsInput";
 
 type CatalogSongInput = {
   catalog_id: string;
@@ -11,6 +12,7 @@ type CatalogSongInput = {
   name?: string;
   album?: string;
   notes?: string;
+  artists?: string[];
 };
 
 type CreateCatalogSongsRequest = {
@@ -65,18 +67,19 @@ export const createCatalogSongsHandler = async (
           name: song.name || "",
           album: song.album || "",
           notes: song.notes || "",
+          artists: Array.isArray(song.artists) ? song.artists : undefined,
         });
       }
       return map;
-    }, new Map<string, { name: string; album: string; notes: string }>());
+    }, new Map<string, { name: string; album: string; notes: string; artists?: string[] }>());
 
-    const songsToProcess: Tables<"songs">[] = Array.from(
-      dataByIsrc.entries()
-    ).map(([isrc, csvData]) => ({
-      isrc,
-      ...csvData,
-      updated_at: new Date().toISOString(),
-    }));
+    // Convert to SongInput format for processSongsInput
+    const songsToProcess: SongInput[] = Array.from(dataByIsrc.entries()).map(
+      ([isrc, csvData]) => ({
+        isrc,
+        ...csvData,
+      })
+    );
 
     await processSongsInput(songsToProcess);
 

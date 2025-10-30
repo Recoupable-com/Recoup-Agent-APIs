@@ -11,6 +11,7 @@ type CatalogSongWithArtists = {
 type SelectCatalogSongsParams = {
   catalogId?: string;
   isrcs?: string[];
+  artistName?: string;
   page?: number;
   limit?: number;
 };
@@ -26,12 +27,13 @@ type CatalogSongsWithPagination = {
 export async function selectCatalogSongsWithArtists(
   params: SelectCatalogSongsParams
 ): Promise<CatalogSongsWithPagination> {
-  const { catalogId, isrcs, page, limit } = params;
+  const { catalogId, isrcs, artistName, page, limit } = params;
 
   // Get the total count for pagination
   const totalCount = await getCatalogSongsCount({
     catalogId,
     isrcs,
+    artistName,
   });
 
   let query = supabase
@@ -45,7 +47,7 @@ export async function selectCatalogSongsWithArtists(
         album,
         notes,
         updated_at,
-        song_artists (
+        song_artists!inner (
           artist,
           accounts!inner (
             id,
@@ -70,6 +72,11 @@ export async function selectCatalogSongsWithArtists(
 
   if (isrcs && isrcs.length > 0) {
     query = query.in("song", isrcs);
+  }
+
+  if (artistName) {
+    // Filter by artist name in nested song_artists relationship
+    query = query.eq("songs.song_artists.accounts.name", artistName);
   }
 
   const { data, error } = await query;

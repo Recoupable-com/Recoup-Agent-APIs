@@ -3,6 +3,7 @@ import supabase from "../serverClient";
 type GetCatalogSongsCountParams = {
   catalogId?: string;
   isrcs?: string[];
+  artistName?: string;
 };
 
 /**
@@ -11,9 +12,21 @@ type GetCatalogSongsCountParams = {
 export async function getCatalogSongsCount(
   params: GetCatalogSongsCountParams
 ): Promise<number> {
-  let query = supabase
-    .from("catalog_songs")
-    .select("*", { count: "exact", head: true });
+  // For artist name filtering, we need to select nested relationships
+  // Otherwise, use head count for better performance
+  const needsNestedData = !!params.artistName;
+
+  const baseQuery = supabase.from("catalog_songs");
+
+  let query;
+  if (needsNestedData) {
+    query = baseQuery.select(
+      `catalog, songs!inner (song_artists!inner (accounts!inner (name)))`,
+      { count: "exact", head: false }
+    );
+  } else {
+    query = baseQuery.select("*", { count: "exact", head: true });
+  }
 
   // Apply filters based on provided parameters
   if (params.catalogId) {
@@ -24,11 +37,20 @@ export async function getCatalogSongsCount(
     query = query.in("song", params.isrcs);
   }
 
-  const { count, error } = await query;
-
-  if (error) {
-    throw new Error(`Failed to count catalog songs: ${error.message}`);
+  if (params.artistName) {
+    // Filter by artist name in nested song_artists relationship
+    query = query.eq("songs.song_artists.accounts.name", params.artistName);
   }
 
-  return count || 0;
+  const { data, count, error } = await query;
+
+  if (error) {
+    console.error("getCatalogSongsCount error:", error);
+    throw new Error(
+      `Failed to count catalog songs: ${error.message || JSON.stringify(error)}`
+    );
+  }
+
+  // When using nested queries, count might not be accurate, use data length instead
+  return needsNestedData ? (data?.length ?? 0) : (count ?? 0);
 }

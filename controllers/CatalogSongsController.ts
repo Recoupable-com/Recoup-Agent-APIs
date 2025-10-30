@@ -124,6 +124,7 @@ export const createCatalogSongsHandler = async (
  *
  * Parameters:
  * - catalog_id (required): The unique identifier of the catalog to query songs for
+ * - artistName (optional): Filter songs by artist name
  * - page (optional): Page number for pagination (default: 1)
  * - limit (optional): Number of songs per page (default: 20, max: 100)
  *
@@ -134,7 +135,7 @@ export const getCatalogSongsHandler = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { catalog_id, page, limit } = req.query;
+    const { catalog_id, artistName, page, limit } = req.query;
 
     // Validate required catalog_id parameter
     if (!catalog_id || typeof catalog_id !== "string") {
@@ -168,6 +169,8 @@ export const getCatalogSongsHandler = async (
     // Fetch catalog songs with pagination
     const result = await selectCatalogSongsWithArtists({
       catalogId: catalog_id,
+      artistName:
+        artistName && typeof artistName === "string" ? artistName : undefined,
       page: pageNum,
       limit: limitNum,
     });

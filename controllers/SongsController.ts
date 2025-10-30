@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import { processSongsInput } from "../lib/songs/processSongsInput";
 import { getSongsWithArtists } from "../lib/songs/getSongsWithArtists";
-import { Tables } from "../types/database.types";
+import { TablesInsert } from "../types/database.types";
+import { formatSongsInput, SongInput } from "../lib/songs/formatSongsInput";
 
 type CreateSongsRequest = {
-  songs: Tables<"songs">[];
+  songs: SongInput[];
 };
 
 /**
@@ -77,8 +78,10 @@ export const createSongsHandler = async (
       return;
     }
 
-    // Process songs (upsert and link to artists)
-    await processSongsInput(body.songs);
+    const { songsForUpsert, artistsByIsrc } = formatSongsInput(body.songs);
+
+    // Process songs (upsert and link to artists) with fallback artists
+    await processSongsInput(songsForUpsert, artistsByIsrc);
 
     // Get unique ISRCs from the processed songs
     const uniqueIsrcs = [...new Set(body.songs.map((song) => song.isrc))];

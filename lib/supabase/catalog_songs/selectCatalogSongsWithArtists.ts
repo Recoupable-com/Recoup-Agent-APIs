@@ -1,6 +1,5 @@
 import supabase from "../serverClient";
 import { Tables } from "../../../types/database.types";
-import { getCatalogSongsCount } from "./getCatalogSongsCount";
 
 type CatalogSongWithArtists = {
   catalog_id: string;
@@ -29,13 +28,6 @@ export async function selectCatalogSongsWithArtists(
 ): Promise<CatalogSongsWithPagination> {
   const { catalogId, isrcs, artistName, page, limit } = params;
 
-  // Get the total count for pagination
-  const totalCount = await getCatalogSongsCount({
-    catalogId,
-    isrcs,
-    artistName,
-  });
-
   let query = supabase
     .from("catalog_songs")
     .select(
@@ -56,7 +48,8 @@ export async function selectCatalogSongsWithArtists(
           )
         )
       )
-    `
+    `,
+      { count: "exact" }
     )
     .order("song", { ascending: false });
 
@@ -79,7 +72,7 @@ export async function selectCatalogSongsWithArtists(
     query = query.eq("songs.song_artists.accounts.name", artistName);
   }
 
-  const { data, error } = await query;
+  const { data, count, error } = await query;
 
   if (error) {
     throw new Error(`Failed to fetch catalog songs: ${error.message}`);
@@ -101,6 +94,6 @@ export async function selectCatalogSongsWithArtists(
 
   return {
     songs: catalogSongs,
-    total_count: totalCount,
+    total_count: count ?? 0,
   };
 }

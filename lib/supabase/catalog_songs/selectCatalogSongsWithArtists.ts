@@ -1,6 +1,5 @@
 import supabase from "../serverClient";
 import { Tables } from "../../../types/database.types";
-import { getCatalogSongsCount } from "./getCatalogSongsCount";
 
 type CatalogSongWithArtists = {
   catalog_id: string;
@@ -11,6 +10,7 @@ type CatalogSongWithArtists = {
 type SelectCatalogSongsParams = {
   catalogId?: string;
   isrcs?: string[];
+  artistName?: string;
   page?: number;
   limit?: number;
 };
@@ -26,13 +26,7 @@ type CatalogSongsWithPagination = {
 export async function selectCatalogSongsWithArtists(
   params: SelectCatalogSongsParams
 ): Promise<CatalogSongsWithPagination> {
-  const { catalogId, isrcs, page, limit } = params;
-
-  // Get the total count for pagination
-  const totalCount = await getCatalogSongsCount({
-    catalogId,
-    isrcs,
-  });
+  const { catalogId, isrcs, artistName, page, limit } = params;
 
   let query = supabase
     .from("catalog_songs")
@@ -45,7 +39,7 @@ export async function selectCatalogSongsWithArtists(
         album,
         notes,
         updated_at,
-        song_artists (
+        song_artists!inner (
           artist,
           accounts!inner (
             id,
@@ -54,7 +48,8 @@ export async function selectCatalogSongsWithArtists(
           )
         )
       )
-    `
+    `,
+      { count: "exact" }
     )
     .order("song", { ascending: false });
 
@@ -72,7 +67,12 @@ export async function selectCatalogSongsWithArtists(
     query = query.in("song", isrcs);
   }
 
-  const { data, error } = await query;
+  if (artistName) {
+    // Filter by artist name in nested song_artists relationship
+    query = query.eq("songs.song_artists.accounts.name", artistName);
+  }
+
+  const { data, count, error } = await query;
 
   if (error) {
     throw new Error(`Failed to fetch catalog songs: ${error.message}`);
@@ -94,6 +94,6 @@ export async function selectCatalogSongsWithArtists(
 
   return {
     songs: catalogSongs,
-    total_count: totalCount,
+    total_count: count ?? 0,
   };
 }

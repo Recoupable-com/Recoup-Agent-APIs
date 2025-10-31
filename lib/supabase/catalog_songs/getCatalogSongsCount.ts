@@ -42,6 +42,6 @@ export async function getCatalogSongsCount(
     );
   }
 
-  // Always use data length for nested queries to ensure accurate count
-  return data?.length ?? 0;
+  // Use count when available, fallback to data length for nested queries
+  return count ?? data?.length ?? 0;
 }

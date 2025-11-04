@@ -3,6 +3,7 @@ import {
   insertScheduledAction,
   CreateJobInput,
 } from "../../lib/supabase/scheduled_actions/insertScheduledAction";
+import { updateScheduledAction } from "../../lib/supabase/scheduled_actions/updateScheduledAction";
 import { createSchedule } from "../../lib/trigger/createSchedule";
 
 /**
@@ -41,15 +42,26 @@ export const createJobHandler = async (
       );
     }
 
-    await createSchedule({
+    const triggerSchedule = await createSchedule({
       cron: schedule,
       deduplicationKey: created.id,
       externalId: created.id,
     });
 
+    if (!triggerSchedule.id) {
+      throw new Error(
+        "Failed to create Trigger.dev schedule: missing schedule id"
+      );
+    }
+
+    const updated = await updateScheduledAction({
+      id: created.id,
+      trigger_schedule_id: triggerSchedule.id,
+    });
+
     res.json({
       status: "success",
-      jobs,
+      jobs: [updated],
     });
   } catch (error) {
     console.error("Error creating job:", error);

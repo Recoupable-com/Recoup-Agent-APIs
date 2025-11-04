@@ -41,7 +41,7 @@ import {
   getCatalogSongsHandler,
   deleteCatalogSongsHandler,
 } from "./controllers/CatalogSongsController";
-import { getJobsHandler } from "./controllers/JobsController";
+import { getJobsHandler, createJobHandler } from "./controllers/JobsController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -114,5 +114,6 @@ routes.post("/catalogs/songs", createCatalogSongsHandler as any);
 routes.delete("/catalogs/songs", deleteCatalogSongsHandler as any);
 
 routes.get("/jobs", getJobsHandler as any);
+routes.post("/jobs", createJobHandler as any);
 
 export default routes;

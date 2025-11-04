@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { selectScheduledActions } from "../lib/supabase/scheduled_actions/selectScheduledActions";
+import { selectScheduledActions } from "../../lib/supabase/scheduled_actions/selectScheduledActions";
 
 /**
  * Retrieves jobs (scheduled actions) from the database.
@@ -29,3 +29,5 @@ export const getJobsHandler = async (
     });
   }
 };
+
+

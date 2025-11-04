@@ -1,9 +1,12 @@
 import supabase from "../serverClient";
+import type { Tables } from "../../../types/database.types";
 import { TablesInsert } from "../../../types/database.types";
 
 export type CreateJobInput = TablesInsert<"scheduled_actions">;
 
-export async function insertScheduledAction(input: CreateJobInput) {
+export async function insertScheduledAction(
+  input: CreateJobInput
+): Promise<Tables<"scheduled_actions">[]> {
   const { data, error } = await supabase
     .from("scheduled_actions")
     .insert(input)

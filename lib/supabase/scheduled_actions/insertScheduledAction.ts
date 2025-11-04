@@ -1,6 +1,5 @@
 import supabase from "../serverClient";
-import type { Tables } from "../../../types/database.types";
-import { TablesInsert } from "../../../types/database.types";
+import type { Tables, TablesInsert } from "../../../types/database.types";
 
 export type CreateJobInput = TablesInsert<"scheduled_actions">;
 

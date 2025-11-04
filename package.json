@@ -26,6 +26,7 @@
     "@stackso/js-core": "^0.5.10",
     "@supabase/supabase-js": "^2.47.9",
     "@tavily/core": "^0.0.2",
+    "@trigger.dev/sdk": "^4.0.6",
     "@types/cheerio": "^0.22.35",
     "@types/stripe": "^8.0.417",
     "@types/uuid": "^10.0.0",
@@ -52,6 +53,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@trigger.dev/build": "^4.0.6",
     "@types/body-parser": "^1.19.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",

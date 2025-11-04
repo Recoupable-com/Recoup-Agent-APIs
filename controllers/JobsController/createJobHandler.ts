@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
-import { insertScheduledAction, CreateJobInput } from "../../lib/supabase/scheduled_actions/insertScheduledAction";
+import {
+  insertScheduledAction,
+  CreateJobInput,
+} from "../../lib/supabase/scheduled_actions/insertScheduledAction";
+import { createSchedule } from "../../lib/trigger/createSchedule";
 
 /**
  * Creates a new job (scheduled action)
@@ -30,7 +34,23 @@ export const createJobHandler = async (
       artist_account_id,
     } as CreateJobInput);
 
-    res.json({ status: "success", jobs });
+    const created = jobs[0];
+    if (!created || !created.id) {
+      throw new Error(
+        "Failed to create job: missing Supabase id for scheduling"
+      );
+    }
+
+    await createSchedule({
+      cron: schedule,
+      deduplicationKey: created.id,
+      externalId: created.id,
+    });
+
+    res.json({
+      status: "success",
+      jobs,
+    });
   } catch (error) {
     console.error("Error creating job:", error);
     res.status(500).json({
@@ -39,5 +59,3 @@ export const createJobHandler = async (
     });
   }
 };
-
-

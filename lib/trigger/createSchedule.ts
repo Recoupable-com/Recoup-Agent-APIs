@@ -14,6 +14,5 @@ export async function createSchedule(params: CreateScheduleParams) {
     externalId: params.externalId,
     timezone: params.timezone || "UTC",
   });
-  console.log("Schedule created:", schedule);
   return schedule;
 }

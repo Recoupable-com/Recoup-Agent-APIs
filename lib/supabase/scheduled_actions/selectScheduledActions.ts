@@ -2,10 +2,12 @@ import supabase from "../serverClient";
 
 type SelectScheduledActionsParams = {
   id?: string;
+  account_id?: string;
+  artist_account_id?: string;
 };
 
 /**
- * Selects scheduled actions (jobs) from the database
+ * Selects scheduled actions (tasks) from the database
  */
 export async function selectScheduledActions(
   params: SelectScheduledActionsParams
@@ -17,6 +19,14 @@ export async function selectScheduledActions(
 
   if (params.id) {
     query = query.eq("id", params.id);
+  }
+
+  if (params.account_id) {
+    query = query.eq("account_id", params.account_id);
+  }
+
+  if (params.artist_account_id) {
+    query = query.eq("artist_account_id", params.artist_account_id);
   }
 
   const { data, error } = await query;

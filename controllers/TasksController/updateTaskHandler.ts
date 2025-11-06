@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import { updateScheduledAction } from "../../lib/supabase/scheduled_actions/updateScheduledAction";
+import { updateSchedule } from "../../lib/trigger/updateSchedule";
 import type { TablesUpdate } from "../../types/database.types";
 
 /**
  * Updates an existing task (scheduled action)
  * Only the `id` field is required; any additional fields will be updated.
+ * If `schedule` (cron) is updated, the corresponding Trigger.dev schedule is also updated.
  * Returns the updated task in an array, matching GET response shape
  */
 export const updateTaskHandler = async (
@@ -35,6 +37,13 @@ export const updateTaskHandler = async (
       id,
       ...updateData,
     });
+
+    if (schedule !== undefined) {
+      await updateSchedule({
+        scheduleId: updated.trigger_schedule_id!,
+        cron: schedule,
+      });
+    }
 
     res.json({
       status: "success",

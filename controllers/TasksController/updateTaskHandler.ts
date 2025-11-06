@@ -14,8 +14,15 @@ export const updateTaskHandler = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { id, title, prompt, schedule, account_id, artist_account_id } =
-      req.body as { id: string } & Partial<TablesUpdate<"scheduled_actions">>;
+    const {
+      id,
+      title,
+      prompt,
+      schedule,
+      account_id,
+      artist_account_id,
+      enabled,
+    } = req.body as { id: string } & Partial<TablesUpdate<"scheduled_actions">>;
 
     if (!id) {
       res.status(400).json({
@@ -32,6 +39,7 @@ export const updateTaskHandler = async (
     if (account_id !== undefined) updateData.account_id = account_id;
     if (artist_account_id !== undefined)
       updateData.artist_account_id = artist_account_id;
+    if (enabled !== undefined) updateData.enabled = enabled;
 
     const updated = await updateScheduledAction({
       id,

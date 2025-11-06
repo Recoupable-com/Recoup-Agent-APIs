@@ -38,17 +38,11 @@ export const updateTaskHandler = async (
       ...updateData,
     });
 
-    try {
+    if (schedule !== undefined) {
       await updateSchedule({
         scheduleId: updated.trigger_schedule_id!,
-        cron: schedule!,
+        cron: schedule,
       });
-    } catch (error) {
-      console.error(
-        `Error updating Trigger.dev schedule:`,
-        error instanceof Error ? error.message : error
-      );
-      // Continue even if Trigger.dev update fails
     }
 
     res.json({

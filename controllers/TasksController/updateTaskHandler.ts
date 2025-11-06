@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { updateScheduledAction } from "../../lib/supabase/scheduled_actions/updateScheduledAction";
 import { updateSchedule } from "../../lib/trigger/updateSchedule";
+import { deactivateSchedule } from "../../lib/trigger/deactivateSchedule";
+import { activateSchedule } from "../../lib/trigger/activateSchedule";
 import type { TablesUpdate } from "../../types/database.types";
 
 /**
@@ -46,11 +48,35 @@ export const updateTaskHandler = async (
       ...updateData,
     });
 
+    // Update Trigger.dev schedule if schedule was provided
     if (schedule !== undefined) {
-      await updateSchedule({
-        scheduleId: updated.trigger_schedule_id!,
-        cron: schedule,
-      });
+      try {
+        await updateSchedule({
+          scheduleId: updated.trigger_schedule_id!,
+          cron: schedule,
+        });
+      } catch (error) {
+        console.error(
+          `Error updating Trigger.dev schedule:`,
+          error instanceof Error ? error.message : error
+        );
+      }
+    }
+
+    // Deactivate/activate Trigger.dev schedule based on enabled status
+    if (enabled !== undefined) {
+      try {
+        if (enabled === false) {
+          await deactivateSchedule(updated.trigger_schedule_id!);
+        } else if (enabled === true) {
+          await activateSchedule(updated.trigger_schedule_id!);
+        }
+      } catch (error) {
+        console.error(
+          `Error ${enabled === false ? "deactivating" : "activating"} Trigger.dev schedule:`,
+          error instanceof Error ? error.message : error
+        );
+      }
     }
 
     res.json({

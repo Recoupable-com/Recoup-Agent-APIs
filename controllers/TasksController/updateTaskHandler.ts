@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { updateScheduledAction } from "../../lib/supabase/scheduled_actions/updateScheduledAction";
-import type { TablesUpdate } from "../../../types/database.types";
+import type { TablesUpdate } from "../../types/database.types";
 
 /**
  * Updates an existing task (scheduled action)

@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { updateScheduledAction } from "../../lib/supabase/scheduled_actions/updateScheduledAction";
 import { updateSchedule } from "../../lib/trigger/updateSchedule";
+import { deactivateSchedule } from "../../lib/trigger/deactivateSchedule";
+import { activateSchedule } from "../../lib/trigger/activateSchedule";
 import type { TablesUpdate } from "../../types/database.types";
 
 /**
@@ -51,6 +53,14 @@ export const updateTaskHandler = async (
         scheduleId: updated.trigger_schedule_id!,
         cron: schedule,
       });
+    }
+
+    if (enabled !== undefined) {
+      if (enabled === false) {
+        await deactivateSchedule(updated.trigger_schedule_id!);
+      } else if (enabled === true) {
+        await activateSchedule(updated.trigger_schedule_id!);
+      }
     }
 
     res.json({

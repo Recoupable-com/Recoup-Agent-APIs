@@ -48,7 +48,6 @@ export const updateTaskHandler = async (
       ...updateData,
     });
 
-    // Update Trigger.dev schedule if schedule was provided
     if (schedule !== undefined) {
       try {
         await updateSchedule({
@@ -63,7 +62,6 @@ export const updateTaskHandler = async (
       }
     }
 
-    // Deactivate/activate Trigger.dev schedule based on enabled status
     if (enabled !== undefined) {
       try {
         if (enabled === false) {

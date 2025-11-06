@@ -41,7 +41,12 @@ import {
   getCatalogSongsHandler,
   deleteCatalogSongsHandler,
 } from "./controllers/CatalogSongsController";
-import { getJobsHandler, createJobHandler } from "./controllers/JobsController";
+import {
+  getTasksHandler,
+  createTaskHandler,
+  updateTaskHandler,
+  deleteTaskHandler,
+} from "./controllers/TasksController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -113,7 +118,9 @@ routes.get("/catalogs/songs", getCatalogSongsHandler as any);
 routes.post("/catalogs/songs", createCatalogSongsHandler as any);
 routes.delete("/catalogs/songs", deleteCatalogSongsHandler as any);
 
-routes.get("/jobs", getJobsHandler as any);
-routes.post("/jobs", createJobHandler as any);
+routes.get("/tasks", getTasksHandler as any);
+routes.post("/tasks", createTaskHandler as any);
+routes.patch("/tasks", updateTaskHandler as any);
+routes.delete("/tasks", deleteTaskHandler as any);
 
 export default routes;

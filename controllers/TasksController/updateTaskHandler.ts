@@ -49,31 +49,17 @@ export const updateTaskHandler = async (
     });
 
     if (schedule !== undefined) {
-      try {
-        await updateSchedule({
-          scheduleId: updated.trigger_schedule_id!,
-          cron: schedule,
-        });
-      } catch (error) {
-        console.error(
-          `Error updating Trigger.dev schedule:`,
-          error instanceof Error ? error.message : error
-        );
-      }
+      await updateSchedule({
+        scheduleId: updated.trigger_schedule_id!,
+        cron: schedule,
+      });
     }
 
     if (enabled !== undefined) {
-      try {
-        if (enabled === false) {
-          await deactivateSchedule(updated.trigger_schedule_id!);
-        } else if (enabled === true) {
-          await activateSchedule(updated.trigger_schedule_id!);
-        }
-      } catch (error) {
-        console.error(
-          `Error ${enabled === false ? "deactivating" : "activating"} Trigger.dev schedule:`,
-          error instanceof Error ? error.message : error
-        );
+      if (enabled === false) {
+        await deactivateSchedule(updated.trigger_schedule_id!);
+      } else if (enabled === true) {
+        await activateSchedule(updated.trigger_schedule_id!);
       }
     }
 

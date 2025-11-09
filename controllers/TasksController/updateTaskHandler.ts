@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import { updateScheduledAction } from "../../lib/supabase/scheduled_actions/updateScheduledAction";
-import { updateSchedule } from "../../lib/trigger/updateSchedule";
-import { deactivateSchedule } from "../../lib/trigger/deactivateSchedule";
-import { activateSchedule } from "../../lib/trigger/activateSchedule";
+import { selectScheduledActions } from "../../lib/supabase/scheduled_actions/selectScheduledActions";
+import { syncTriggerSchedule } from "../../lib/trigger/syncTriggerSchedule";
 import type { TablesUpdate } from "../../types/database.types";
 
 /**
@@ -34,6 +33,17 @@ export const updateTaskHandler = async (
       return;
     }
 
+    const existingTasks = await selectScheduledActions({ id });
+    const existingTask = existingTasks[0];
+
+    if (!existingTask) {
+      res.status(404).json({
+        status: "error",
+        error: "Task not found",
+      });
+      return;
+    }
+
     const updateData: Partial<TablesUpdate<"scheduled_actions">> = {};
     if (title !== undefined) updateData.title = title;
     if (prompt !== undefined) updateData.prompt = prompt;
@@ -43,25 +53,28 @@ export const updateTaskHandler = async (
       updateData.artist_account_id = artist_account_id;
     if (enabled !== undefined) updateData.enabled = enabled;
 
+    const finalEnabled =
+      enabled !== undefined ? enabled : (existingTask.enabled ?? true);
+    const cronExpression = schedule ?? existingTask.schedule ?? undefined;
+    const scheduleChanged = schedule !== undefined;
+
+    let newTriggerScheduleId: string | null;
+    newTriggerScheduleId = await syncTriggerSchedule({
+      taskId: id,
+      enabled: finalEnabled,
+      cronExpression,
+      scheduleChanged,
+      existingScheduleId: existingTask.trigger_schedule_id ?? null,
+    });
+
+    if (newTriggerScheduleId !== existingTask.trigger_schedule_id) {
+      updateData.trigger_schedule_id = newTriggerScheduleId;
+    }
+
     const updated = await updateScheduledAction({
       id,
       ...updateData,
     });
-
-    if (schedule !== undefined) {
-      await updateSchedule({
-        scheduleId: updated.trigger_schedule_id!,
-        cron: schedule,
-      });
-    }
-
-    if (enabled !== undefined) {
-      if (enabled === false) {
-        await deactivateSchedule(updated.trigger_schedule_id!);
-      } else if (enabled === true) {
-        await activateSchedule(updated.trigger_schedule_id!);
-      }
-    }
 
     res.json({
       status: "success",

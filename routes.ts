@@ -47,6 +47,7 @@ import {
   updateTaskHandler,
   deleteTaskHandler,
 } from "./controllers/TasksController";
+import { getChatsHandler } from "./controllers/ChatsController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -122,5 +123,7 @@ routes.get("/tasks", getTasksHandler as any);
 routes.post("/tasks", createTaskHandler as any);
 routes.patch("/tasks", updateTaskHandler as any);
 routes.delete("/tasks", deleteTaskHandler as any);
+
+routes.get("/chats", getChatsHandler as any);
 
 export default routes;

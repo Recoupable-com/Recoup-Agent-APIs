@@ -1,0 +1,1 @@
+export { getChatsHandler } from "./getChatsHandler";

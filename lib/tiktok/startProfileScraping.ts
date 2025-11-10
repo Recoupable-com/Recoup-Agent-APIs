@@ -8,11 +8,12 @@ interface ApifyRunInfo {
 }
 
 const startProfileScraping = async (
-  handle: string
+  handle: string,
+  resultsPerPage = 1
 ): Promise<ApifyRunInfo | null> => {
   const profiles = [handle];
   const input = {
-    resultsPerPage: 10,
+    resultsPerPage,
     proxyCountryCode: "None",
     profiles,
   };

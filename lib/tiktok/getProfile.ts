@@ -17,7 +17,7 @@ const POLLING_INTERVAL = 3000; // 3 seconds
 
 const getProfile = async (handle: string): Promise<ProfileResult> => {
   try {
-    const runInfo = await startProfileScraping(handle);
+    const runInfo = await startProfileScraping(handle, 10);
     if (!runInfo) {
       throw new Error("Failed to start profile scraping");
     }

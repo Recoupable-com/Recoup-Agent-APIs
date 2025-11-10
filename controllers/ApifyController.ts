@@ -10,53 +10,41 @@ export const getScraperResultsHandler = async (
     const { runId } = req.query;
 
     if (!runId || typeof runId !== "string") {
-      res.status(400).json({
-        error: "Missing or invalid runId parameter",
-      });
+      res.status(400).json({ error: "Missing or invalid runId parameter" });
       return;
     }
 
     // Get the current status of the run
     const { status, datasetId } = await getActorStatus(runId);
 
-    // If the run is still in progress, return the status
-    if (status === "RUNNING" || status === "PENDING") {
-      res.json({
-        status,
-        datasetId,
-      });
-      return;
-    }
+    let statusCode = 200;
+    let payload: {
+      status: string;
+      datasetId: string | null;
+      data?: unknown[];
+    } = {
+      status,
+      datasetId: datasetId ?? null,
+    };
 
-    // If the run failed, return an error
-    if (status === "FAILED" || status === "ABORTED") {
-      res.status(500).json({
-        error: `Scraper run failed with status: ${status}`,
-      });
-      return;
-    }
-
-    // If the run succeeded, get and return the dataset
-    if (status === "SUCCEEDED" && datasetId) {
-      const results = await getDataset(datasetId);
-      if (!results) {
-        res.status(500).json({
-          error: "Failed to fetch dataset results",
-        });
-        return;
+    if (status === "SUCCEEDED") {
+      if (!datasetId) {
+        statusCode = 500;
+      } else {
+        const results = await getDataset(datasetId);
+        if (!results) {
+          statusCode = 500;
+        } else {
+          payload = { status, datasetId, data: results };
+        }
       }
-      res.json(results);
-      return;
+    } else if (status === "FAILED" || status === "ABORTED") {
+      statusCode = 500;
     }
 
-    // If we get here, something unexpected happened
-    res.status(500).json({
-      error: `Unexpected status: ${status}`,
-    });
+    res.status(statusCode).json(payload);
   } catch (error) {
     console.error("Error in getScraperResultsHandler:", error);
-    res.status(500).json({
-      error: "Internal server error",
-    });
+    res.status(500).json({ error: "Internal server error" });
   }
 };

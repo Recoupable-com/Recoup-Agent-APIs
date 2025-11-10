@@ -48,6 +48,7 @@ import {
   deleteTaskHandler,
 } from "./controllers/TasksController";
 import { getChatsHandler } from "./controllers/ChatsController";
+import { postSocialScrapeHandler } from "./controllers/SocialController";
 
 const routes = express.Router();
 const pilotController = new PilotController();
@@ -93,6 +94,7 @@ routes.get("/artist/segments", getArtistSegmentsHandler as any);
 routes.get("/segment/fans", getSegmentFansHandler as any);
 routes.get("/artist/socials", getArtistSocialsHandler as any);
 routes.get("/social/posts", getSocialPostsHandler as any);
+routes.post("/social/scrape", postSocialScrapeHandler as any);
 routes.get("/post/comments", getPostCommentsHandler as any);
 
 routes.get("/spotify/search", getSpotifySearchHandler as any);

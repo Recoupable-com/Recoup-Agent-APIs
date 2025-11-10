@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { selectSocials } from "../../lib/supabase/socials/selectSocials";
-import startProfileScraping from "../../lib/tiktok/startProfileScraping";
+import startTikTokProfileScraping from "../../lib/tiktok/startProfileScraping";
+import startInstagramProfileScraping from "../../lib/instagram/startProfileScraping";
 
 export const postSocialScrapeHandler = async (
   req: Request,
@@ -28,13 +29,19 @@ export const postSocialScrapeHandler = async (
       return;
     }
 
-    if (
-      social.profile_url &&
-      social.profile_url.toLowerCase().includes("tiktok.com")
-    ) {
-      try {
-        const runInfo = await startProfileScraping(social.username);
+    const profileUrl = social.profile_url?.toLowerCase() ?? "";
 
+    if (
+      profileUrl.includes("tiktok.com") ||
+      profileUrl.includes("instagram.com")
+    ) {
+      const isTikTok = profileUrl.includes("tiktok.com");
+      const startScrape = isTikTok
+        ? startTikTokProfileScraping
+        : startInstagramProfileScraping;
+
+      try {
+        const runInfo = await startScrape(social.username);
         res.json({
           runId: runInfo?.runId ?? null,
           datasetId: runInfo?.datasetId ?? null,
@@ -42,7 +49,7 @@ export const postSocialScrapeHandler = async (
         });
         return;
       } catch (error) {
-        console.error("Failed to start TikTok profile scraping:", error);
+        console.error("Failed to start social profile scraping:", error);
         res.status(500).json({
           status: "error",
           error:

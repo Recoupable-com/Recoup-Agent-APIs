@@ -1,26 +1,29 @@
-import runApifyActor from "../apify/runApifyActor.js";
-import { OUTSTANDING_ERROR } from "../twitter/errors.js";
-
-interface ApifyRunInfo {
-  runId: string;
-  datasetId: string;
-  error?: string;
-}
+import apifyClient from "../apify/client";
+import { OUTSTANDING_ERROR } from "../twitter/errors";
+import { ApifyRunInfo } from "../apify/types";
 
 const startProfileScraping = async (
-  handle: string
+  handle: string,
+  resultsPerPage = 1
 ): Promise<ApifyRunInfo | null> => {
-  const profiles = [handle];
+  const cleanHandle = handle.trim();
+
+  if (!cleanHandle) {
+    throw new Error("Invalid TikTok handle");
+  }
+
   const input = {
-    resultsPerPage: 10,
+    resultsPerPage,
     proxyCountryCode: "None",
-    profiles,
+    profiles: [cleanHandle],
   };
 
   try {
-    const response = await runApifyActor(input, "clockworks~tiktok-scraper");
+    const run = await apifyClient
+      .actor("clockworks~tiktok-scraper")
+      .start(input);
 
-    if (!response) {
+    if (!run?.id || !run?.defaultDatasetId) {
       console.error(
         "Failed to start TikTok profile scraping for handle:",
         handle
@@ -28,12 +31,14 @@ const startProfileScraping = async (
       return null;
     }
 
-    const { error, runId, datasetId } = response;
-    if (error) {
+    if (run.status === "FAILED" || run.status === "ABORTED") {
       throw new Error(OUTSTANDING_ERROR);
     }
 
-    return { runId, datasetId };
+    return {
+      runId: run.id,
+      datasetId: run.defaultDatasetId,
+    };
   } catch (error) {
     console.error("Error in startProfileScraping:", error);
     throw error;

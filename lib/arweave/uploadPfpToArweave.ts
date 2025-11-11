@@ -1,45 +1,25 @@
-import { Readable } from "node:stream";
 import getBlob from "../ipfs/getBlob";
-import turboClient from "./client";
+import uploadToArweave from "./uploadToArweave";
 
 const uploadPfpToArweave = async (image: string): Promise<string | null> => {
   try {
     // Get image blob and type
     const { blob, type } = await getBlob(image);
-    const buffer = Buffer.from(await blob.arrayBuffer());
-    const fileSize = buffer.length;
+    const base64Data = Buffer.from(await blob.arrayBuffer()).toString("base64");
 
-    // Create a Node.js Readable stream factory
-    const fileStreamFactory = () => {
-      const stream = new Readable({
-        read() {
-          this.push(buffer);
-          this.push(null);
-        },
-      });
-      return stream;
-    };
-
-    const { id } = await turboClient.uploadFile({
-      fileStreamFactory,
-      fileSizeFactory: () => fileSize,
-      dataItemOpts: {
-        tags: [
-          {
-            name: "Content-Type",
-            value: type || "image/png",
-          },
-          {
-            name: "File-Name",
-            value: "avatar.png",
-          },
-        ],
+    const transaction = await uploadToArweave(
+      {
+        base64Data,
+        mimeType: type || "image/png",
       },
-    });
+      () => {}
+    );
 
-    if (!id) return null;
+    if (!transaction?.id) {
+      return null;
+    }
 
-    return `https://arweave.net/${id}`;
+    return `https://arweave.net/${transaction.id}`;
   } catch (error) {
     console.error("Error uploading to Arweave:", error);
     return null;

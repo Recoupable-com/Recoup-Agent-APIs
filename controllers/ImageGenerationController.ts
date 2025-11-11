@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { generateImage } from "../lib/openai/generateImage";
 import getAccountSocials from "../lib/supabase/getAccountSocials";
-import uploadPfpToArweave from "../lib/arweave/uploadPfpToArweave";
 import { createContract } from "../lib/inprocess/createContract";
+import uploadToArweave from "../lib/arweave/uploadToArweave";
 
 /**
  * Validates the artist account exists in the database
@@ -60,9 +60,22 @@ export const generateImageHandler = async (
     // Generate image
     const result = await generateImage(prompt);
 
+    if (!result.data[0].b64_json) {
+      return res.status(500).json({
+        status: "error",
+        error: {
+          code: "image_generation_failed",
+          message: "Failed to generate the image",
+        },
+      });
+    }
     // Upload to Arweave
-    console.log("[ImageGeneration] Uploading to Arweave...");
-    const arweaveUrl = await uploadPfpToArweave(result.url);
+    const transaction = await uploadToArweave({
+      base64Data: result.data[0].b64_json,
+      mimeType: "image/png",
+    });
+
+    const arweaveUrl = `https://arweave.net/${transaction.id}`;
 
     if (!arweaveUrl) {
       return res.status(500).json({

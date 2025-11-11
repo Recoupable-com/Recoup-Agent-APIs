@@ -4,8 +4,14 @@ import { ApifyRunInfo } from "../apify/types";
 const startTwitterProfileScraping = async (
   handle: string
 ): Promise<ApifyRunInfo | null> => {
+  const cleanHandle = handle.trim();
+
+  if (!cleanHandle) {
+    throw new Error("Invalid Twitter handle");
+  }
+
   const input = {
-    twitterHandles: [handle],
+    twitterHandles: [cleanHandle],
     sort: "Latest",
     maxItems: 1,
   };

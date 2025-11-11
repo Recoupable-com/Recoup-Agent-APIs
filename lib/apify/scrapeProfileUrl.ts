@@ -3,6 +3,7 @@ import startInstagramProfileScraping from "../instagram/startProfileScraping";
 import startTwitterProfileScraping from "../twitter/startTwitterProfileScraping";
 import startThreadsProfileScraping from "../threads/startThreadsProfileScraping";
 import startYoutubeProfileScraping from "../youtube/startYoutubeProfileScraping";
+import startFacebookProfileScraping from "../facebook/startFacebookProfileScraping";
 
 type ScrapeRunner = (handle: string) => Promise<{
   runId: string;
@@ -42,6 +43,10 @@ const PLATFORM_SCRAPERS: Array<{
   {
     match: (url: string) => url.includes("youtube.com"),
     scraper: startYoutubeProfileScraping,
+  },
+  {
+    match: (url: string) => url.includes("facebook.com"),
+    scraper: startFacebookProfileScraping,
   },
 ];
 

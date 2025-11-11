@@ -1,26 +1,24 @@
-import runApifyActor from "../apify/runApifyActor";
+import apifyClient from "../apify/client";
 import { OUTSTANDING_ERROR } from "../twitter/errors";
-
-interface ApifyRunInfo {
-  runId: string;
-  datasetId: string;
-  error?: string;
-}
+import { ApifyRunInfo } from "../apify/types";
 
 const startProfileScraping = async (
   handle: string
 ): Promise<ApifyRunInfo | null> => {
-  const input = {
-    usernames: [handle],
-  };
+  const cleanHandle = handle.trim().replace(/^@/, "");
+
+  if (!cleanHandle) {
+    throw new Error("Invalid Instagram handle");
+  }
 
   try {
-    const response = await runApifyActor(
-      input,
-      "apify~instagram-profile-scraper"
-    );
+    const run = await apifyClient
+      .actor("apify~instagram-profile-scraper")
+      .call({
+        usernames: [cleanHandle],
+      });
 
-    if (!response) {
+    if (!run?.id || !run?.defaultDatasetId) {
       console.error(
         "Failed to start Instagram profile scraping for handle:",
         handle
@@ -28,10 +26,11 @@ const startProfileScraping = async (
       return null;
     }
 
-    const { error, runId, datasetId } = response;
-    if (error) throw new Error(OUTSTANDING_ERROR);
+    if (run.status === "FAILED" || run.status === "ABORTED") {
+      throw new Error(OUTSTANDING_ERROR);
+    }
 
-    return { runId, datasetId };
+    return { runId: run.id, datasetId: run.defaultDatasetId };
   } catch (error) {
     console.error("Error in startProfileScraping:", error);
     return null;

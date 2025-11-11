@@ -37,7 +37,8 @@ const PLATFORM_SCRAPERS: Array<{
     scraper: startTwitterProfileScraping,
   },
   {
-    match: (url: string) => url.includes("threads.com"),
+    match: (url: string) =>
+      url.includes("threads.com") || url.includes("threads.net"),
     scraper: startThreadsProfileScraping,
   },
   {

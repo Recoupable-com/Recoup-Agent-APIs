@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { selectSocials } from "../../lib/supabase/socials/selectSocials";
-import startTikTokProfileScraping from "../../lib/tiktok/startProfileScraping";
-import startInstagramProfileScraping from "../../lib/instagram/startProfileScraping";
+import { scrapeProfileUrl } from "../../lib/apify/scrapeProfileUrl";
 
 export const postSocialScrapeHandler = async (
   req: Request,
@@ -29,34 +28,25 @@ export const postSocialScrapeHandler = async (
       return;
     }
 
-    const profileUrl = social.profile_url?.toLowerCase() ?? "";
+    const scrapeResult = await scrapeProfileUrl(
+      social.profile_url,
+      social.username
+    );
 
-    if (
-      profileUrl.includes("tiktok.com") ||
-      profileUrl.includes("instagram.com")
-    ) {
-      const isTikTok = profileUrl.includes("tiktok.com");
-      const startScrape = isTikTok
-        ? startTikTokProfileScraping
-        : startInstagramProfileScraping;
-
-      try {
-        const runInfo = await startScrape(social.username);
-        res.json({
-          runId: runInfo?.runId ?? null,
-          datasetId: runInfo?.datasetId ?? null,
-          error: runInfo?.error ?? null,
-        });
-        return;
-      } catch (error) {
-        console.error("Failed to start social profile scraping:", error);
+    if (scrapeResult) {
+      if (scrapeResult.error) {
         res.status(500).json({
           status: "error",
-          error:
-            error instanceof Error ? error.message : "Failed to start scrape",
+          error: scrapeResult.error,
         });
-        return;
+      } else {
+        res.json({
+          runId: scrapeResult.runId,
+          datasetId: scrapeResult.datasetId,
+          error: scrapeResult.error,
+        });
       }
+      return;
     }
 
     res.json({

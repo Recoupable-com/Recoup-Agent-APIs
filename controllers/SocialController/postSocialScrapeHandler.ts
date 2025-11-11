@@ -43,7 +43,6 @@ export const postSocialScrapeHandler = async (
         res.json({
           runId: scrapeResult.runId,
           datasetId: scrapeResult.datasetId,
-          error: scrapeResult.error,
         });
       }
       return;

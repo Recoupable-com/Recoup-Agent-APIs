@@ -14,7 +14,7 @@ const startProfileScraping = async (
   try {
     const run = await apifyClient
       .actor("apify~instagram-profile-scraper")
-      .call({
+      .start({
         usernames: [cleanHandle],
       });
 

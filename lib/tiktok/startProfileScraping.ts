@@ -21,7 +21,7 @@ const startProfileScraping = async (
   try {
     const run = await apifyClient
       .actor("clockworks~tiktok-scraper")
-      .call(input);
+      .start(input);
 
     if (!run?.id || !run?.defaultDatasetId) {
       console.error(

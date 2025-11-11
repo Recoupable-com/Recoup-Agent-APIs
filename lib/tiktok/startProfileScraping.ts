@@ -1,11 +1,6 @@
 import runApifyActor from "../apify/runApifyActor.js";
 import { OUTSTANDING_ERROR } from "../twitter/errors.js";
-
-interface ApifyRunInfo {
-  runId: string;
-  datasetId: string;
-  error?: string;
-}
+import { ApifyRunInfo } from "../apify/types";
 
 const startProfileScraping = async (
   handle: string,

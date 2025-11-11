@@ -1,11 +1,5 @@
 import apifyClient from "../apify/client";
-
-interface ApifyRunInfo {
-  runId: string;
-  datasetId: string;
-  error?: string;
-  data?: unknown;
-}
+import { ApifyRunInfo } from "../apify/types";
 
 const startTwitterProfileScraping = async (
   handle: string
@@ -18,7 +12,7 @@ const startTwitterProfileScraping = async (
 
   const run = await apifyClient
     .actor("apidojo/twitter-scraper-lite")
-    .call(input);
+    .start(input);
 
   return {
     runId: run.id,
@@ -27,4 +21,3 @@ const startTwitterProfileScraping = async (
 };
 
 export default startTwitterProfileScraping;
-

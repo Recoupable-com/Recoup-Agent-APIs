@@ -29,7 +29,13 @@ export default async function handleSocialProfileWebhook(
   }
 
   const dataset = await getDataset(datasetId);
-  const { payload } = await parser(dataset);
+  const datasetItem = Array.isArray(dataset) ? dataset[0] : null;
+
+  if (!datasetItem) {
+    return { social };
+  }
+
+  const { payload } = await parser(datasetItem);
 
   if (!payload) {
     return { social };

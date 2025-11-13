@@ -5,5 +5,5 @@ export type SocialProfileParserResult = {
 };
 
 export type SocialProfileParser = (
-  dataset: unknown
+  datasetItem: unknown
 ) => Promise<SocialProfileParserResult> | SocialProfileParserResult;

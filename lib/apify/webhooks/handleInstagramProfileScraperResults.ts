@@ -16,10 +16,9 @@ export default async function handleInstagramProfileScraperResults(
 ) {
   const datasetId = parsed.resource.defaultDatasetId;
   let social: Tables<"socials"> | null = null;
-  let dataset;
 
   if (datasetId) {
-    dataset = await getDataset(datasetId);
+    const dataset = await getDataset(datasetId);
     const firstResult = dataset[0];
     if (firstResult?.latestPosts) {
       const arweaveResult = await uploadPfpToArweave(
@@ -29,16 +28,16 @@ export default async function handleInstagramProfileScraperResults(
         firstResult.profilePicUrl = getFetchableUrl(arweaveResult);
       }
 
-      await upsertSocials([
-        {
-          username: firstResult.username,
-          avatar: firstResult.profilePicUrl,
-          profile_url: firstResult.url,
-          bio: firstResult.biography,
-          followerCount: firstResult.followersCount,
-          followingCount: firstResult.followsCount,
-        },
-      ]);
+      const updatedResult = {
+        username: firstResult.username,
+        avatar: firstResult.profilePicUrl,
+        profile_url: firstResult.url,
+        bio: firstResult.biography,
+        followerCount: firstResult.followersCount,
+        followingCount: firstResult.followsCount,
+      };
+
+      social = (await upsertSocials([updatedResult]))[0];
     }
   }
 

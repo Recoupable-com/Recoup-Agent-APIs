@@ -5,7 +5,7 @@
   "main": "app.js",
   "type": "commonjs",
   "scripts": {
-    "start": "npx tsc && nodemon --experimental-specifier-resolution=node --no-warnings ./dist/app.js",
+    "start": "npx tsc && npx tsc-alias && nodemon --experimental-specifier-resolution=node --no-warnings ./dist/app.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -46,6 +46,7 @@
     "prettier": "^3.4.1",
     "socket.io": "^4.8.1",
     "stripe": "^18.5.0",
+    "tsconfig-paths": "^4.2.0",
     "ts-node": "^10.9.2",
     "uuid": "^11.0.5",
     "viem": "^2.37.5",
@@ -60,6 +61,7 @@
     "@types/node-fetch": "^2.6.12",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
+    "tsc-alias": "^1.8.8",
     "typescript": "^5.7.3"
   }
 }

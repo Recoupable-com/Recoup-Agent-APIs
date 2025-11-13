@@ -4,8 +4,14 @@ import handleInstagramProfileScraperResults from "./handleInstagramProfileScrape
 
 export type ApifyWebhookPayload = z.infer<typeof apifyPayloadSchema>;
 
-const processApifyWebhook = async (parsed: ApifyWebhookPayload) => {
-  const fallbackResponse = {
+export type ProcessApifyWebhookResult = Awaited<
+  ReturnType<typeof handleInstagramProfileScraperResults>
+>;
+
+const processApifyWebhook = async (
+  parsed: ApifyWebhookPayload
+): Promise<ProcessApifyWebhookResult> => {
+  const fallbackResponse: ProcessApifyWebhookResult = {
     social: null,
   };
 

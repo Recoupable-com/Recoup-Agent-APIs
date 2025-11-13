@@ -1,10 +1,10 @@
-import getDataset from "../getDataset";
-import { Tables } from "../../../types/database.types";
+import getDataset from "@/lib/apify/getDataset";
+import { Tables } from "@/types/database.types";
 import { z } from "zod";
-import upsertSocials from "../../supabase/socials/upsertSocials";
+import upsertSocials from "@/lib/supabase/socials/upsertSocials";
 import apifyPayloadSchema from "./apifyPayloadSchema";
-import { getFetchableUrl } from "../../arweave/getFetchableUrl";
-import uploadPfpToArweave from "../../arweave/uploadPfpToArweave";
+import { getFetchableUrl } from "@/lib/arweave/getFetchableUrl";
+import uploadPfpToArweave from "@/lib/arweave/uploadPfpToArweave";
 
 /**
  * Handles Instagram profile scraper results: fetches dataset, saves posts, saves socials, and returns results.

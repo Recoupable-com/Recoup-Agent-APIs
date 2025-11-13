@@ -1,6 +1,5 @@
 import type { SocialProfileParser, SocialProfileParserResult } from "./types";
 import type { TablesInsert } from "@/types/database.types";
-import { extractYoutubeUsernameFromUrl } from "@/lib/youtube/extractYoutubeUsernameFromUrl";
 
 type YouTubeDatasetItem = {
   channelName?: string;

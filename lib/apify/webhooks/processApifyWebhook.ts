@@ -6,12 +6,7 @@ export type ApifyWebhookPayload = z.infer<typeof apifyPayloadSchema>;
 
 const processApifyWebhook = async (parsed: ApifyWebhookPayload) => {
   const fallbackResponse = {
-    posts: [],
     social: null,
-    accountSocials: [],
-    accountArtistIds: [],
-    accountEmails: [],
-    sentEmails: null,
   };
 
   try {

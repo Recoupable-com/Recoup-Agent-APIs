@@ -2,9 +2,9 @@ import getDataset from "../getDataset";
 import { Tables } from "../../../types/database.types";
 import { z } from "zod";
 import upsertSocials from "../../supabase/socials/upsertSocials";
-import uploadLinkToArweave from "@/lib/arweave/uploadLinkToArweave";
-import apifyPayloadSchema from "@/lib/apify/apifyPayloadSchema";
-import { getFetchableUrl } from "@/lib/arweave/gateway";
+import apifyPayloadSchema from "./apifyPayloadSchema";
+import { getFetchableUrl } from "../../arweave/getFetchableUrl";
+import uploadPfpToArweave from "../../arweave/uploadPfpToArweave";
 
 /**
  * Handles Instagram profile scraper results: fetches dataset, saves posts, saves socials, and returns results.
@@ -22,7 +22,7 @@ export default async function handleInstagramProfileScraperResults(
     dataset = await getDataset(datasetId);
     const firstResult = dataset[0];
     if (firstResult?.latestPosts) {
-      const arweaveResult = await uploadLinkToArweave(
+      const arweaveResult = await uploadPfpToArweave(
         firstResult.profilePicUrlHD || firstResult.profilePicUrl
       );
       if (arweaveResult) {

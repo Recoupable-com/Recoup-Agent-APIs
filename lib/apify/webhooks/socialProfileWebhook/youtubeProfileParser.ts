@@ -27,8 +27,7 @@ export const youtubeProfileParser: SocialProfileParser = (
   const payload: TablesInsert<"socials"> = {
     username:
       item.channelUsername ||
-      item.channelName ||
-      extractYoutubeUsernameFromUrl(item.channelUrl) ||
+      extractYoutubeUsernameFromUrl(item.inputChannelUrl) ||
       "",
     bio: item.channelDescription ?? null,
     profile_url:

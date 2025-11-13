@@ -1,6 +1,5 @@
 import type { ArweaveURL } from "../artist-profile/isArweaveUrl";
 import { isArweaveUrl } from "../artist-profile/isArweaveUrl";
-import { getIpfsGatewayUrl, isNormalizeableIPFSUrl } from "../ipfs";
 import getArweaveGatewayUrl from "./getArweaveGatewayUrl";
 
 export function getFetchableUrl(uri: string | null | undefined): string | null {
@@ -8,12 +7,6 @@ export function getFetchableUrl(uri: string | null | undefined): string | null {
 
   // Prevent fetching from insecure URLs
   if (uri.startsWith("http://")) return null;
-
-  // If it is an IPFS HTTP or ipfs:// url
-  if (isNormalizeableIPFSUrl(uri)) {
-    // Return a fetchable gateway url
-    return getIpfsGatewayUrl(uri);
-  }
 
   // If it is a ar:// url
   if (isArweaveUrl(uri)) {

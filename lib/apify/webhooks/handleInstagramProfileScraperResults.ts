@@ -25,7 +25,10 @@ export default async function handleInstagramProfileScraperResults(
         firstResult.profilePicUrlHD || firstResult.profilePicUrl
       );
       if (arweaveResult) {
-        firstResult.profilePicUrl = getFetchableUrl(arweaveResult);
+        const fetchableUrl = getFetchableUrl(arweaveResult);
+        if (fetchableUrl) {
+          firstResult.profilePicUrl = fetchableUrl;
+        }
       }
 
       const updatedResult = {
@@ -38,6 +41,7 @@ export default async function handleInstagramProfileScraperResults(
       };
 
       social = (await upsertSocials([updatedResult]))[0];
+      console.log("Social upserted successfully:", social);
     }
   }
 

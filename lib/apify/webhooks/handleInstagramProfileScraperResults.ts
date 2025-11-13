@@ -41,7 +41,6 @@ export default async function handleInstagramProfileScraperResults(
       };
 
       social = (await upsertSocials([updatedResult]))[0];
-      console.log("Social upserted successfully:", social);
     }
   }
 

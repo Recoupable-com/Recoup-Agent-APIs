@@ -8,6 +8,8 @@ export type ProcessApifyWebhookResult = Awaited<
   ReturnType<typeof handleInstagramProfileScraperResults>
 >;
 
+const INSTAGRAM_PROFILE_SCRAPER_ACTOR_ID = "dSCLg0C3YEZ83HzYX" as const;
+
 const processApifyWebhook = async (
   parsed: ApifyWebhookPayload
 ): Promise<ProcessApifyWebhookResult> => {
@@ -16,7 +18,7 @@ const processApifyWebhook = async (
   };
 
   try {
-    if (parsed.eventData.actorId === "dSCLg0C3YEZ83HzYX") {
+    if (parsed.eventData.actorId === INSTAGRAM_PROFILE_SCRAPER_ACTOR_ID) {
       return await handleInstagramProfileScraperResults(parsed);
     }
 

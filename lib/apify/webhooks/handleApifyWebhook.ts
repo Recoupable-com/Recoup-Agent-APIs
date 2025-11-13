@@ -14,6 +14,8 @@ const handleApifyWebhook: RequestHandler = async (req, res) => {
 
   try {
     const result = await processApifyWebhook(parsed.data);
+    // TODO: delete this after Facebook scraper is implemented
+    console.log("Apify webhook processed successfully:", result.social);
     res.status(200).json(result);
   } catch (error) {
     console.error("Failed to process Apify webhook request:", error);

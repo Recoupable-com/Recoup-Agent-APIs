@@ -4,7 +4,7 @@ import { Tables } from "../../../types/database.types";
 type AccountEmail = Tables<"account_emails">;
 
 type GetAccountEmailsParams = {
-  account_id?: string;
+  account_ids?: string[];
   queryEmail?: string;
 };
 
@@ -17,8 +17,8 @@ export const getAccountEmails = async (
   let query = serverClient.from("account_emails").select("*");
 
   // Add filters based on provided parameters
-  if (params.account_id) {
-    query = query.eq("account_id", params.account_id);
+  if (params.account_ids && params.account_ids.length > 0) {
+    query = query.in("account_id", params.account_ids);
   }
 
   if (params.queryEmail) {

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { getActiveSubscriptionDetails } from "../lib/stripe/getActiveSubscriptionDetails";
-import isEnterprise from "../lib/isEnterprise";
+import isEnterprise from "@/lib/enterprise/isEnterprise";
 import { getAccountEmails } from "../lib/supabase/account_emails/getAccountEmails";
 
 /**

@@ -16,8 +16,11 @@ export interface ProfileScrapeResult {
   runId: string | null;
   datasetId: string | null;
   error: string | null;
-  supported: boolean;
 }
+
+export type ScrapeProfileResult = ProfileScrapeResult & {
+  supported: boolean;
+};
 
 const PLATFORM_SCRAPERS: Array<{
   match: (url: string) => boolean;
@@ -54,7 +57,7 @@ const PLATFORM_SCRAPERS: Array<{
 export const scrapeProfileUrl = async (
   profileUrl: string | null | undefined,
   username: string
-): Promise<ProfileScrapeResult | null> => {
+): Promise<ScrapeProfileResult | null> => {
   if (!profileUrl) {
     return null;
   }

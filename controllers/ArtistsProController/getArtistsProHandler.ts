@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import { getAllEnterpriseAccounts } from "@/lib/enterprise/getAllEnterpriseAccounts";
-import { getActiveSubscriptions } from "@/lib/stripe/getActiveSubscriptions";
-import { getAccountEmails } from "@/lib/supabase/account_emails/getAccountEmails";
-import Stripe from "stripe";
+import { getSubscriberAccountEmails } from "@/lib/stripe/getSubscriberAccountEmails";
 
 /**
  * Handles GET requests for artists list
@@ -13,23 +11,10 @@ export const getArtistsProHandler = async (
   res: Response
 ): Promise<void> => {
   try {
-    const allEnterpriseEmails = await getAllEnterpriseAccounts();
-    const activeSubscriptions = await getActiveSubscriptions();
-
-    // Extract accountIds from subscription metadata
-    const accountIds = activeSubscriptions
-      .map(
-        (subscription: Stripe.Subscription) => subscription.metadata?.accountId
-      )
-      .filter((accountId: string | undefined): accountId is string =>
-        Boolean(accountId)
-      );
-
-    // Get account emails for subscriptions with accountIds
-    const subscriptionAccountEmails =
-      accountIds.length > 0
-        ? await getAccountEmails({ account_ids: accountIds })
-        : [];
+    const [allEnterpriseEmails, subscriptionAccountEmails] = await Promise.all([
+      getAllEnterpriseAccounts(),
+      getSubscriberAccountEmails(),
+    ]);
 
     const artists = [...allEnterpriseEmails, ...subscriptionAccountEmails];
 

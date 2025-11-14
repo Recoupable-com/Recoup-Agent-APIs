@@ -9,13 +9,13 @@ type AccountEmail = Tables<"account_emails">;
  * @returns Array of account emails from enterprise domains
  */
 export const getAllEnterpriseAccounts = async (): Promise<AccountEmail[]> => {
-  const allEnterpriseEmails: AccountEmail[] = [];
+  // Query for each enterprise domain using queryEmail parameter in parallel
+  const emailPromises = Array.from(ENTERPRISE_DOMAINS).map((domain) =>
+    getAccountEmails({ queryEmail: `@${domain}` })
+  );
 
-  // Query for each enterprise domain using queryEmail parameter
-  for (const domain of ENTERPRISE_DOMAINS) {
-    const emails = await getAccountEmails({ queryEmail: `@${domain}` });
-    allEnterpriseEmails.push(...emails);
-  }
+  const emailArrays = await Promise.all(emailPromises);
 
-  return allEnterpriseEmails;
+  // Flatten the array of arrays into a single array
+  return emailArrays.flat();
 };

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { getActiveSubscriptionDetails } from "../lib/stripe/getActiveSubscriptionDetails";
-import isEnterprise from "../lib/isEnterprise";
+import isEnterprise from "@/lib/enterprise/isEnterprise";
 import { getAccountEmails } from "../lib/supabase/account_emails/getAccountEmails";
 
 /**
@@ -25,7 +25,7 @@ export const getSubscriptionsHandler = async (
     }
 
     // Get account emails to check if any belong to enterprise domain
-    const accountEmails = await getAccountEmails(accountId);
+    const accountEmails = await getAccountEmails({ account_id: accountId });
 
     if (!accountEmails || accountEmails.length === 0) {
       res.status(404).json({

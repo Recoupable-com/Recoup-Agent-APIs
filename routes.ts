@@ -3,6 +3,7 @@ import * as SegmentsController from "./controllers/SegmentsController";
 import * as GlobalController from "./controllers/GlobalController";
 import { PilotController } from "./controllers/PilotController";
 import { getArtistProfileHandler } from "./controllers/ArtistProfileController";
+import { getArtistsProHandler } from "./controllers/ArtistsProController";
 import { generateImageHandler } from "./controllers/ImageGenerationController";
 import { getCommentsHandler } from "./controllers/CommentsController";
 import { getArtistSegmentsHandler } from "./controllers/ArtistSegmentsController";
@@ -95,6 +96,7 @@ routes.get("/image-generation", generateImageHandler as any);
 
 routes.get("/comments", getCommentsHandler as any);
 
+routes.get("/artists/pro", getArtistsProHandler);
 routes.get("/artist/segments", getArtistSegmentsHandler as any);
 routes.get("/segment/fans", getSegmentFansHandler as any);
 routes.get("/artist/socials", getArtistSocialsHandler);

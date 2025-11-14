@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import { getAccountSocials } from "../../lib/supabase/getAccountSocials";
 import {
   ProfileScrapeResult,
+  ScrapeProfileResult,
   scrapeProfileUrl,
 } from "../../lib/apify/scrapeProfileUrl";
 
@@ -35,28 +36,24 @@ export const postArtistSocialsScrapeHandler: RequestHandler = async (
       return;
     }
 
-    const results: ProfileScrapeResult[] = await Promise.all(
+    const resultsWithNulls = await Promise.all(
       socials.map(async (social) => {
         const scrapeResult = await scrapeProfileUrl(
           social.profile_url ?? null,
           social.username ?? ""
         );
 
-        if (!scrapeResult) {
-          return {
-            runId: null,
-            datasetId: null,
-            error: "Unsupported or missing profile URL",
-          };
-        }
-
-        return {
-          runId: scrapeResult.runId,
-          datasetId: scrapeResult.datasetId,
-          error: scrapeResult.error,
-        };
+        return scrapeResult;
       })
     );
+
+    const results: ProfileScrapeResult[] = resultsWithNulls
+      .filter((result): result is ScrapeProfileResult => result !== null)
+      .map(({ runId, datasetId, error }) => ({
+        runId,
+        datasetId,
+        error,
+      }));
 
     res.json(results);
     return;

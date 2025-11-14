@@ -1,4 +1,5 @@
 import supabase from "./serverClient";
+import { selectAccountArtistIds } from "./account_artist_ids/selectAccountArtistIds";
 
 interface ArtistEmailsResponse {
   emails: string[];
@@ -14,28 +15,20 @@ const getArtistEmails = async (
   artistId: string
 ): Promise<ArtistEmailsResponse> => {
   try {
-    const { data: accountArtists, error: accountArtistsError } = await supabase
-      .from("account_artist_ids")
-      .select("account_id")
-      .eq("artist_id", artistId);
-    if (accountArtistsError) {
-      console.error(
-        "[ERROR] Failed to get account_artist_ids:",
-        accountArtistsError
-      );
-      return {
-        emails: [],
-        error: new Error("Failed to get artist accounts"),
-      };
-    }
-    if (!accountArtists?.length) {
+    const accountArtists = await selectAccountArtistIds({
+      artist_id: artistId,
+    });
+
+    if (!accountArtists || accountArtists.length === 0) {
       return {
         emails: [],
         error: new Error("No accounts found for artist"),
       };
     }
 
-    const accountIds = accountArtists.map((aa) => aa.account_id);
+    const accountIds = accountArtists
+      .map((aa) => aa.account_id)
+      .filter((accountId): accountId is string => Boolean(accountId));
 
     const { data: accountEmails, error: emailsError } = await supabase
       .from("account_emails")

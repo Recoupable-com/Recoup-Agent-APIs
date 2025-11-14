@@ -1,0 +1,1 @@
+export { getArtistsProHandler } from "./getArtistsProHandler";

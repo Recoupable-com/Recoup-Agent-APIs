@@ -1,30 +1,33 @@
 import { Request, Response } from "express";
-import { getArtists } from "../../lib/artists/getArtists";
 
 /**
  * Handles GET requests for artists list
- * Returns all artists from the accounts table
+ * Returns mock artists data
  */
 export const getArtistsProHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const response = await getArtists();
+  const mockResponse = {
+    status: "success",
+    artists: [
+      {
+        id: "1",
+        name: "Artist One",
+        timestamp: 1234567890,
+      },
+      {
+        id: "2",
+        name: "Artist Two",
+        timestamp: 1234567891,
+      },
+      {
+        id: "3",
+        name: "Artist Three",
+        timestamp: 1234567892,
+      },
+    ],
+  };
 
-    if (response.status === "error") {
-      res.status(500).json(response);
-      return;
-    }
-
-    res.status(200).json(response);
-  } catch (error) {
-    console.error("[ERROR] Error in getArtistsProHandler:", error);
-    res.status(500).json({
-      status: "error",
-      artists: [],
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    });
-  }
+  res.status(200).json(mockResponse);
 };

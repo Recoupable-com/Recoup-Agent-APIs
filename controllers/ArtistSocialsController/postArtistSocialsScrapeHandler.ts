@@ -1,12 +1,9 @@
 import type { RequestHandler } from "express";
 import { getAccountSocials } from "../../lib/supabase/getAccountSocials";
-import { scrapeProfileUrl } from "../../lib/apify/scrapeProfileUrl";
-
-type ArtistSocialScrapeResult = {
-  runId: string | null;
-  datasetId: string | null;
-  error: string | null;
-};
+import {
+  ProfileScrapeResult,
+  scrapeProfileUrl,
+} from "../../lib/apify/scrapeProfileUrl";
 
 export const postArtistSocialsScrapeHandler: RequestHandler = async (
   req,
@@ -38,7 +35,7 @@ export const postArtistSocialsScrapeHandler: RequestHandler = async (
       return;
     }
 
-    const results: ArtistSocialScrapeResult[] = await Promise.all(
+    const results: ProfileScrapeResult[] = await Promise.all(
       socials.map(async (social) => {
         const scrapeResult = await scrapeProfileUrl(
           social.profile_url ?? null,

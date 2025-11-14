@@ -1,22 +1,16 @@
 import { Request, Response } from "express";
-import { getAllEnterpriseAccounts } from "@/lib/enterprise/getAllEnterpriseAccounts";
-import { getSubscriberAccountEmails } from "@/lib/stripe/getSubscriberAccountEmails";
+import { getEnterpriseArtists } from "@/lib/enterprise/getEnterpriseArtists";
 
 /**
  * Handles GET requests for artists list
- * Returns enterprise emails and account emails from active subscriptions
+ * Returns artists associated with pro accounts (enterprise and active subscriptions)
  */
 export const getArtistsProHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const [allEnterpriseEmails, subscriptionAccountEmails] = await Promise.all([
-      getAllEnterpriseAccounts(),
-      getSubscriberAccountEmails(),
-    ]);
-
-    const artists = [...allEnterpriseEmails, ...subscriptionAccountEmails];
+    const artists = await getEnterpriseArtists();
 
     res.status(200).json({
       status: "success",

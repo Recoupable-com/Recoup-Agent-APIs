@@ -1,5 +1,5 @@
-import { ENTERPRISE_DOMAINS } from "../consts";
-import extractDomain from "../email/extractDomain";
+import { ENTERPRISE_DOMAINS } from "@/lib/consts";
+import extractDomain from "@/lib/email/extractDomain";
 
 /**
  * Returns true if the provided email belongs to a known enterprise domain.

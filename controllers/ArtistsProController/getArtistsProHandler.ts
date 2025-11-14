@@ -1,33 +1,28 @@
 import { Request, Response } from "express";
+import { getAllEnterpriseAccounts } from "@/lib/enterprise/getAllEnterpriseAccounts";
 
 /**
  * Handles GET requests for artists list
- * Returns mock artists data
+ * Returns enterprise emails
  */
 export const getArtistsProHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const mockResponse = {
-    status: "success",
-    artists: [
-      {
-        id: "1",
-        name: "Artist One",
-        timestamp: 1234567890,
-      },
-      {
-        id: "2",
-        name: "Artist Two",
-        timestamp: 1234567891,
-      },
-      {
-        id: "3",
-        name: "Artist Three",
-        timestamp: 1234567892,
-      },
-    ],
-  };
+  try {
+    const allEnterpriseEmails = await getAllEnterpriseAccounts();
 
-  res.status(200).json(mockResponse);
+    res.status(200).json({
+      status: "success",
+      artists: allEnterpriseEmails,
+    });
+  } catch (error) {
+    console.error("[ERROR] Error in getArtistsProHandler:", error);
+    res.status(500).json({
+      status: "error",
+      artists: [],
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    });
+  }
 };

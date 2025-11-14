@@ -7,7 +7,10 @@ import { generateImageHandler } from "./controllers/ImageGenerationController";
 import { getCommentsHandler } from "./controllers/CommentsController";
 import { getArtistSegmentsHandler } from "./controllers/ArtistSegmentsController";
 import { getSegmentFansHandler } from "./controllers/SegmentFansController";
-import { getArtistSocialsHandler } from "./controllers/ArtistSocialsController";
+import {
+  getArtistSocialsHandler,
+  postArtistSocialsScrapeHandler,
+} from "./controllers/ArtistSocialsController";
 import { getSocialPostsHandler } from "./controllers/SocialPostsController";
 import { getPostCommentsHandler } from "./controllers/PostCommentsController";
 import {
@@ -94,7 +97,8 @@ routes.get("/comments", getCommentsHandler as any);
 
 routes.get("/artist/segments", getArtistSegmentsHandler as any);
 routes.get("/segment/fans", getSegmentFansHandler as any);
-routes.get("/artist/socials", getArtistSocialsHandler as any);
+routes.get("/artist/socials", getArtistSocialsHandler);
+routes.post("/artist/socials/scrape", postArtistSocialsScrapeHandler);
 routes.get("/social/posts", getSocialPostsHandler as any);
 routes.post("/social/scrape", postSocialScrapeHandler as any);
 routes.get("/post/comments", getPostCommentsHandler as any);

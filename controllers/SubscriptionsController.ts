@@ -25,7 +25,7 @@ export const getSubscriptionsHandler = async (
     }
 
     // Get account emails to check if any belong to enterprise domain
-    const accountEmails = await getAccountEmails({ account_id: accountId });
+    const accountEmails = await getAccountEmails({ account_ids: [accountId] });
 
     if (!accountEmails || accountEmails.length === 0) {
       res.status(404).json({

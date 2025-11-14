@@ -1,7 +1,7 @@
 import stripeClient from "./client";
 import Stripe from "stripe";
 
-export const getActiveSubscriptions = async (accountId: string) => {
+export const getActiveSubscriptions = async (accountId?: string) => {
   try {
     const subscriptions = await stripeClient.subscriptions.list({
       limit: 100,
@@ -10,11 +10,16 @@ export const getActiveSubscriptions = async (accountId: string) => {
       },
     });
 
+    // Return all active subscriptions if no accountId provided
+    if (!accountId) {
+      return subscriptions?.data || [];
+    }
+
+    // Filter by accountId if provided
     const activeSubscriptions = subscriptions?.data?.filter(
       (subscription: Stripe.Subscription) =>
         subscription.metadata?.accountId === accountId
     );
-
     return activeSubscriptions || [];
   } catch (error) {
     console.error("Error fetching subscriptions:", error);

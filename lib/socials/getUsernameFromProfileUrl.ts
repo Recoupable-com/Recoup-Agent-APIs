@@ -5,17 +5,17 @@
  */
 export const getUsernameFromProfileUrl = (
   profileUrl: string | null | undefined
-): string | null => {
+): string => {
   if (!profileUrl) {
-    return null;
+    return "";
   }
 
   try {
     const normalizedUrl = profileUrl.toLowerCase().trim();
     const match = normalizedUrl.match(/(?:\.com|\.net)\/([^/?]+)/);
-    return match ? match[1] : null;
+    return match ? match[1] : "";
   } catch (error) {
     console.error("[ERROR] Error extracting username from profile URL:", error);
-    return null;
+    return "";
   }
 };

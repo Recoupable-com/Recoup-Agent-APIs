@@ -75,7 +75,7 @@ export const scrapeProfileUrl = async (
   const finalUsername = username || getUsernameFromProfileUrl(profileUrl);
 
   try {
-    const result = await platform.scraper(finalUsername ?? "");
+    const result = await platform.scraper(finalUsername);
 
     if (!result) {
       return {

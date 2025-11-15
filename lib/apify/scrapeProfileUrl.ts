@@ -4,6 +4,7 @@ import startTwitterProfileScraping from "../twitter/startTwitterProfileScraping"
 import startThreadsProfileScraping from "../threads/startThreadsProfileScraping";
 import startYoutubeProfileScraping from "../youtube/startYoutubeProfileScraping";
 import startFacebookProfileScraping from "../facebook/startFacebookProfileScraping";
+import { getUsernameFromProfileUrl } from "../socials/getUsernameFromProfileUrl";
 
 type ScrapeRunner = (handle: string) => Promise<{
   runId: string;
@@ -71,8 +72,10 @@ export const scrapeProfileUrl = async (
     return null;
   }
 
+  const finalUsername = username || getUsernameFromProfileUrl(profileUrl);
+
   try {
-    const result = await platform.scraper(username);
+    const result = await platform.scraper(finalUsername);
 
     if (!result) {
       return {

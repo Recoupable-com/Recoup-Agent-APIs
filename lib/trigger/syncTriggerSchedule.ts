@@ -37,6 +37,7 @@ export async function syncTriggerSchedule(
     await updateSchedule({
       scheduleId: existingScheduleId,
       cron: cronExpression,
+      externalId: taskId,
     });
     return existingScheduleId;
   }

@@ -8,10 +8,13 @@ const FACILITATOR_URL = "https://x402.org/facilitator";
 
 type RoutesConfig = Parameters<typeof paymentMiddleware>[1];
 
+const price = IS_PROD ? "$0.01" : "$0.0001";
+const network = IS_PROD ? "base" : "base-sepolia";
+
 const routeConfig = {
   "GET /api/image/generate": {
-    price: IS_PROD ? "$0.01" : "$0.0001",
-    network: IS_PROD ? "base" : "base-sepolia",
+    price,
+    network,
     config: {
       description: "Generate images using AI",
       inputSchema: {

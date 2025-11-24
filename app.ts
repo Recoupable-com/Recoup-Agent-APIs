@@ -4,6 +4,7 @@ import cors from "cors";
 import routes from "./routes";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
+import { createPaymentMiddleware } from "./lib/x402/paymentMiddleware";
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(createPaymentMiddleware());
 app.use("/api", routes);
 
 app.listen(port, () => {

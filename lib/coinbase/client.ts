@@ -1,10 +1,10 @@
 import { Coinbase } from "@coinbase/coinbase-sdk";
 
-const apiKeyName = process.env.CDP_APP_KEY_ID;
-const privateKey = process.env.CDP_SECRET;
+const apiKeyName = process.env.CDP_API_KEY_ID;
+const privateKey = process.env.CDP_API_KEY_SECRET;
 
 if (!apiKeyName || !privateKey) {
-  throw new Error("CDP_APP_KEY_ID and CDP_SECRET must be set");
+  throw new Error("CDP_API_KEY_ID and CDP_API_KEY_SECRET must be set");
 }
 
 /**

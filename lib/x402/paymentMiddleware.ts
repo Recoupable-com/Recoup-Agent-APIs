@@ -11,28 +11,43 @@ const price = IS_PROD ? "$0.01" : "$0.0001";
 const network = IS_PROD ? "base" : "base-sepolia";
 const facilitator = getFacilitator();
 
-const routeConfig = {
+const RESOURCE_URL = "https://api.recoupable.com/api/image/generate";
+
+const outputSchema = {
+  input: {
+    type: "http" as const,
+    method: "GET" as const,
+    queryParams: {
+      location: {
+        type: "string",
+        required: true,
+        description: "City name",
+      },
+    },
+  },
+  output: {
+    type: "object" as const,
+    properties: {
+      weather: { type: "string" },
+      temperature: { type: "number" },
+    },
+  },
+};
+
+const routeConfig: RoutesConfig = {
   "GET /api/image/generate": {
     price,
     network,
     config: {
       description: "Generate images using AI",
-      inputSchema: {
-        type: "object",
-        properties: {
-          location: { type: "string", description: "City name" },
-        },
-      },
-      outputSchema: {
-        type: "object",
-        properties: {
-          weather: { type: "string" },
-          temperature: { type: "number" },
-        },
-      },
+      mimeType: "application/json",
+      maxTimeoutSeconds: 60,
+      discoverable: true,
+      resource: RESOURCE_URL,
+      outputSchema,
     },
   },
-} as RoutesConfig;
+};
 
 export const createPaymentMiddleware = (): RequestHandler => {
   return paymentMiddleware(RECEIVING_WALLET_ADDRESS, routeConfig, facilitator);

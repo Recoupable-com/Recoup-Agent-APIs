@@ -1,15 +1,15 @@
-import { paymentMiddleware, Resource } from "x402-express";
+import { paymentMiddleware } from "x402-express";
 import type { RequestHandler } from "express";
 import { IS_PROD } from "../consts";
-import { facilitator } from "@coinbase/x402";
+import { getFacilitator } from "./getFacilitator";
 
 const RECEIVING_WALLET_ADDRESS = "0x749B7b7A6944d72266Be9500FC8C221B6A7554Ce";
-const FACILITATOR_URL = "https://x402.org/facilitator";
 
 type RoutesConfig = Parameters<typeof paymentMiddleware>[1];
 
 const price = IS_PROD ? "$0.01" : "$0.0001";
 const network = IS_PROD ? "base" : "base-sepolia";
+const facilitator = getFacilitator();
 
 const routeConfig = {
   "GET /api/image/generate": {
@@ -34,16 +34,6 @@ const routeConfig = {
   },
 } as RoutesConfig;
 
-const facilitatorConfig = IS_PROD
-  ? facilitator
-  : ({
-      url: FACILITATOR_URL,
-    } as { url: Resource });
-
 export const createPaymentMiddleware = (): RequestHandler => {
-  return paymentMiddleware(
-    RECEIVING_WALLET_ADDRESS,
-    routeConfig,
-    facilitatorConfig
-  );
+  return paymentMiddleware(RECEIVING_WALLET_ADDRESS, routeConfig, facilitator);
 };

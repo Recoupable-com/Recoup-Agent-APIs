@@ -136,4 +136,14 @@ routes.delete("/tasks", deleteTaskHandler as any);
 
 routes.get("/chats", getChatsHandler as any);
 
+// Implement your route
+routes.get("/image/generate", (req, res) => {
+  res.send({
+    report: {
+      weather: "sunny",
+      temperature: 70,
+    },
+  });
+});
+
 export default routes;

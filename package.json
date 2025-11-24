@@ -18,6 +18,7 @@
   "dependencies": {
     "@browserbasehq/stagehand": "^1.10.1",
     "@coinbase/coinbase-sdk": "^0.21.0",
+    "@coinbase/x402": "^0.7.3",
     "@langchain/anthropic": "^0.3.15",
     "@langchain/core": "^0.3.42",
     "@langchain/langgraph": "^0.2.55",
@@ -46,10 +47,11 @@
     "prettier": "^3.4.1",
     "socket.io": "^4.8.1",
     "stripe": "^18.5.0",
-    "tsconfig-paths": "^4.2.0",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "uuid": "^11.0.5",
     "viem": "^2.37.5",
+    "x402-express": "^0.7.3",
     "zod": "^4.1.12"
   },
   "devDependencies": {

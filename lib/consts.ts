@@ -20,6 +20,7 @@ export const CHAT_POINT_SYSTEM_ID = 4172;
 export const AGENT_RUN = "agent_run";
 export const MESSAGE_SENT_POINT = 1;
 export const MESSAGE_SENT_EVENT = "message_sent";
+export const IS_PROD = process.env.NODE_ENV === "production";
 
 export const ENTERPRISE_DOMAINS: ReadonlySet<string> = new Set([
   "recoupable.com",

@@ -1,6 +1,7 @@
-import { paymentMiddleware } from "x402-express";
+import { paymentMiddleware, Resource } from "x402-express";
 import type { RequestHandler } from "express";
 import { IS_PROD } from "../consts";
+import { facilitator } from "@coinbase/x402";
 
 const RECEIVING_WALLET_ADDRESS = "0x749B7b7A6944d72266Be9500FC8C221B6A7554Ce";
 const FACILITATOR_URL = "https://x402.org/facilitator";
@@ -30,8 +31,16 @@ const routeConfig = {
   },
 } as RoutesConfig;
 
+const facilitatorConfig = IS_PROD
+  ? facilitator
+  : ({
+      url: FACILITATOR_URL,
+    } as { url: Resource });
+
 export const createPaymentMiddleware = (): RequestHandler => {
-  return paymentMiddleware(RECEIVING_WALLET_ADDRESS, routeConfig, {
-    url: FACILITATOR_URL,
-  });
+  return paymentMiddleware(
+    RECEIVING_WALLET_ADDRESS,
+    routeConfig,
+    facilitatorConfig
+  );
 };
